@@ -1,167 +1,132 @@
-package json
+package gson
 
-import (
-    "encoding/gob"
-    "errors"
-    "strconv"
-    "io"
-)
-
-// error codes
-
-// ErrorInvalidDocumentText is returned for misconstructed JSON text.
-var ErrorInvalidDocumentText = errors.New("json.invalidDocumentText")
-
-// ErrorEmptyDocument is returned when Document does not contain a valid value.
-var ErrorEmptyDocument = errors.New("json.emptyDocument")
+import "encoding/gob"
+import "strconv"
+import "io"
 
 // Document object for JSON.
+//   meta fields,
+//      _id     document id
 type Document struct {
-    Docid    []byte
-    M        map[string]interface{}
-    // local variables
-    pointers []string
-    // config
-    nk       NumberKind // how to save number in `M`
-    ws       SpaceKind  // how to parse whitespace
-    jsonp    bool       // whether to gather json-pointers while parsing
+	// marshalled fields
+	M map[string]interface{}
+	// local fields
+	pointers []string
+	config   Config
 }
 
-// NewDocument constructs a new Document object for {id, value} pair. `value`
-// can be JSON text or go-native representation, map[string]interface{}, of
-// parsed JSON object.
-func NewDocument(id []byte, value interface{}) (doc *Document, err error) {
-    if value == nil {
-        return
-    }
+// NewDocument constructs a new Document object for {id, value} pair.
+// `value` can be JSON text or go-native representation,
+// map[string]interface{}, of parsed JSON object.
+func NewDocument(
+	id []byte, value interface{}, config Config) (doc *Document, err error) {
 
-    var m interface{}
-    var ok bool
+	doc = &Document{config: config, M: make(map[string]interface{})}
+	doc.M["_id"] = id
 
-    doc = &Document{Docid: id, nk: FloatNumber, ws: AnsiSpace}
-    switch v := value.(type) {
-    case []byte:
-        p := NewParser(doc.nk, doc.ws, false /*jsonp*/)
-        m, doc.pointers, err = p.Parse(v)
-        if doc.M, ok = m.(map[string]interface{}); !ok {
-            err = ErrorInvalidDocumentText
-        }
+	if value == nil {
+		return doc, nil
+	}
 
-    case map[string]interface{}:
-        doc.M = v
-    }
-    return
+	switch v := value.(type) {
+	case []byte:
+		if m, _, err := config.Parse(v); err != nil {
+			return nil, err
+		} else if val, ok := m.(map[string]interface{}); !ok {
+			return nil, ErrorInvalidDocumentType
+		} else {
+			doc.Mixin(val)
+		}
+
+	case map[string]interface{}:
+		doc.Mixin(v)
+
+	default:
+		return nil, ErrorInvalidValueType
+	}
+	return
 }
 
-// NewDocuments constructs a list of Document object for {_, value} pair.
-// Document-id shall be populated by the caller.
-func NewDocuments(txt []byte) (docs []*Document, err error) {
-    p := NewParser(FloatNumber, AnsiSpace, false /*jsonp*/)
-    ms, _, err := p.ParseMany(txt)
-    if err != nil {
-        return nil, err
-    }
-
-    var doc *Document
-
-    docs = make([]*Document, 0, len(ms))
-    for _, m := range ms {
-        if M, ok := m.(map[string]interface{}); m != nil && ok {
-            if doc, err = NewDocument(nil, M); err != nil {
-                return nil, err
-            }
-            docs = append(docs, doc)
-        }
-    }
-    return
+// Id returns the document's id.
+func (doc *Document) Id() []byte {
+	return doc.M["_id"].([]byte)
 }
 
-func (doc *Document) ListPointers() ([]string, error) {
-    if doc == nil || doc.M == nil {
-        return nil, ErrorEmptyDocument
-    }
-    return traverseObject(doc.M), nil
+// SetId will update the document's id.
+func (doc *Document) SetId(id []byte) *Document {
+	doc.M["_id"] = id
+	return doc
+}
+
+// SetValue will update the document's value object.
+func (doc *Document) SetValue(value map[string]interface{}) *Document {
+	for _, metaf := range MetaFields {
+		value[metaf] = doc.M[metaf]
+	}
+	doc.M = value
+	return doc
+}
+
+// Mixin will update the document's value map into one or more
+// supplied maps.
+func (doc *Document) Mixin(vals ...map[string]interface{}) *Document {
+	for _, val := range vals {
+		for key, value := range val {
+			doc.M[key] = value
+		}
+	}
+	return doc
+}
+
+// ListPointers will compose json-pointers into document object.
+// composed pointers will also include meta-fields, like, "/_id"
+func (doc *Document) ListPointers() []string {
+	if doc == nil || doc.M == nil {
+		return nil
+	}
+	return traverseObject(doc.M)
 }
 
 func traverseObject(obj interface{}) []string {
-    var pointers []string
+	var pointers []string
 
-    switch v := obj.(type) {
-    case []interface{}:
-        if len(v) > 0 {
-            pointers = make([]string, 0, 4)
-            for i, value := range v {
-                prefix := "/" + strconv.Itoa(i)
-                for _, pointer := range traverseObject(value) {
-                    pointers = append(pointers, prefix + pointer)
-                }
-            }
-        }
+	switch v := obj.(type) {
+	case []interface{}:
+		if len(v) > 0 {
+			pointers = make([]string, 0, 4)
+			for i, value := range v {
+				prefix := "/" + strconv.Itoa(i)
+				for _, pointer := range traverseObject(value) {
+					pointers = append(pointers, prefix+pointer)
+				}
+			}
+		}
 
-    case map[string]interface{}:
-        pointers = make([]string, 0, 4)
-        pointers = append(pointers, "")
-        if len(v) > 0 {
-            for key, value := range v {
-                prefix := "/" + key
-                for _, pointer := range traverseObject(value) {
-                    pointers = append(pointers, prefix + pointer)
-                }
-            }
-        }
-    }
-    return pointers
+	case map[string]interface{}:
+		pointers = make([]string, 0, 4)
+		pointers = append(pointers, "")
+		if len(v) > 0 {
+			for key, value := range v {
+				prefix := "/" + key
+				for _, pointer := range traverseObject(value) {
+					pointers = append(pointers, prefix+pointer)
+				}
+			}
+		}
+	}
+	return pointers
 }
 
-// GobEncode shall marshal a Document stucture (only exported fields) to byte
-// array, suitable for transmission over wire.
+// GobEncode shall marshal a Document stucture (only exported fields)
+// to byte array, suitable for transmission over wire.
 func (doc *Document) GobEncode(buf io.Writer) error {
-    e := gob.NewEncoder(buf)
-    return e.Encode(doc.M)
+	e := gob.NewEncoder(buf)
+	return e.Encode(doc.M)
 }
 
-// GobDecode shall unmarshal byte array returned by GobEncode() back to
-// Document structure.
+// GobDecode shall unmarshal byte array returned by GobEncode()
+// back to Document structure.
 func (doc *Document) GobDecode(buf io.Reader) error {
-    d := gob.NewDecoder(buf)
-    return d.Decode(&doc.M)
-}
-
-// Factory object to construct `Document` structure.
-type Factory struct {
-    p     *Parser
-    // config
-    nk    NumberKind // how to save number in `M`
-    ws    SpaceKind  // how to parse whitespace
-    jsonp bool       // gather json-pointers
-}
-
-// NewFactory create a factory with specified parameters.
-func NewFactory(nk NumberKind, ws SpaceKind, jsonp bool) *Factory {
-    factory := &Factory{nk: nk, ws:ws, jsonp: jsonp}
-    factory.p = NewParser(nk, ws, jsonp)
-    return factory
-}
-
-// NewDocument will use the factory to create a Document object for {id, value}
-// pair.
-func (f *Factory) NewDocument(id []byte, value interface{}) (doc *Document, err error) {
-    if value == nil {
-        return
-    }
-
-    var m interface{}
-    var ok bool
-
-    doc = &Document{Docid: id, nk: f.nk, ws: f.ws}
-    switch v := value.(type) {
-    case []byte:
-        m, doc.pointers, err = f.p.Parse(v)
-        if doc.M, ok = m.(map[string]interface{}); !ok {
-            err = ErrorInvalidDocumentText
-        }
-    case map[string]interface{}:
-        doc.M = v
-    }
-    return
+	d := gob.NewDecoder(buf)
+	return d.Decode(&doc.M)
 }
