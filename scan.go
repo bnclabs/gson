@@ -17,14 +17,14 @@ var falseLiteral = "false"
 // c. error in the i/p text.
 // calling this function will scan for exactly one JSON value
 func scanToken(txt string, config *Config) (interface{}, string, error) {
-	txt = skipWS(txt, config.ws)
+	txt = skipWS(txt, config.Ws)
 
 	if len(txt) < 1 {
 		return nil, txt, ErrorEmptyText
 	}
 
 	if digitCheck[txt[0]] == 1 {
-		return scanNum(txt, config.nk)
+		return scanNum(txt, config.Nk)
 	}
 
 	var tok interface{}
@@ -50,14 +50,14 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 		return nil, txt, ErrorExpectedFalse
 
 	case '-':
-		return scanNum(txt, config.nk)
+		return scanNum(txt, config.Nk)
 
 	case '"':
 		s, remtxt, err := scanString(str2bytes(txt))
 		return bytes2str(s), bytes2str(remtxt), err
 
 	case '[':
-		txt = skipWS(txt[1:], config.ws)
+		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == ']' {
 			return []interface{}{}, txt[1:], nil
 		}
@@ -68,9 +68,9 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 				return nil, txt, err
 			}
 			arr = append(arr, tok)
-			txt = skipWS(txt, config.ws)
+			txt = skipWS(txt, config.Ws)
 			if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.ws)
+				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
@@ -80,7 +80,7 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 		return arr, txt[1:], nil
 
 	case '{':
-		txt = skipWS(txt[1:], config.ws)
+		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == '}' {
 			return map[string]interface{}{}, txt[1:], nil
 		}
@@ -95,18 +95,18 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 				return nil, txt, ErrorExpectedKey
 			}
 
-			txt = skipWS(txt, config.ws)
+			txt = skipWS(txt, config.Ws)
 			if txt[0] != ':' {
 				return nil, txt, ErrorExpectedColon
 			}
-			tok, txt, err = scanToken(skipWS(txt[1:], config.ws), config)
+			tok, txt, err = scanToken(skipWS(txt[1:], config.Ws), config)
 			if err != nil {
 				return nil, txt, err
 			}
 			m[key] = tok
-			txt = skipWS(txt, config.ws)
+			txt = skipWS(txt, config.Ws)
 			if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.ws)
+				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == '}' {
 				break
 			} else {

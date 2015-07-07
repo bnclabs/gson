@@ -26,13 +26,13 @@ const (
 
 // Configuration for document factory
 type Config struct {
-	nk NumberKind
-	ws SpaceKind
+	Nk NumberKind
+	Ws SpaceKind
 }
 
 // NewConfig returns a new configuration factory
 func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	return &Config{nk: nk, ws: ws}
+	return &Config{Nk: nk, Ws: ws}
 }
 
 // Parse input JSON text to a single go-native value.
