@@ -24,10 +24,15 @@ const (
 	UnicodeSpace
 )
 
-// Configuration for document factory
+// Config for document factory
 type Config struct {
 	Nk NumberKind
 	Ws SpaceKind
+}
+
+// NewDefaultConfig returns a new configuration factory
+func NewDefaultConfig() *Config {
+	return NewConfig(FloatNumber, UnicodeSpace)
 }
 
 // NewConfig returns a new configuration factory
@@ -36,31 +41,28 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 }
 
 // Parse input JSON text to a single go-native value.
-func (config *Config) Parse(txt_b []byte) (interface{}, []byte, error) {
-	txt := bytes2str(txt_b)
+func (config *Config) Parse(txt string) (interface{}, string, error) {
 	tok, remtxt, err := scanToken(txt, config)
 	if err != nil {
 		err = fmt.Errorf("error `%v` before %v", err, len(txt)-len(remtxt))
-		return nil, nil, err
+		return nil, "", err
 	}
-	return tok, str2bytes(remtxt), nil
+	return tok, remtxt, nil
 }
 
 // ParseMany will parse input JSON text to one or more go native
 // values.
-func (config *Config) ParseMany(txt_b []byte) ([]interface{}, []byte, error) {
-	txt := bytes2str(txt_b)
-
-	values := make([]interface{}, 0)
+func (config *Config) ParseMany(txt string) ([]interface{}, string, error) {
+	var values []interface{}
 
 	ln := len(txt)
 	for len(txt) > 0 {
 		tok, txt, err := scanToken(txt, config)
 		if err != nil {
 			err = fmt.Errorf("error `%v` before %v", err, ln-len(txt))
-			return nil, nil, err
+			return nil, "", err
 		}
 		values = append(values, tok)
 	}
-	return values, str2bytes(txt), nil
+	return values, txt, nil
 }

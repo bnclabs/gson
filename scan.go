@@ -5,6 +5,8 @@ import "unicode"
 import "unicode/utf8"
 import "unicode/utf16"
 
+// Number placeholder type when number is represted in str format,
+// used for delayed parsing.
 type Number string
 
 var nullLiteral = "null"
@@ -32,33 +34,31 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 
 	switch txt[0] {
 	case 'n':
-		if txt[:4] == nullLiteral {
+		if len(txt) >= 4 && txt[:4] == nullLiteral {
 			return nil, txt[4:], nil
 		}
 		return nil, txt, ErrorExpectedNil
 
 	case 't':
-		if txt[:4] == trueLiteral {
+		if len(txt) >= 4 && txt[:4] == trueLiteral {
 			return true, txt[4:], nil
 		}
 		return nil, txt, ErrorExpectedTrue
 
 	case 'f':
-		if txt[:5] == falseLiteral {
+		if len(txt) >= 5 && txt[:5] == falseLiteral {
 			return false, txt[5:], nil
 		}
 		return nil, txt, ErrorExpectedFalse
-
-	case '-':
-		return scanNum(txt, config.Nk)
 
 	case '"':
 		s, remtxt, err := scanString(str2bytes(txt))
 		return bytes2str(s), bytes2str(remtxt), err
 
 	case '[':
-		txt = skipWS(txt[1:], config.Ws)
-		if txt[0] == ']' {
+		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
+			return nil, txt, ErrorExpectedClosearray
+		} else if txt[0] == ']' {
 			return []interface{}{}, txt[1:], nil
 		}
 		arr := make([]interface{}, 0, len(txt)/10)
@@ -68,8 +68,9 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 				return nil, txt, err
 			}
 			arr = append(arr, tok)
-			txt = skipWS(txt, config.Ws)
-			if txt[0] == ',' {
+			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+				return nil, txt, ErrorExpectedClosearray
+			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == ']' {
 				break
@@ -83,6 +84,8 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == '}' {
 			return map[string]interface{}{}, txt[1:], nil
+		} else if txt[0] != '"' {
+			return nil, txt, ErrorExpectedKey
 		}
 		m := make(map[string]interface{})
 		for {
@@ -95,8 +98,9 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 				return nil, txt, ErrorExpectedKey
 			}
 
-			txt = skipWS(txt, config.Ws)
-			if txt[0] != ':' {
+			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+				return nil, txt, ErrorExpectedColon
+			} else if txt[0] != ':' {
 				return nil, txt, ErrorExpectedColon
 			}
 			tok, txt, err = scanToken(skipWS(txt[1:], config.Ws), config)
@@ -104,8 +108,9 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 				return nil, txt, err
 			}
 			m[key] = tok
-			txt = skipWS(txt, config.Ws)
-			if txt[0] == ',' {
+			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+				return nil, txt, ErrorExpectedCloseobject
+			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == '}' {
 				break
@@ -162,12 +167,9 @@ func scanNum(txt string, nk NumberKind) (interface{}, string, error) {
 	case IntNumber:
 		num, err := strconv.Atoi(string(txt[s:e]))
 		return num, txt[e:], err
-
-	case FloatNumber:
-		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		return num, txt[e:], err
 	}
-	return nil, "", ErrorExpectedNum
+	num, err := strconv.ParseFloat(string(txt[s:e]), 64)
+	return num, txt[e:], err
 }
 
 var escapeCode = [256]byte{ // TODO: size can be optimized
@@ -184,7 +186,7 @@ var escapeCode = [256]byte{ // TODO: size can be optimized
 
 func scanString(txt []byte) ([]byte, []byte, error) {
 	if len(txt) < 2 {
-		return nil, nil, ErrorExpectedString
+		return nil, txt, ErrorExpectedString
 	}
 
 	e := 1
@@ -199,9 +201,12 @@ func scanString(txt []byte) ([]byte, []byte, error) {
 		}
 		r, size := utf8.DecodeRune(txt[e:])
 		if r == utf8.RuneError && size == 1 {
-			return nil, nil, ErrorExpectedString
+			return nil, txt, ErrorExpectedString
 		}
 		e += size
+		if e == len(txt) {
+			return nil, txt, ErrorExpectedString
+		}
 	}
 
 	if txt[e] == '"' { // done we have nothing to unquote
@@ -223,7 +228,7 @@ loop:
 			if txt[e+1] == 'u' {
 				r := getu4(txt[e:])
 				if r < 0 { // invalid
-					return nil, nil, ErrorExpectedString
+					return nil, txt, ErrorExpectedString
 				}
 				e += 6
 				if utf16.IsSurrogate(r) {
@@ -246,7 +251,7 @@ loop:
 			}
 
 		case c < ' ': // control character is invalid
-			return nil, nil, ErrorExpectedString
+			return nil, txt, ErrorExpectedString
 
 		case c < utf8.RuneSelf: // ASCII
 			out[oute] = c
@@ -263,7 +268,7 @@ loop:
 	if out[oute] == '"' {
 		return out[1:oute], txt[e:], nil
 	}
-	return nil, nil, ErrorExpectedString
+	return nil, txt, ErrorExpectedString
 }
 
 // getu4 decodes \uXXXX from the beginning of s, returning the hex value,

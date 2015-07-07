@@ -2,6 +2,9 @@ package gson
 
 import "errors"
 
+// MetaFields for a document.
+var MetaFields = []string{"_id"}
+
 //**** error codes ****//
 
 // ErrorInvalidDocumentText is returned for misconstructed JSON text.
@@ -49,5 +52,3 @@ var ErrorExpectedNum = errors.New("gson.exptectedNum")
 
 // ErrorExpectedString expected a `string` token while scanning.
 var ErrorExpectedString = errors.New("gson.exptectedString")
-
-var MetaFields = []string{"_id"}

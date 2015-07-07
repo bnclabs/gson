@@ -30,7 +30,8 @@ func NewDocument(
 
 	switch v := value.(type) {
 	case []byte:
-		if m, _, err := config.Parse(v); err != nil {
+		txt := bytes2str(v)
+		if m, _, err := config.Parse(txt); err != nil {
 			return nil, err
 		} else if val, ok := m.(map[string]interface{}); !ok {
 			return nil, ErrorInvalidDocumentType
@@ -47,13 +48,13 @@ func NewDocument(
 	return
 }
 
-// Id returns the document's id.
-func (doc *Document) Id() []byte {
+// ID returns the document's id.
+func (doc *Document) ID() []byte {
 	return doc.M["_id"].([]byte)
 }
 
-// SetId will update the document's id.
-func (doc *Document) SetId(id []byte) *Document {
+// SetID will update the document's id.
+func (doc *Document) SetID(id []byte) *Document {
 	doc.M["_id"] = id
 	return doc
 }
