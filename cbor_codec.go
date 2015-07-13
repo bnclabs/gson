@@ -25,17 +25,17 @@ func hdr(major, info byte) byte {
 //   o/p byte-slice.
 
 func encodeNull(buf []byte) int {
-	buf[0] = Type7 | SimpleTypeNil
+	buf[0] = hdr(Type7, SimpleTypeNil)
 	return 1
 }
 
 func encodeTrue(buf []byte) int {
-	buf[0] = Type7 | SimpleTypeTrue
+	buf[0] = hdr(Type7, SimpleTypeTrue)
 	return 1
 }
 
 func encodeFalse(buf []byte) int {
-	buf[0] = Type7 | SimpleTypeFalse
+	buf[0] = hdr(Type7, SimpleTypeFalse)
 	return 1
 }
 
@@ -173,7 +173,7 @@ func encodeFloat32(item float32, buf []byte) int {
 }
 
 func encodeFloat64(item float64, buf []byte) int {
-	buf[0] = Type7 | Float64
+	buf[0] = hdr(Type7, Float64)
 	iobuf := bytes.NewBuffer(buf[1:])
 	binary.Write(iobuf, binary.BigEndian, item)
 	return 9
@@ -261,6 +261,10 @@ func decodeTrue(buf []byte) (interface{}, int) {
 
 func decodeNil(buf []byte) (interface{}, int) {
 	return nil, 1
+}
+
+func decodeUndefined(buf []byte) (interface{}, int) {
+	return Undefined(SimpleUndefined), 1
 }
 
 func decodeSimpleTypeByte(buf []byte) (interface{}, int) {
@@ -402,8 +406,8 @@ func init() {
 	}
 	//-- Type0                  (unsigned integer)
 	// 1st-byte 0..23
-	for i := 0; i < Info24; i++ {
-		cborDecoders[hdr(Type0, byte(i))] = decodeType0SmallInt
+	for i := byte(0); i < Info24; i++ {
+		cborDecoders[hdr(Type0, i)] = decodeType0SmallInt
 	}
 	// 1st-byte 24..27
 	cborDecoders[hdr(Type0, Info24)] = decodeType0Info24
@@ -418,8 +422,8 @@ func init() {
 
 	//-- Type1                  (signed integer)
 	// 1st-byte 0..23
-	for i := 0; i < Info24; i++ {
-		cborDecoders[hdr(Type1, byte(i))] = decodeType1SmallInt
+	for i := byte(0); i < Info24; i++ {
+		cborDecoders[hdr(Type1, i)] = decodeType1SmallInt
 	}
 	// 1st-byte 24..27
 	cborDecoders[hdr(Type1, Info24)] = decodeType1Info24
@@ -478,17 +482,18 @@ func init() {
 
 	//-- Type7                  (simple values / floats / break-stop)
 	// 1st-byte 0..19
-	for i := 0; i < 19; i++ {
-		cborDecoders[hdr(Type7, byte(i))] =
-			func(buf []byte) (interface{}, int) { return i, 1 }
+	for i := byte(0); i < 20; i++ {
+		cborDecoders[hdr(Type7, i)] =
+			func(i byte) func([]byte) (interface{}, int) {
+				return func(buf []byte) (interface{}, int) { return i, 1 }
+			}(i)
 	}
-	// 1st-byte 20..27
+	// 1st-byte 20..23
 	cborDecoders[hdr(Type7, SimpleTypeFalse)] = decodeFalse
 	cborDecoders[hdr(Type7, SimpleTypeTrue)] = decodeTrue
 	cborDecoders[hdr(Type7, SimpleTypeNil)] = decodeNil
-	cborDecoders[hdr(Type7, SimpleUndefined)] = func(_ []byte) (interface{}, int) {
-		return SimpleUndefined, 1
-	}
+	cborDecoders[hdr(Type7, SimpleUndefined)] = decodeUndefined
+
 	cborDecoders[hdr(Type7, SimpleTypeByte)] = decodeSimpleTypeByte
 	cborDecoders[hdr(Type7, Float16)] = decodeFloat16
 	cborDecoders[hdr(Type7, Float32)] = decodeFloat32

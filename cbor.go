@@ -5,6 +5,9 @@ package gson
 // Indefinite code, 1st-byte of data item.
 type Indefinite byte
 
+// Undefined type as part of simple-type code23
+type Undefined byte
+
 // BreakStop code, last-byte of the data item.
 type BreakStop byte
 
@@ -15,7 +18,7 @@ const MaxSmallInt = 23
 // Major types.
 const (
 	// Type0 is major type Unsigned integer
-	Type0 = iota << 5
+	Type0 byte = iota << 5
 	// Type1 is major type Negative integer
 	Type1
 	// Type2 is major type Byte string
@@ -37,7 +40,7 @@ const (
 	// 0..23 actual value
 
 	// Info24 follows 1-byte data-item
-	Info24 = iota + 24
+	Info24 byte = iota + 24
 	// Info25 follows 2-byte data-item
 	Info25
 	// Info26 follows 4-byte data-item
@@ -56,7 +59,7 @@ const (
 	// 0..19 unassigned
 
 	// SimpleTypeFalse encodes nil type
-	SimpleTypeFalse = iota + 20
+	SimpleTypeFalse byte = iota + 20
 	// SimpleTypeTrue encodes true type
 	SimpleTypeTrue
 	// SimpleTypeNil encodes nil type
@@ -85,6 +88,26 @@ func EncodeSmallInt(item int8, buf []byte) int {
 	} else {
 		buf[0] = hdr(Type0, byte(item)) // 0 to 23
 	}
+	return 1
+}
+
+// EncodeSimpleType that falls outside the golang native type.
+// code points 0..19 and 32..255
+func EncodeSimpleType(typcode byte, buf []byte) int {
+	if typcode < 20 {
+		buf[0] = hdr(Type7, typcode)
+		return 1
+	} else if typcode < 32 {
+		panic("simpletype.lessthan32")
+	}
+	buf[0] = hdr(Type7, SimpleTypeByte)
+	buf[1] = typcode
+	return 2
+}
+
+// EncodeUndefined for simple type undefined.
+func EncodeUndefined(buf []byte) int {
+	buf[0] = hdr(Type7, SimpleUndefined)
 	return 1
 }
 
