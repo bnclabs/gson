@@ -1,19 +1,20 @@
 package gson
 
 import "testing"
+import "fmt"
 
-func TestEncodeSmall(t *testing.T) {
-	var buf [10]byte
+var _ = fmt.Sprintln("dummy")
 
-	if EncodeSmall(byte(0), buf) != 1 {
-		t.Errorf("fail EncodeSmall return expected as 1")
-	} else if buf[0] != 0x00 {
-		t.Errorf("fail EncodeSmall expected 0x00")
-	}
+func TestCborSmallInt(t *testing.T) {
+	buf := make([]byte, 10)
 
-	if EncodeSmall(byte(0), buf) != 1 {
-		t.Errorf("fail EncodeSmall return expected as 1")
-	} else if buf[0] != 0x17 {
-		t.Errorf("fail EncodeSmall expected 0x17")
+	for i := int8(-24); i < 24; i++ { // SmallInt is -24..23
+		if n := EncodeSmallInt(i, buf[:]); n != 1 {
+			t.Errorf("fail EncodeSmall: %v want 1", n)
+		} else if item, m := Decode(buf); n != 1 {
+			t.Errorf("fail Decode on SmallInt len: %v want 1", m)
+		} else if item.(int64) != int64(i) {
+			t.Errorf("fail Decode on SmallInt: %x, want %x", item.(int64), i)
+		}
 	}
 }

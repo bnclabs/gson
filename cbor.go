@@ -1,5 +1,7 @@
 package gson
 
+//import "fmt"
+
 // Indefinite code, 1st-byte of data item.
 type Indefinite byte
 
@@ -73,15 +75,15 @@ const (
 	// 28..30 un-assigned
 
 	// ItemBreak encodes stop-code for indefinite-length items
-	ItemBreak = iota + 31
+	ItemBreak = 31
 )
 
-// EncodeSmallInt integers between -24 and +24.
-func EncodeSmallInt(item byte, buf []byte) int {
+// EncodeSmallInt integers -23..+23
+func EncodeSmallInt(item int8, buf []byte) int {
 	if item < 0 {
-		buf[0] = Type1 & item // -23 to -1
+		buf[0] = hdr(Type1, byte(-(item + 1))) // -23 to -1
 	} else {
-		buf[0] = Type0 & item // 0 to 23
+		buf[0] = hdr(Type0, byte(item)) // 0 to 23
 	}
 	return 1
 }
