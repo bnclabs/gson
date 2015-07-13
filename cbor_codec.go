@@ -134,7 +134,7 @@ func encodeInt32(item int32, buf []byte) int {
 
 func encodeUint64(item uint64, buf []byte) int {
 	if item < 4294967296 {
-		return encodeUint16(uint16(item), buf) // 0..4294967295
+		return encodeUint32(uint32(item), buf) // 0..4294967295
 	}
 	buf[0] = hdr(Type0, Info27) // 4294967296 to 18446744073709551615
 	binary.BigEndian.PutUint64(buf[1:], item)
@@ -158,7 +158,7 @@ func encodeInt64(item int64, buf []byte) int {
 			binary.BigEndian.PutUint32(buf[1:], uint32(-(item + 1)))
 			return 5
 		}
-		buf[0] = hdr(Type1, Info25) // -9223372036854775808..-4294967296
+		buf[0] = hdr(Type1, Info27) // -9223372036854775808..-4294967296
 		binary.BigEndian.PutUint64(buf[1:], uint64(-(item + 1)))
 		return 9
 	}
@@ -294,7 +294,7 @@ func decodeFloat64(buf []byte) (interface{}, int) {
 }
 
 func decodeType0SmallInt(buf []byte) (interface{}, int) {
-	return int64(info(buf[0])), 1
+	return uint64(info(buf[0])), 1
 }
 
 func decodeType1SmallInt(buf []byte) (interface{}, int) {
