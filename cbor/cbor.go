@@ -190,7 +190,7 @@ func Encode(item interface{}, buf []byte) int {
 	case BigFloat:
 		n += encodeBigFloat(v, buf)
 	case Cbor:
-		n += encodeCbor(v, buf[n:])
+		n += encodeCbor(v, buf)
 	case *regexp.Regexp:
 		n += encodeRegexp(v, buf)
 	case CborPrefix:
@@ -205,5 +205,3 @@ func Decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
 	return item, n
 }
-
-//---- custom types

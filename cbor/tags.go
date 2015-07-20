@@ -35,7 +35,7 @@ const (
 	// TODO: TagBase64URL, TagBase64, TagBase16
 
 	// TagBase64URL tells decoder that []byte to surface up in base64 format
-	TagBase64URL = iota + 21
+	TagBase64URL = iota + 15
 	// TagBase64 tells decoder that []byte to surface up in base64 format
 	TagBase64
 	// TagBase64 tells decoder that []byte to surface up in base16 format
@@ -68,7 +68,7 @@ const (
 
 func encodeTag(tag uint64, buf []byte) int {
 	n := encodeUint64(tag, buf)
-	buf[0] = (buf[0] & 0x1f) & Type6 // fix the type as tag.
+	buf[0] = (buf[0] & 0x1f) | Type6 // fix the type as tag.
 	return n
 }
 
@@ -92,23 +92,27 @@ func encodeBigNum(num *big.Int, buf []byte) int {
 	n := 0
 	bytes := num.Bytes()
 	if num.Sign() < 0 {
-		n += encodeTag(TagPosBignum, buf)
-	} else {
 		n += encodeTag(TagNegBignum, buf)
+	} else {
+		n += encodeTag(TagPosBignum, buf)
 	}
 	n += Encode(bytes, buf[n:])
 	return n
 }
 
-func encodeDecimalFraction(item [2]interface{}, buf []byte) int {
+func encodeDecimalFraction(item interface{}, buf []byte) int {
 	n := encodeTag(TagDecimalFraction, buf)
-	n += Encode(item, buf[n:])
+	x := item.(DecimalFraction)
+	n += encodeInt64(x[0].(int64), buf[n:])
+	n += encodeInt64(x[1].(int64), buf[n:])
 	return n
 }
 
-func encodeBigFloat(item [2]interface{}, buf []byte) int {
+func encodeBigFloat(item interface{}, buf []byte) int {
 	n := encodeTag(TagBigFloat, buf)
-	n += Encode(item, buf[n:])
+	x := item.(BigFloat)
+	n += encodeInt64(x[0].(int64), buf[n:])
+	n += encodeInt64(x[1].(int64), buf[n:])
 	return n
 }
 
@@ -133,7 +137,7 @@ func encodeCborPrefix(item, buf []byte) int {
 //---- decode functions
 
 func decodeTag(buf []byte) (interface{}, int) {
-	byt := (buf[0] & 0x1f) & Type0 // fix as positive num
+	byt := (buf[0] & 0x1f) | Type0 // fix as positive num
 	item, n := cborDecoders[byt](buf)
 	switch item.(uint64) {
 	case TagDateTime:
@@ -150,29 +154,27 @@ func decodeTag(buf []byte) (interface{}, int) {
 
 	case TagNegBignum:
 		item, m := decodeBigNum(buf[n:])
-		return item, n + m
+		return big.NewInt(0).Mul(item.(*big.Int), big.NewInt(-1)), n + m
 
 	case TagDecimalFraction:
 		item, m := decodeDecimalFraction(buf[n:])
-		return item, m + n
+		return item, n + m
 
 	case TagBigFloat:
 		item, m := decodeBigFloat(buf[n:])
-		return item, m + n
+		return item, n + m
 
 	case TagCborEnc:
 		item, m := decodeCborEnc(buf[n:])
-		return item, m + n
+		return item, n + m
 
 	case TagRegexp:
 		item, m := decodeRegexp(buf[n:])
-		return item, m + n
-
-	case TagCborPrefix:
-		item, m := decodeCborPrefix(buf[n:])
-		return item, m + n
+		return item, n + m
 	}
-	return nil, 0
+	// TagCborPrefix:
+	item, m := decodeCborPrefix(buf[n:])
+	return item, n + m
 }
 
 func decodeDateTime(buf []byte) (interface{}, int) {
@@ -189,10 +191,12 @@ func decodeEpoch(buf []byte) (interface{}, int) {
 	switch v := item.(type) {
 	case int64:
 		return Epoch(v), n
+	case uint64:
+		return Epoch(v), n
 	case float64:
 		return EpochMicro(v), n
 	default:
-		panic("decodeEpoch(): neither int64 nor float64")
+		panic(fmt.Errorf("decodeEpoch(): neither int64 nor float64: %T", v))
 	}
 	return nil, 0
 }
@@ -204,25 +208,43 @@ func decodeBigNum(buf []byte) (interface{}, int) {
 }
 
 func decodeDecimalFraction(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
-	x := item.([]interface{})
-	return DecimalFraction([2]interface{}{x[0], x[1]}), n
+	e, x := Decode(buf)
+	m, y := Decode(buf[x:])
+	if a, ok := e.(uint64); ok {
+		if b, ok := m.(uint64); ok {
+			return DecimalFraction([2]interface{}{int64(a), int64(b)}), x + y
+		}
+		return DecimalFraction([2]interface{}{int64(a), m.(int64)}), x + y
+
+	} else if b, ok := m.(uint64); ok {
+		return DecimalFraction([2]interface{}{e.(int64), int64(b)}), x + y
+	}
+	return DecimalFraction([2]interface{}{e.(int64), m.(int64)}), x + y
 }
 
 func decodeBigFloat(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
-	x := item.([]interface{})
-	return BigFloat([2]interface{}{x[0], x[1]}), n
+	e, x := Decode(buf)
+	m, y := Decode(buf[x:])
+	if a, ok := e.(uint64); ok {
+		if b, ok := m.(uint64); ok {
+			return BigFloat([2]interface{}{int64(a), int64(b)}), x + y
+		}
+		return BigFloat([2]interface{}{int64(a), m.(int64)}), x + y
+
+	} else if b, ok := m.(uint64); ok {
+		return BigFloat([2]interface{}{e.(int64), int64(b)}), x + y
+	}
+	return BigFloat([2]interface{}{e.(int64), m.(int64)}), x + y
 }
 
 func decodeCborEnc(buf []byte) (interface{}, int) {
 	item, n := Decode(buf)
-	return item, n
+	return Cbor(item.([]uint8)), n
 }
 
 func decodeRegexp(buf []byte) (interface{}, int) {
 	item, n := Decode(buf)
-	s := bytes2str(item.([]byte))
+	s := item.(string)
 	re, err := regexp.Compile(s)
 	if err != nil {
 		panic(fmt.Errorf("compiling regexp %q: %v", s, err))
@@ -232,5 +254,5 @@ func decodeRegexp(buf []byte) (interface{}, int) {
 
 func decodeCborPrefix(buf []byte) (interface{}, int) {
 	item, n := Decode(buf)
-	return item, n
+	return CborPrefix(item.([]byte)), n
 }
