@@ -1,15 +1,38 @@
 package cbor
 
-import "fmt"
-
-// Indefinite code, 1st-byte of data item.
-type Indefinite byte
+import "time"
+import "math/big"
+import "regexp"
 
 // Undefined type as part of simple-type code23
 type Undefined byte
 
+// Indefinite code, 1st-byte of data item.
+type Indefinite byte
+
 // BreakStop code, last-byte of the data item.
 type BreakStop byte
+
+// Epoch tagged-type, seconds since 1970-01-01T00:00Z in UTC time.
+type Epoch int64
+
+// EpochMicro tagged-type, float64 since 1970-01-01T00:00Z in UTC time.
+type EpochMicro float64
+
+// DecimalFraction tagged-type, combine an integer mantissa with a
+// base-10 scaling factor, m*(10**e). As int64{e,m}.
+type DecimalFraction [2]interface{}
+
+// BigFloat tagged-type, combine an integer mantissa with a base-2
+// scaling factor, m*(10**e). As int64{e,m}.
+type BigFloat [2]interface{}
+
+// Cbor tagged-type, byte-string of cbor data-item.
+type Cbor []byte
+
+// CborPrefix tagged-type, byte-string of cbor data-item, that will be
+// wrapped with a unique prefix before sending out.
+type CborPrefix []byte
 
 // MaxSmallInt is the maximum value that can be stored
 // as assiative value to any major type.
@@ -153,8 +176,27 @@ func Encode(item interface{}, buf []byte) int {
 		n += encodeArray(v, buf)
 	case [][2]interface{}:
 		n += encodeMap(v, buf)
-	default:
-		panic(fmt.Sprintf("can't encode type %T", item))
+	// tagged encoding
+	case time.Time: // tag-0
+		n += encodeDateTime(v, buf)
+	case Epoch: // tag-1
+		n += encodeDateTime(v, buf)
+	case EpochMicro: // tag-1
+		n += encodeDateTime(v, buf)
+	case *big.Int:
+		n += encodeBigNum(v, buf)
+	case DecimalFraction:
+		n += encodeDecimalFraction(v, buf)
+	case BigFloat:
+		n += encodeBigFloat(v, buf)
+	case Cbor:
+		n += encodeCbor(v, buf[n:])
+	case *regexp.Regexp:
+		n += encodeRegexp(v, buf)
+	case CborPrefix:
+		n += encodeCborPrefix(v, buf)
+		// tagged encoding for custom data-type
+		//default:
 	}
 	return n
 }
@@ -163,3 +205,5 @@ func Decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
 	return item, n
 }
+
+//---- custom types

@@ -476,6 +476,22 @@ func init() {
 	cborDecoders[hdr(Type5, 30)] = makePanic("reserved")
 	cborDecoders[hdr(Type5, IndefiniteLength)] = decodeType5Indefinite
 
+	//-- Type6
+	// 1st-byte 0..23
+	for i := byte(0); i < Info24; i++ {
+		cborDecoders[hdr(Type6, i)] = decodeTag
+	}
+	// 1st-byte 24..27
+	cborDecoders[hdr(Type6, Info24)] = decodeTag
+	cborDecoders[hdr(Type6, Info25)] = decodeTag
+	cborDecoders[hdr(Type6, Info26)] = decodeTag
+	cborDecoders[hdr(Type6, Info27)] = decodeTag
+	// 1st-byte 28..31
+	cborDecoders[hdr(Type6, 28)] = makePanic("reserved")
+	cborDecoders[hdr(Type6, 29)] = makePanic("reserved")
+	cborDecoders[hdr(Type6, 30)] = makePanic("reserved")
+	cborDecoders[hdr(Type6, IndefiniteLength)] = makePanic("indefinite -na-")
+
 	//-- Type7                  (simple values / floats / break-stop)
 	// 1st-byte 0..19
 	for i := byte(0); i < 20; i++ {
