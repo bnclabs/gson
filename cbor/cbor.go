@@ -41,12 +41,6 @@ func EncodeSimpleType(typcode byte, buf []byte) int {
 	return 2
 }
 
-// EncodeUndefined for simple type undefined.
-func EncodeUndefined(buf []byte) int {
-	buf[0] = hdr(type7, simpleUndefined)
-	return 1
-}
-
 // Encode null, true, false,
 // 8/16/32/64 bit ints and uints, 32/64 bit floats,
 // byte string and string.
@@ -89,6 +83,9 @@ func Encode(item interface{}, buf []byte) int {
 		n += encodeArray(v, buf)
 	case [][2]interface{}:
 		n += encodeMap(v, buf)
+	// simple types
+	case Undefined:
+		n += encodeUndefined(buf)
 	// tagged encoding
 	case time.Time: // tag-0
 		n += encodeDateTime(v, buf)

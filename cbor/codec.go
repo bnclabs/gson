@@ -283,6 +283,11 @@ func encodeBreakStop(buf []byte) int {
 	return 1
 }
 
+func encodeUndefined(buf []byte) int {
+	buf[0] = hdr(type7, simpleUndefined)
+	return 1
+}
+
 //---- decode functions
 //
 

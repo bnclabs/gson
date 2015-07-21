@@ -70,7 +70,7 @@ func TestCborFalse(t *testing.T) {
 func TestCborUndefined(t *testing.T) {
 	buf := make([]byte, 10)
 
-	if n := EncodeUndefined(buf); n != 1 {
+	if n := encodeUndefined(buf); n != 1 {
 		t.Errorf("fail Encode undefined: %v want 1", n)
 	} else if item, m := Decode(buf); m != 1 {
 		t.Errorf("fail Decode on undefined len: %v want 1", m)
