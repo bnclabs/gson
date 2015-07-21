@@ -3,6 +3,41 @@ package cbor
 import "encoding/binary"
 import "bytes"
 
+const ( // major types.
+	type0 byte = iota << 5 // unsigned integer
+	type1                  // negative integer
+	type2                  // byte string
+	type3                  // text string
+	type4                  // array
+	type5                  // map
+	type6                  // tagged data-item
+	type7                  // floating-point, simple-types and break-stop
+)
+
+const ( // associated information for type0 and type1.
+	// 0..23 actual value
+	info24 byte = iota + 24 // followed by 1-byte data-item
+	info25                  // followed by 2-byte data-item
+	info26                  // followed by 4-byte data-item
+	info27                  // followed by 8-byte data-item
+	// 28..30 reserved
+	indefiniteLength = 31 // for byte-string, string, arr, map
+)
+
+const ( // simple types for type7
+	// 0..19 unassigned
+	simpleTypeFalse byte = iota + 20 // encodes nil type
+	simpleTypeTrue
+	simpleTypeNil
+	simpleUndefined
+	simpleTypeByte // the actual type in next byte 32..255
+	flt16          // IEEE 754 Half-Precision Float
+	flt32          // IEEE 754 Single-Precision Float
+	flt64          // IEEE 754 Double-Precision Float
+	// 28..30 un-assigned
+	itemBreak = 31 // stop-code for indefinite-length items
+)
+
 func major(b byte) byte {
 	return b & 0xe0
 }
@@ -23,44 +58,44 @@ func hdr(major, info byte) byte {
 //   o/p byte-slice.
 
 func encodeNull(buf []byte) int {
-	buf[0] = hdr(Type7, SimpleTypeNil)
+	buf[0] = hdr(type7, simpleTypeNil)
 	return 1
 }
 
 func encodeTrue(buf []byte) int {
-	buf[0] = hdr(Type7, SimpleTypeTrue)
+	buf[0] = hdr(type7, simpleTypeTrue)
 	return 1
 }
 
 func encodeFalse(buf []byte) int {
-	buf[0] = hdr(Type7, SimpleTypeFalse)
+	buf[0] = hdr(type7, simpleTypeFalse)
 	return 1
 }
 
 func encodeUint8(item byte, buf []byte) int {
 	if item <= MaxSmallInt {
-		buf[0] = hdr(Type0, item) // 0..23
+		buf[0] = hdr(type0, item) // 0..23
 		return 1
 	}
-	buf[0] = hdr(Type0, Info24)
+	buf[0] = hdr(type0, info24)
 	buf[1] = item // 24..255
 	return 2
 }
 
 func encodeInt8(item int8, buf []byte) int {
 	if item > MaxSmallInt {
-		buf[0] = hdr(Type0, Info24)
+		buf[0] = hdr(type0, info24)
 		buf[1] = byte(item) // 24..127
 		return 2
 	} else if item < -MaxSmallInt {
-		buf[0] = hdr(Type1, Info24)
+		buf[0] = hdr(type1, info24)
 		buf[1] = byte(-(item + 1)) // -128..-24
 		return 2
 	} else if item < 0 {
-		buf[0] = hdr(Type1, byte(-(item + 1))) // -23..-1
+		buf[0] = hdr(type1, byte(-(item + 1))) // -23..-1
 		return 1
 	}
-	buf[0] = hdr(Type0, byte(item)) // 0..23
+	buf[0] = hdr(type0, byte(item)) // 0..23
 	return 1
 }
 
@@ -68,7 +103,7 @@ func encodeUint16(item uint16, buf []byte) int {
 	if item < 256 {
 		return encodeUint8(byte(item), buf)
 	}
-	buf[0] = hdr(Type0, Info25)
+	buf[0] = hdr(type0, info25)
 	binary.BigEndian.PutUint16(buf[1:], item) // 256..65535
 	return 3
 }
@@ -76,21 +111,21 @@ func encodeUint16(item uint16, buf []byte) int {
 func encodeInt16(item int16, buf []byte) int {
 	if item > 127 {
 		if item < 256 {
-			buf[0] = hdr(Type0, Info24)
+			buf[0] = hdr(type0, info24)
 			buf[1] = byte(item) // 128..255
 			return 2
 		}
-		buf[0] = hdr(Type0, Info25)
+		buf[0] = hdr(type0, info25)
 		binary.BigEndian.PutUint16(buf[1:], uint16(item)) // 256..32767
 		return 3
 
 	} else if item < -128 {
 		if item > -256 {
-			buf[0] = hdr(Type1, Info24)
+			buf[0] = hdr(type1, info24)
 			buf[1] = byte(-(item + 1)) // -255..-129
 			return 2
 		}
-		buf[0] = hdr(Type1, Info25) // -32768..-256
+		buf[0] = hdr(type1, info25) // -32768..-256
 		binary.BigEndian.PutUint16(buf[1:], uint16(-(item + 1)))
 		return 3
 	}
@@ -101,7 +136,7 @@ func encodeUint32(item uint32, buf []byte) int {
 	if item < 65536 {
 		return encodeUint16(uint16(item), buf) // 0..65535
 	}
-	buf[0] = hdr(Type0, Info26)
+	buf[0] = hdr(type0, info26)
 	binary.BigEndian.PutUint32(buf[1:], item) // 65536 to 4294967295
 	return 5
 }
@@ -109,21 +144,21 @@ func encodeUint32(item uint32, buf []byte) int {
 func encodeInt32(item int32, buf []byte) int {
 	if item > 32767 {
 		if item < 65536 {
-			buf[0] = hdr(Type0, Info25)
+			buf[0] = hdr(type0, info25)
 			binary.BigEndian.PutUint16(buf[1:], uint16(item)) // 32768..65535
 			return 3
 		}
-		buf[0] = hdr(Type0, Info26) // 65536 to 2147483647
+		buf[0] = hdr(type0, info26) // 65536 to 2147483647
 		binary.BigEndian.PutUint32(buf[1:], uint32(item))
 		return 5
 
 	} else if item < -32768 {
 		if item > -65536 {
-			buf[0] = hdr(Type1, Info25) // -65535..-32769
+			buf[0] = hdr(type1, info25) // -65535..-32769
 			binary.BigEndian.PutUint16(buf[1:], uint16(-(item + 1)))
 			return 3
 		}
-		buf[0] = hdr(Type1, Info26) // -2147483648..-65536
+		buf[0] = hdr(type1, info26) // -2147483648..-65536
 		binary.BigEndian.PutUint32(buf[1:], uint32(-(item + 1)))
 		return 5
 	}
@@ -134,7 +169,7 @@ func encodeUint64(item uint64, buf []byte) int {
 	if item < 4294967296 {
 		return encodeUint32(uint32(item), buf) // 0..4294967295
 	}
-	buf[0] = hdr(Type0, Info27) // 4294967296 to 18446744073709551615
+	buf[0] = hdr(type0, info27) // 4294967296 to 18446744073709551615
 	binary.BigEndian.PutUint64(buf[1:], item)
 	return 9
 }
@@ -142,21 +177,21 @@ func encodeUint64(item uint64, buf []byte) int {
 func encodeInt64(item int64, buf []byte) int {
 	if item > 2147483647 {
 		if item < 4294967296 {
-			buf[0] = hdr(Type0, Info26) // 2147483647..4294967296
+			buf[0] = hdr(type0, info26) // 2147483647..4294967296
 			binary.BigEndian.PutUint32(buf[1:], uint32(item))
 			return 5
 		}
-		buf[0] = hdr(Type0, Info27) // 4294967296..9223372036854775807
+		buf[0] = hdr(type0, info27) // 4294967296..9223372036854775807
 		binary.BigEndian.PutUint64(buf[1:], uint64(item))
 		return 9
 
 	} else if item < -2147483648 {
 		if item > -4294967296 {
-			buf[0] = hdr(Type1, Info26) // -4294967295..-2147483649
+			buf[0] = hdr(type1, info26) // -4294967295..-2147483649
 			binary.BigEndian.PutUint32(buf[1:], uint32(-(item + 1)))
 			return 5
 		}
-		buf[0] = hdr(Type1, Info27) // -9223372036854775808..-4294967296
+		buf[0] = hdr(type1, info27) // -9223372036854775808..-4294967296
 		binary.BigEndian.PutUint64(buf[1:], uint64(-(item + 1)))
 		return 9
 	}
@@ -164,14 +199,14 @@ func encodeInt64(item int64, buf []byte) int {
 }
 
 func encodeFloat32(item float32, buf []byte) int {
-	buf[0] = Type7 | Float32
+	buf[0] = type7 | flt32
 	iobuf := bytes.NewBuffer(buf[1:1])
 	binary.Write(iobuf, binary.BigEndian, item)
 	return 5
 }
 
 func encodeFloat64(item float64, buf []byte) int {
-	buf[0] = hdr(Type7, Float64)
+	buf[0] = hdr(type7, flt64)
 	iobuf := bytes.NewBuffer(buf[1:1])
 	binary.Write(iobuf, binary.BigEndian, item)
 	return 9
@@ -179,31 +214,31 @@ func encodeFloat64(item float64, buf []byte) int {
 
 func encodeBytes(item []byte, buf []byte) int {
 	n := encodeUint64(uint64(len(item)), buf)
-	buf[0] = (buf[0] & 0x1f) | Type2 // fix the type from Type0->Type2
+	buf[0] = (buf[0] & 0x1f) | type2 // fix the type from type0->type2
 	copy(buf[n:], item)
 	return n + len(item)
 }
 
 func encodeBytesStart(buf []byte) int {
 	// indefinite chunks of byte string
-	buf[0] = hdr(Type2, byte(IndefiniteLength))
+	buf[0] = hdr(type2, byte(indefiniteLength))
 	return 1
 }
 
 func encodeText(item string, buf []byte) int {
 	n := encodeBytes(str2bytes(item), buf)
-	buf[0] = (buf[0] & 0x1f) | Type3 // fix the type from Type2->Type3
+	buf[0] = (buf[0] & 0x1f) | type3 // fix the type from type2->type3
 	return n
 }
 
 func encodeTextStart(buf []byte) int {
-	buf[0] = hdr(Type3, byte(IndefiniteLength)) // indefinite chunks of text
+	buf[0] = hdr(type3, byte(indefiniteLength)) // indefinite chunks of text
 	return 1
 }
 
 func encodeArray(items []interface{}, buf []byte) int {
 	n := encodeUint64(uint64(len(items)), buf)
-	buf[0] = (buf[0] & 0x1f) | Type4 // fix the type from Type0->Type4
+	buf[0] = (buf[0] & 0x1f) | type4 // fix the type from type0->type4
 	n += encodeArrayItems(items, buf[n:])
 	return n
 }
@@ -217,13 +252,13 @@ func encodeArrayItems(items []interface{}, buf []byte) int {
 }
 
 func encodeArrayStart(buf []byte) int {
-	buf[0] = hdr(Type4, byte(IndefiniteLength)) // indefinite length array
+	buf[0] = hdr(type4, byte(indefiniteLength)) // indefinite length array
 	return 1
 }
 
 func encodeMap(items [][2]interface{}, buf []byte) int {
 	n := encodeUint64(uint64(len(items)), buf)
-	buf[0] = (buf[0] & 0x1f) | Type5 // fix the type from Type0->Type5
+	buf[0] = (buf[0] & 0x1f) | type5 // fix the type from type0->type5
 	n += encodeMapItems(items, buf[n:])
 	return n
 }
@@ -238,13 +273,13 @@ func encodeMapItems(items [][2]interface{}, buf []byte) int {
 }
 
 func encodeMapStart(buf []byte) int {
-	buf[0] = hdr(Type5, byte(IndefiniteLength)) // indefinite length map
+	buf[0] = hdr(type5, byte(indefiniteLength)) // indefinite length map
 	return 1
 }
 
 func encodeBreakStop(buf []byte) int {
 	// break stop for indefinite array or map
-	buf[0] = hdr(Type7, byte(ItemBreak))
+	buf[0] = hdr(type7, byte(itemBreak))
 	return 1
 }
 
@@ -264,7 +299,7 @@ func decodeNil(buf []byte) (interface{}, int) {
 }
 
 func decodeUndefined(buf []byte) (interface{}, int) {
-	return Undefined(SimpleUndefined), 1
+	return Undefined(simpleUndefined), 1
 }
 
 func decodeSimpleTypeByte(buf []byte) (interface{}, int) {
@@ -337,7 +372,7 @@ func decodeType1Info27(buf []byte) (interface{}, int) {
 }
 
 func decodeLength(buf []byte) (int, int) {
-	lbyte := (buf[0] & 0x1f) | Type0 // fix the type from Type*->Type0
+	lbyte := (buf[0] & 0x1f) | type0 // fix the type from Type*->type0
 	ln, n := cborDecoders[lbyte](buf)
 	return int(ln.(uint64)), n
 }
@@ -400,119 +435,119 @@ func init() {
 	makePanic := func(msg string) func([]byte) (interface{}, int) {
 		return func(_ []byte) (interface{}, int) { panic(msg) }
 	}
-	//-- Type0                  (unsigned integer)
+	//-- type0                  (unsigned integer)
 	// 1st-byte 0..23
-	for i := byte(0); i < Info24; i++ {
-		cborDecoders[hdr(Type0, i)] = decodeType0SmallInt
+	for i := byte(0); i < info24; i++ {
+		cborDecoders[hdr(type0, i)] = decodeType0SmallInt
 	}
 	// 1st-byte 24..27
-	cborDecoders[hdr(Type0, Info24)] = decodeType0Info24
-	cborDecoders[hdr(Type0, Info25)] = decodeType0Info25
-	cborDecoders[hdr(Type0, Info26)] = decodeType0Info26
-	cborDecoders[hdr(Type0, Info27)] = decodeType0Info27
+	cborDecoders[hdr(type0, info24)] = decodeType0Info24
+	cborDecoders[hdr(type0, info25)] = decodeType0Info25
+	cborDecoders[hdr(type0, info26)] = decodeType0Info26
+	cborDecoders[hdr(type0, info27)] = decodeType0Info27
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type0, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type0, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type0, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type0, IndefiniteLength)] = makePanic("indefinite -na-")
+	cborDecoders[hdr(type0, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type0, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type0, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type0, indefiniteLength)] = makePanic("indefinite -na-")
 
-	//-- Type1                  (signed integer)
+	//-- type1                  (signed integer)
 	// 1st-byte 0..23
-	for i := byte(0); i < Info24; i++ {
-		cborDecoders[hdr(Type1, i)] = decodeType1SmallInt
+	for i := byte(0); i < info24; i++ {
+		cborDecoders[hdr(type1, i)] = decodeType1SmallInt
 	}
 	// 1st-byte 24..27
-	cborDecoders[hdr(Type1, Info24)] = decodeType1Info24
-	cborDecoders[hdr(Type1, Info25)] = decodeType1Info25
-	cborDecoders[hdr(Type1, Info26)] = decodeType1Info26
-	cborDecoders[hdr(Type1, Info27)] = decodeType1Info27
+	cborDecoders[hdr(type1, info24)] = decodeType1Info24
+	cborDecoders[hdr(type1, info25)] = decodeType1Info25
+	cborDecoders[hdr(type1, info26)] = decodeType1Info26
+	cborDecoders[hdr(type1, info27)] = decodeType1Info27
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type1, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type1, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type1, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type1, IndefiniteLength)] = makePanic("indefinite -na-")
+	cborDecoders[hdr(type1, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type1, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type1, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type1, indefiniteLength)] = makePanic("indefinite -na-")
 
-	//-- Type2                  (byte string)
+	//-- type2                  (byte string)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborDecoders[hdr(Type2, byte(i))] = decodeType2
+		cborDecoders[hdr(type2, byte(i))] = decodeType2
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type2, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type2, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type2, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type2, IndefiniteLength)] = decodeType2Indefinite
+	cborDecoders[hdr(type2, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type2, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type2, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type2, indefiniteLength)] = decodeType2Indefinite
 
-	//-- Type3                  (string)
+	//-- type3                  (string)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborDecoders[hdr(Type3, byte(i))] = decodeType3
+		cborDecoders[hdr(type3, byte(i))] = decodeType3
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type3, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type3, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type3, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type3, IndefiniteLength)] = decodeType3Indefinite
+	cborDecoders[hdr(type3, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type3, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type3, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type3, indefiniteLength)] = decodeType3Indefinite
 
-	//-- Type4                  (array)
+	//-- type4                  (array)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborDecoders[hdr(Type4, byte(i))] = decodeType4
+		cborDecoders[hdr(type4, byte(i))] = decodeType4
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type4, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type4, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type4, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type4, IndefiniteLength)] = decodeType4Indefinite
+	cborDecoders[hdr(type4, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type4, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type4, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type4, indefiniteLength)] = decodeType4Indefinite
 
-	//-- Type5                  (map)
+	//-- type5                  (map)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborDecoders[hdr(Type5, byte(i))] = decodeType5
+		cborDecoders[hdr(type5, byte(i))] = decodeType5
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type5, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type5, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type5, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type5, IndefiniteLength)] = decodeType5Indefinite
+	cborDecoders[hdr(type5, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type5, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type5, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type5, indefiniteLength)] = decodeType5Indefinite
 
-	//-- Type6
+	//-- type6
 	// 1st-byte 0..23
-	for i := byte(0); i < Info24; i++ {
-		cborDecoders[hdr(Type6, i)] = decodeTag
+	for i := byte(0); i < info24; i++ {
+		cborDecoders[hdr(type6, i)] = decodeTag
 	}
 	// 1st-byte 24..27
-	cborDecoders[hdr(Type6, Info24)] = decodeTag
-	cborDecoders[hdr(Type6, Info25)] = decodeTag
-	cborDecoders[hdr(Type6, Info26)] = decodeTag
-	cborDecoders[hdr(Type6, Info27)] = decodeTag
+	cborDecoders[hdr(type6, info24)] = decodeTag
+	cborDecoders[hdr(type6, info25)] = decodeTag
+	cborDecoders[hdr(type6, info26)] = decodeTag
+	cborDecoders[hdr(type6, info27)] = decodeTag
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type6, 28)] = makePanic("reserved")
-	cborDecoders[hdr(Type6, 29)] = makePanic("reserved")
-	cborDecoders[hdr(Type6, 30)] = makePanic("reserved")
-	cborDecoders[hdr(Type6, IndefiniteLength)] = makePanic("indefinite -na-")
+	cborDecoders[hdr(type6, 28)] = makePanic("reserved")
+	cborDecoders[hdr(type6, 29)] = makePanic("reserved")
+	cborDecoders[hdr(type6, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type6, indefiniteLength)] = makePanic("indefinite -na-")
 
-	//-- Type7                  (simple values / floats / break-stop)
+	//-- type7                  (simple values / floats / break-stop)
 	// 1st-byte 0..19
 	for i := byte(0); i < 20; i++ {
-		cborDecoders[hdr(Type7, i)] =
+		cborDecoders[hdr(type7, i)] =
 			func(i byte) func([]byte) (interface{}, int) {
 				return func(buf []byte) (interface{}, int) { return i, 1 }
 			}(i)
 	}
 	// 1st-byte 20..23
-	cborDecoders[hdr(Type7, SimpleTypeFalse)] = decodeFalse
-	cborDecoders[hdr(Type7, SimpleTypeTrue)] = decodeTrue
-	cborDecoders[hdr(Type7, SimpleTypeNil)] = decodeNil
-	cborDecoders[hdr(Type7, SimpleUndefined)] = decodeUndefined
+	cborDecoders[hdr(type7, simpleTypeFalse)] = decodeFalse
+	cborDecoders[hdr(type7, simpleTypeTrue)] = decodeTrue
+	cborDecoders[hdr(type7, simpleTypeNil)] = decodeNil
+	cborDecoders[hdr(type7, simpleUndefined)] = decodeUndefined
 
-	cborDecoders[hdr(Type7, SimpleTypeByte)] = decodeSimpleTypeByte
-	cborDecoders[hdr(Type7, Float16)] = decodeFloat16
-	cborDecoders[hdr(Type7, Float32)] = decodeFloat32
-	cborDecoders[hdr(Type7, Float64)] = decodeFloat64
+	cborDecoders[hdr(type7, simpleTypeByte)] = decodeSimpleTypeByte
+	cborDecoders[hdr(type7, flt16)] = decodeFloat16
+	cborDecoders[hdr(type7, flt32)] = decodeFloat32
+	cborDecoders[hdr(type7, flt64)] = decodeFloat64
 	// 1st-byte 28..31
-	cborDecoders[hdr(Type7, 28)] = makePanic("unassigned")
-	cborDecoders[hdr(Type7, 29)] = makePanic("unassigned")
-	cborDecoders[hdr(Type7, 30)] = makePanic("unassigned")
-	cborDecoders[hdr(Type7, ItemBreak)] = decodeBreakCode
+	cborDecoders[hdr(type7, 28)] = makePanic("unassigned")
+	cborDecoders[hdr(type7, 29)] = makePanic("unassigned")
+	cborDecoders[hdr(type7, 30)] = makePanic("unassigned")
+	cborDecoders[hdr(type7, itemBreak)] = decodeBreakCode
 }

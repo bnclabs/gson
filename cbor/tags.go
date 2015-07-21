@@ -7,60 +7,57 @@ import "fmt"
 
 // Notes:
 //
-// 1. TagBase64URL, TagBase64, TagBase16 are used to reduce the message size.
+// 1. tagBase64URL, tagBase64, tagBase16 are used to reduce the message size.
 //   a. if following data-item is other than []byte then it applies
 //     to all []byte contained in the data-time.
 //
-// 2. TagBase64URL/TagBase64 carry item in raw-byte string while
-//   TagBase64URLEnc/TagBase64Enc carry item in base64 encoded text-string.
+// 2. tagBase64URL/tagBase64 carry item in raw-byte string while
+//   tagBase64URLEnc/tagBase64Enc carry item in base64 encoded text-string.
 //
-// 3. TODO, yet to encode/decode TagBase* data-items and TagURI item.
+// 3. TODO, yet to encode/decode tagBase* data-items and tagURI item.
 
-const (
-	// TagDateTime as utf-8 string
-	TagDateTime = iota
-	// TagEpoch as +/- int or +/- float
-	TagEpoch
-	// TagPosBignum as []bytes
-	TagPosBignum
-	// TagNegBignum as []bytes
-	TagNegBignum
-	// TagDecimalFraction aka decimal fraction as array of [2]num
-	TagDecimalFraction
-	// TagBigFloat as array of [2]num
-	TagBigFloat
+// Epoch tagged-type, seconds since 1970-01-01T00:00Z in UTC time.
+type Epoch int64
 
+// EpochMicro tagged-type, float64 since 1970-01-01T00:00Z in UTC time.
+type EpochMicro float64
+
+// DecimalFraction tagged-type, combine an integer mantissa with a
+// base-10 scaling factor, m*(10**e). As int64{e,m}.
+type DecimalFraction [2]interface{}
+
+// BigFloat tagged-type, combine an integer mantissa with a base-2
+// scaling factor, m*(10**e). As int64{e,m}.
+type BigFloat [2]interface{}
+
+// Cbor tagged-type, byte-string of cbor data-item.
+type Cbor []byte
+
+// CborPrefix tagged-type, byte-string of cbor data-item, that will be
+// wrapped with a unique prefix before sending out.
+type CborPrefix []byte
+
+const ( // pre-defined tag values
+	tagDateTime        = iota // datetime as utf-8 string
+	tagEpoch                  // datetime as +/- int or +/- float
+	tagPosBignum              // as []bytes
+	tagNegBignum              // as []bytes
+	tagDecimalFraction        // decimal fraction as array of [2]num
+	tagBigFloat               // as array of [2]num
 	// unasigned 6..20
-
-	// TODO: TagBase64URL, TagBase64, TagBase16
-
-	// TagBase64URL tells decoder that []byte to surface up in base64 format
-	TagBase64URL = iota + 15
-	// TagBase64 tells decoder that []byte to surface up in base64 format
-	TagBase64
-	// TagBase64 tells decoder that []byte to surface up in base16 format
-	TagBase16
-
-	// TagCborEnc embedds another CBOR message
-	TagCborEnc
-
+	// TODO: tagBase64URL, tagBase64, tagBase16
+	tagBase64URL = iota + 15 // tell decoder that []byte to use as base64 format
+	tagBase64                // tell decoder that []byte to use as base64 format
+	tagBase16                // tell decoder that []byte to use as base16 format
+	tagCborEnc               // embedd another CBOR message
 	// unassigned 25..31
-
-	// TagURI as defined in rfc3986
-	TagURI = iota + 32
-	// TagBase64URLEnc base64 encoded url as text strings
-	TagBase64URLEnc
-	// TagBase64Enc base64 encoded byte-string as text strings
-	TagBase64Enc
-	// TagRegexp for PCRE and ECMA262 (Javascript) regular expression
-	TagRegexp
-	// TagMime as defined by rfc2045
-	TagMime
-
+	tagURI          = iota + 32 // defined in rfc3986
+	tagBase64URLEnc             // base64 encoded url as text strings
+	tagBase64Enc                // base64 encoded byte-string as text strings
+	tagRegexp                   // PCRE and ECMA262 (Javascript) regular expression
+	tagMime                     // MIME defined by rfc2045
 	// unassigned 37..55798
-
-	TagCborPrefix = iota + 55799
-
+	tagCborPrefix = iota + 55799
 	// unassigned 55800..
 )
 
@@ -68,7 +65,7 @@ const (
 
 func encodeTag(tag uint64, buf []byte) int {
 	n := encodeUint64(tag, buf)
-	buf[0] = (buf[0] & 0x1f) | Type6 // fix the type as tag.
+	buf[0] = (buf[0] & 0x1f) | type6 // fix the type as tag.
 	return n
 }
 
@@ -76,13 +73,13 @@ func encodeDateTime(dt interface{}, buf []byte) int {
 	n := 0
 	switch v := dt.(type) {
 	case time.Time: // rfc3339, as refined by section 3.3 rfc4287
-		n += encodeTag(TagDateTime, buf)
+		n += encodeTag(tagDateTime, buf)
 		n += Encode(v.Format(time.RFC3339), buf[n:]) // TODO: make this config.
 	case Epoch:
-		n += encodeTag(TagEpoch, buf)
+		n += encodeTag(tagEpoch, buf)
 		n += Encode(int64(v), buf[n:])
 	case EpochMicro:
-		n += encodeTag(TagEpoch, buf)
+		n += encodeTag(tagEpoch, buf)
 		n += Encode(float64(v), buf[n:])
 	}
 	return n
@@ -92,16 +89,16 @@ func encodeBigNum(num *big.Int, buf []byte) int {
 	n := 0
 	bytes := num.Bytes()
 	if num.Sign() < 0 {
-		n += encodeTag(TagNegBignum, buf)
+		n += encodeTag(tagNegBignum, buf)
 	} else {
-		n += encodeTag(TagPosBignum, buf)
+		n += encodeTag(tagPosBignum, buf)
 	}
 	n += Encode(bytes, buf[n:])
 	return n
 }
 
 func encodeDecimalFraction(item interface{}, buf []byte) int {
-	n := encodeTag(TagDecimalFraction, buf)
+	n := encodeTag(tagDecimalFraction, buf)
 	x := item.(DecimalFraction)
 	n += encodeInt64(x[0].(int64), buf[n:])
 	n += encodeInt64(x[1].(int64), buf[n:])
@@ -109,7 +106,7 @@ func encodeDecimalFraction(item interface{}, buf []byte) int {
 }
 
 func encodeBigFloat(item interface{}, buf []byte) int {
-	n := encodeTag(TagBigFloat, buf)
+	n := encodeTag(tagBigFloat, buf)
 	x := item.(BigFloat)
 	n += encodeInt64(x[0].(int64), buf[n:])
 	n += encodeInt64(x[1].(int64), buf[n:])
@@ -117,19 +114,19 @@ func encodeBigFloat(item interface{}, buf []byte) int {
 }
 
 func encodeCbor(item, buf []byte) int {
-	n := encodeTag(TagCborEnc, buf)
+	n := encodeTag(tagCborEnc, buf)
 	n += encodeBytes(item, buf[n:])
 	return n
 }
 
 func encodeRegexp(item *regexp.Regexp, buf []byte) int {
-	n := encodeTag(TagRegexp, buf)
+	n := encodeTag(tagRegexp, buf)
 	n += encodeText(item.String(), buf[n:])
 	return n
 }
 
 func encodeCborPrefix(item, buf []byte) int {
-	n := encodeTag(TagCborPrefix, buf)
+	n := encodeTag(tagCborPrefix, buf)
 	n += encodeBytes(item, buf[n:])
 	return n
 }
@@ -137,42 +134,42 @@ func encodeCborPrefix(item, buf []byte) int {
 //---- decode functions
 
 func decodeTag(buf []byte) (interface{}, int) {
-	byt := (buf[0] & 0x1f) | Type0 // fix as positive num
+	byt := (buf[0] & 0x1f) | type0 // fix as positive num
 	item, n := cborDecoders[byt](buf)
 	switch item.(uint64) {
-	case TagDateTime:
+	case tagDateTime:
 		item, m := decodeDateTime(buf[n:])
 		return item, n + m
 
-	case TagEpoch:
+	case tagEpoch:
 		item, m := decodeEpoch(buf[n:])
 		return item, n + m
 
-	case TagPosBignum:
+	case tagPosBignum:
 		item, m := decodeBigNum(buf[n:])
 		return item, n + m
 
-	case TagNegBignum:
+	case tagNegBignum:
 		item, m := decodeBigNum(buf[n:])
 		return big.NewInt(0).Mul(item.(*big.Int), big.NewInt(-1)), n + m
 
-	case TagDecimalFraction:
+	case tagDecimalFraction:
 		item, m := decodeDecimalFraction(buf[n:])
 		return item, n + m
 
-	case TagBigFloat:
+	case tagBigFloat:
 		item, m := decodeBigFloat(buf[n:])
 		return item, n + m
 
-	case TagCborEnc:
+	case tagCborEnc:
 		item, m := decodeCborEnc(buf[n:])
 		return item, n + m
 
-	case TagRegexp:
+	case tagRegexp:
 		item, m := decodeRegexp(buf[n:])
 		return item, n + m
 	}
-	// TagCborPrefix:
+	// tagCborPrefix:
 	item, m := decodeCborPrefix(buf[n:])
 	return item, n + m
 }

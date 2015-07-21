@@ -74,7 +74,7 @@ func TestCborUndefined(t *testing.T) {
 		t.Errorf("fail Encode undefined: %v want 1", n)
 	} else if item, m := Decode(buf); m != 1 {
 		t.Errorf("fail Decode on undefined len: %v want 1", m)
-	} else if item.(Undefined) != Undefined(SimpleUndefined) {
+	} else if item.(Undefined) != Undefined(simpleUndefined) {
 		t.Errorf("fail Decode on undefined: %T %v", item, item)
 	}
 }
@@ -267,7 +267,7 @@ func TestCborNum(t *testing.T) {
 			}
 		}()
 		Encode(uint64(9223372036854775808), buf)
-		buf[0] = (buf[0] & 0x1f) | Type1 // fix as negative integer
+		buf[0] = (buf[0] & 0x1f) | type1 // fix as negative integer
 		Decode(buf)
 	}()
 }
@@ -405,7 +405,7 @@ func TestCborReserved(t *testing.T) {
 			t.Errorf("expected panic while decoding reserved")
 		}
 	}()
-	Decode([]byte{hdr(Type0, 28)})
+	Decode([]byte{hdr(type0, 28)})
 }
 
 func TestDateTime(t *testing.T) {
