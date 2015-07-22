@@ -1,7 +1,7 @@
 package cbor
 
 import "encoding/binary"
-import "bytes"
+import "math"
 
 const ( // major types.
 	type0 byte = iota << 5 // unsigned integer
@@ -199,17 +199,15 @@ func encodeInt64(item int64, buf []byte) int {
 }
 
 func encodeFloat32(item float32, buf []byte) int {
+	n := encodeUint32(math.Float32bits(item), buf)
 	buf[0] = type7 | flt32
-	iobuf := bytes.NewBuffer(buf[1:1])
-	binary.Write(iobuf, binary.BigEndian, item)
-	return 5
+	return n
 }
 
 func encodeFloat64(item float64, buf []byte) int {
-	buf[0] = hdr(type7, flt64)
-	iobuf := bytes.NewBuffer(buf[1:1])
-	binary.Write(iobuf, binary.BigEndian, item)
-	return 9
+	n := encodeUint64(math.Float64bits(item), buf)
+	buf[0] = type7 | flt64
+	return n
 }
 
 func encodeBytes(item []byte, buf []byte) int {
@@ -291,20 +289,16 @@ func encodeUndefined(buf []byte) int {
 //---- decode functions
 //
 
+func decodeNull(buf []byte) (interface{}, int) {
+	return nil, 1
+}
+
 func decodeFalse(buf []byte) (interface{}, int) {
 	return false, 1
 }
 
 func decodeTrue(buf []byte) (interface{}, int) {
 	return true, 1
-}
-
-func decodeNil(buf []byte) (interface{}, int) {
-	return nil, 1
-}
-
-func decodeUndefined(buf []byte) (interface{}, int) {
-	return Undefined(simpleUndefined), 1
 }
 
 func decodeSimpleTypeByte(buf []byte) (interface{}, int) {
@@ -319,17 +313,13 @@ func decodeFloat16(buf []byte) (interface{}, int) {
 }
 
 func decodeFloat32(buf []byte) (interface{}, int) {
-	var item float32
-	iobuf := bytes.NewBuffer(buf[1:5])
-	binary.Read(iobuf, binary.BigEndian, &item)
-	return item, 5
+	item, n := decodeType0Info26(buf)
+	return math.Float32frombits(uint32(item.(uint64))), n
 }
 
 func decodeFloat64(buf []byte) (interface{}, int) {
-	var item float64
-	iobuf := bytes.NewBuffer(buf[1:])
-	binary.Read(iobuf, binary.BigEndian, &item)
-	return item, 9
+	item, n := decodeType0Info27(buf)
+	return math.Float64frombits(item.(uint64)), n
 }
 
 func decodeType0SmallInt(buf []byte) (interface{}, int) {
@@ -433,6 +423,12 @@ func decodeType5Indefinite(buf []byte) (interface{}, int) {
 func decodeBreakCode(buf []byte) (interface{}, int) {
 	return BreakStop(buf[0]), 1
 }
+
+func decodeUndefined(buf []byte) (interface{}, int) {
+	return Undefined(simpleUndefined), 1
+}
+
+//---- decoders
 
 var cborDecoders = make(map[byte]func([]byte) (interface{}, int))
 
@@ -543,7 +539,7 @@ func init() {
 	// 1st-byte 20..23
 	cborDecoders[hdr(type7, simpleTypeFalse)] = decodeFalse
 	cborDecoders[hdr(type7, simpleTypeTrue)] = decodeTrue
-	cborDecoders[hdr(type7, simpleTypeNil)] = decodeNil
+	cborDecoders[hdr(type7, simpleTypeNil)] = decodeNull
 	cborDecoders[hdr(type7, simpleUndefined)] = decodeUndefined
 
 	cborDecoders[hdr(type7, simpleTypeByte)] = decodeSimpleTypeByte

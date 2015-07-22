@@ -67,8 +67,12 @@ func Encode(item interface{}, buf []byte) int {
 		n += encodeInt32(v, buf)
 	case uint32:
 		n += encodeUint32(v, buf)
+	case int:
+		n += encodeInt64(int64(v), buf)
 	case int64:
 		n += encodeInt64(v, buf)
+	case uint:
+		n += encodeUint64(uint64(v), buf)
 	case uint64:
 		n += encodeUint64(v, buf)
 	case float32:

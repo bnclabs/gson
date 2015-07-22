@@ -331,3 +331,262 @@ func TestCborReserved(t *testing.T) {
 	}()
 	Decode([]byte{hdr(type0, 28)})
 }
+
+func BenchmarkEncodeNull(b *testing.B) {
+	buf := make([]byte, 10)
+	for i := 0; i < b.N; i++ {
+		Encode(nil, buf)
+	}
+}
+
+func BenchmarkDecodeNull(b *testing.B) {
+	buf := make([]byte, 10)
+	n := Encode(nil, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeTrue(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(true, buf)
+	}
+}
+
+func BenchmarkDecodeTrue(b *testing.B) {
+	buf := make([]byte, 10)
+	n := Encode(true, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeFalse(b *testing.B) {
+	buf := make([]byte, 10)
+	for i := 0; i < b.N; i++ {
+		Encode(false, buf)
+	}
+}
+
+func BenchmarkDecodeFalse(b *testing.B) {
+	buf := make([]byte, 10)
+	n := Encode(false, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeUint8(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(uint8(255), buf)
+	}
+}
+
+func BenchmarkDecodeUint8(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(uint8(255), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeInt8(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(int8(-128), buf)
+	}
+}
+
+func BenchmarkDecodeInt8(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(int8(-128), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeUint16(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(uint16(65535), buf)
+	}
+}
+
+func BenchmarkDecodeUint16(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(uint16(65535), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeInt16(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(int16(-32768), buf)
+	}
+}
+
+func BenchmarkDecodeInt16(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(int16(-32768), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeUint32(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(uint32(4294967295), buf)
+	}
+}
+
+func BenchmarkDecodeUint32(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(uint32(4294967295), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeInt32(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(int32(-2147483648), buf)
+	}
+}
+
+func BenchmarkDecodeInt32(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(int32(-2147483648), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeUint64(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(uint64(18446744073709551615), buf)
+	}
+}
+
+func BenchmarkDecodeUint64(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(uint64(18446744073709551615), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeInt64(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(int64(-2147483648), buf)
+	}
+}
+
+func BenchmarkDecodeInt64(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(int64(-2147483648), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeFlt32(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(float32(10.2), buf)
+	}
+}
+
+func BenchmarkDecodeFlt32(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(float32(10.2), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeFlt64(b *testing.B) {
+	buf := make([]byte, 64)
+	for i := 0; i < b.N; i++ {
+		Encode(float64(10.2), buf)
+	}
+}
+
+func BenchmarkDecodeFlt64(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode(float64(10.2), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeBytes(b *testing.B) {
+	buf := make([]byte, 64)
+	bs := []byte("hello world")
+	for i := 0; i < b.N; i++ {
+		Encode(bs, buf)
+	}
+}
+
+func BenchmarkDecodeBytes(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode([]byte("hello world"), buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeText(b *testing.B) {
+	buf := make([]byte, 64)
+	text := "hello world"
+	for i := 0; i < b.N; i++ {
+		Encode(text, buf)
+	}
+}
+
+func BenchmarkDecodeText(b *testing.B) {
+	buf := make([]byte, 64)
+	n := Encode("hello world", buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeArr0(b *testing.B) {
+	buf, arr := make([]byte, 1024), make([]interface{}, 0)
+	for i := 0; i < b.N; i++ {
+		Encode(arr, buf)
+	}
+}
+
+func BenchmarkDecodeArr0(b *testing.B) {
+	buf, arr := make([]byte, 1024), make([]interface{}, 0)
+	n := Encode(arr, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeArr5(b *testing.B) {
+	buf := make([]byte, 1024)
+	arr := []interface{}{5, 5.0, "hello world", true, nil}
+	for i := 0; i < b.N; i++ {
+		Encode(arr, buf)
+	}
+}
+
+func BenchmarkDecodeArr5(b *testing.B) {
+	buf := make([]byte, 1024)
+	arr := []interface{}{5, 5.0, "hello world", true, nil}
+	n := Encode(arr, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
