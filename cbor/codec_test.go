@@ -590,3 +590,45 @@ func BenchmarkDecodeArr5(b *testing.B) {
 		Decode(buf[:n])
 	}
 }
+
+func BenchmarkEncodeMap0(b *testing.B) {
+	buf := make([]byte, 1024)
+	m := make([][2]interface{}, 0)
+	for i := 0; i < b.N; i++ {
+		Encode(m, buf)
+	}
+}
+
+func BenchmarkDecodeMap0(b *testing.B) {
+	buf := make([]byte, 1024)
+	m := make([][2]interface{}, 0)
+	n := Encode(m, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
+
+func BenchmarkEncodeMap5(b *testing.B) {
+	buf := make([]byte, 1024)
+	m := [][2]interface{}{
+		[2]interface{}{"key0", 5}, [2]interface{}{"key1", 5.0},
+		[2]interface{}{"key2", "hello world"},
+		[2]interface{}{"key3", true}, [2]interface{}{"key4", nil},
+	}
+	for i := 0; i < b.N; i++ {
+		Encode(m, buf)
+	}
+}
+
+func BenchmarkDecodeMap5(b *testing.B) {
+	buf := make([]byte, 1024)
+	m := [][2]interface{}{
+		[2]interface{}{"key0", 5}, [2]interface{}{"key1", 5.0},
+		[2]interface{}{"key2", "hello world"},
+		[2]interface{}{"key3", true}, [2]interface{}{"key4", nil},
+	}
+	n := Encode(m, buf)
+	for i := 0; i < b.N; i++ {
+		Decode(buf[:n])
+	}
+}
