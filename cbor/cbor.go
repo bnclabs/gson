@@ -1,17 +1,20 @@
+// Package cbor implements RFC-7049 to encode and decode
+// data in
+
 package cbor
 
 import "time"
 import "math/big"
 import "regexp"
 
-// MaxSmallInt is the maximum value that can be stored
-// as assiative value to any major type.
+// MaxSmallInt is the maximum integer value that can be stored
+// as assiative value.
 const MaxSmallInt = 23
 
-// Undefined type as part of simple-type code23
+// Undefined type as part of simple-type codepoint-23.
 type Undefined byte
 
-// Indefinite code, 1st-byte of data item.
+// Indefinite code, first-byte of data item.
 type Indefinite byte
 
 // BreakStop code, last-byte of the data item.
@@ -41,9 +44,7 @@ func EncodeSimpleType(typcode byte, buf []byte) int {
 	return 2
 }
 
-// Encode null, true, false,
-// 8/16/32/64 bit ints and uints, 32/64 bit floats,
-// byte string and string.
+// Encode golang data into cbor binary.
 func Encode(item interface{}, buf []byte) int {
 	n := 0
 	switch v := item.(type) {
@@ -115,6 +116,7 @@ func Encode(item interface{}, buf []byte) int {
 	return n
 }
 
+// Decode cbor binary into golang data.
 func Decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
 	return item, n

@@ -7,12 +7,14 @@ import "fmt"
 
 // Notes:
 //
-// 1. tagBase64URL, tagBase64, tagBase16 are used to reduce the message size.
+// 1. tagBase64URL, tagBase64, tagBase16 are used to reduce the
+//   message size.
 //   a. if following data-item is other than []byte then it applies
 //     to all []byte contained in the data-time.
 //
 // 2. tagBase64URL/tagBase64 carry item in raw-byte string while
-//   tagBase64URLEnc/tagBase64Enc carry item in base64 encoded text-string.
+//   tagBase64URLEnc/tagBase64Enc carry item in base64 encoded
+//   text-string.
 //
 // 3. TODO, yet to encode/decode tagBase* data-items and tagURI item.
 
@@ -46,15 +48,15 @@ const ( // pre-defined tag values
 	tagBigFloat               // as array of [2]num
 	// unasigned 6..20
 	// TODO: tagBase64URL, tagBase64, tagBase16
-	tagBase64URL = iota + 15 // tell decoder that []byte to use as base64 format
-	tagBase64                // tell decoder that []byte to use as base64 format
-	tagBase16                // tell decoder that []byte to use as base16 format
+	tagBase64URL = iota + 15 // interpret []byte as base64 format
+	tagBase64                // interpret []byte as base64 format
+	tagBase16                // interpret []byte as base16 format
 	tagCborEnc               // embedd another CBOR message
 	// unassigned 25..31
 	tagURI          = iota + 32 // defined in rfc3986
 	tagBase64URLEnc             // base64 encoded url as text strings
 	tagBase64Enc                // base64 encoded byte-string as text strings
-	tagRegexp                   // PCRE and ECMA262 (Javascript) regular expression
+	tagRegexp                   // PCRE and ECMA262 regular expression
 	tagMime                     // MIME defined by rfc2045
 	// unassigned 37..55798
 	tagCborPrefix = iota + 55799

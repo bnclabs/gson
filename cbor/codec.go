@@ -287,7 +287,6 @@ func encodeUndefined(buf []byte) int {
 }
 
 //---- decode functions
-//
 
 func decodeNull(buf []byte) (interface{}, int) {
 	return nil, 1
