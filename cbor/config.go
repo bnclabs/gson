@@ -1,13 +1,14 @@
 package cbor
 
-import "fmt"
-
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 
 const (
+	// SmartNumber will either use str.Atoi to parse JSON numbers or
+	// fall back to float.
+	SmartNumber NumberKind = iota + 1
 	// IntNumber will use str.Atoi to parse JSON numbers.
-	IntNumber NumberKind = iota + 1
+	IntNumber
 	// FloatNumber will use strconv.ParseFloat to parse JSON numbers.
 	FloatNumber
 )
@@ -33,25 +34,12 @@ type Config struct {
 //      Nk: FloatNumber
 //      Ws: SpaceKind
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace)
+	return NewConfig(SmartNumber, UnicodeSpace)
 }
 
 // NewConfig returns a new configuration factory
 func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 	return &Config{Nk: nk, Ws: ws}
-}
-
-// Parse input JSON text to cbor binary.
-func (config *Config) ParseJson(
-	txt string, out []byte) (int, string, error) {
-
-	n, remtxt, err := scanToken(txt, out, config)
-	if err != nil {
-		fmsg := "error `%v` before %v"
-		err = fmt.Errorf(fmsg, err, len(txt)-len(remtxt))
-		panic(err)
-	}
-	return n, remtxt, nil
 }
 
 // Encode golang data into cbor binary.
@@ -62,4 +50,11 @@ func (config *Config) Encode(item interface{}, buf []byte) int {
 // Decode cbor binary into golang data.
 func (config *Config) Decode(buf []byte) (interface{}, int) {
 	return Decode(buf)
+}
+
+// Parse input JSON text to cbor binary.
+func (config *Config) ParseJson(
+	txt string, out []byte) (int, string) {
+
+	return scanToken(txt, out, config)
 }

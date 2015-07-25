@@ -110,8 +110,8 @@ func Encode(item interface{}, buf []byte) int {
 		n += encodeRegexp(v, buf)
 	case CborPrefix:
 		n += encodeCborPrefix(v, buf)
-		// tagged encoding for custom data-type
-		//default:
+	default:
+		panic(ErrorUnknownType)
 	}
 	return n
 }
@@ -120,4 +120,32 @@ func Encode(item interface{}, buf []byte) int {
 func Decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
 	return item, n
+}
+
+// IsIndefiniteBytes can be used to check the shape of
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+func IsIndefiniteBytes(b Indefinite) bool {
+	return b == Indefinite(hdr(type2, indefiniteLength))
+}
+
+// IsIndefiniteBytes can be used to check the shape of
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+func IsIndefiniteText(b Indefinite) bool {
+	return b == Indefinite(hdr(type3, indefiniteLength))
+}
+
+// IsIndefiniteBytes can be used to check the shape of
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+func IsIndefiniteArray(b Indefinite) bool {
+	return b == Indefinite(hdr(type4, indefiniteLength))
+}
+
+// IsIndefiniteBytes can be used to check the shape of
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+func IsIndefiniteMap(b Indefinite) bool {
+	return b == Indefinite(hdr(type5, indefiniteLength))
 }

@@ -373,7 +373,9 @@ func decodeLength(buf []byte) (int, int) {
 
 func decodeType2(buf []byte) (interface{}, int) {
 	ln, n := decodeLength(buf)
-	return buf[n : n+ln], n + ln
+	dst := make([]byte, ln)
+	copy(dst, buf[n:n+ln])
+	return dst, n + ln
 }
 
 func decodeType2Indefinite(buf []byte) (interface{}, int) {
@@ -382,7 +384,9 @@ func decodeType2Indefinite(buf []byte) (interface{}, int) {
 
 func decodeType3(buf []byte) (interface{}, int) {
 	ln, n := decodeLength(buf)
-	return bytes2str(buf[n : n+ln]), n + ln
+	dst := make([]byte, ln)
+	copy(dst, buf[n:n+ln])
+	return bytes2str(dst), n + ln
 }
 
 func decodeType3Indefinite(buf []byte) (interface{}, int) {
@@ -432,7 +436,7 @@ func decodeUndefined(buf []byte) (interface{}, int) {
 var cborDecoders = make(map[byte]func([]byte) (interface{}, int))
 
 func init() {
-	makePanic := func(msg string) func([]byte) (interface{}, int) {
+	makePanic := func(msg error) func([]byte) (interface{}, int) {
 		return func(_ []byte) (interface{}, int) { panic(msg) }
 	}
 	//-- type0                  (unsigned integer)
@@ -446,10 +450,10 @@ func init() {
 	cborDecoders[hdr(type0, info26)] = decodeType0Info26
 	cborDecoders[hdr(type0, info27)] = decodeType0Info27
 	// 1st-byte 28..31
-	cborDecoders[hdr(type0, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type0, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type0, 30)] = makePanic("reserved")
-	cborDecoders[hdr(type0, indefiniteLength)] = makePanic("indefinite -na-")
+	cborDecoders[hdr(type0, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type0, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type0, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type0, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
 
 	//-- type1                  (signed integer)
 	// 1st-byte 0..23
@@ -462,10 +466,10 @@ func init() {
 	cborDecoders[hdr(type1, info26)] = decodeType1Info26
 	cborDecoders[hdr(type1, info27)] = decodeType1Info27
 	// 1st-byte 28..31
-	cborDecoders[hdr(type1, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type1, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type1, 30)] = makePanic("reserved")
-	cborDecoders[hdr(type1, indefiniteLength)] = makePanic("indefinite -na-")
+	cborDecoders[hdr(type1, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type1, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type1, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type1, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
 
 	//-- type2                  (byte string)
 	// 1st-byte 0..27
@@ -473,9 +477,9 @@ func init() {
 		cborDecoders[hdr(type2, byte(i))] = decodeType2
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type2, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type2, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type2, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type2, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type2, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type2, 30)] = makePanic(ErrorInfoReserved)
 	cborDecoders[hdr(type2, indefiniteLength)] = decodeType2Indefinite
 
 	//-- type3                  (string)
@@ -484,9 +488,9 @@ func init() {
 		cborDecoders[hdr(type3, byte(i))] = decodeType3
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type3, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type3, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type3, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type3, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type3, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type3, 30)] = makePanic(ErrorInfoReserved)
 	cborDecoders[hdr(type3, indefiniteLength)] = decodeType3Indefinite
 
 	//-- type4                  (array)
@@ -495,9 +499,9 @@ func init() {
 		cborDecoders[hdr(type4, byte(i))] = decodeType4
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type4, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type4, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type4, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type4, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type4, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type4, 30)] = makePanic(ErrorInfoReserved)
 	cborDecoders[hdr(type4, indefiniteLength)] = decodeType4Indefinite
 
 	//-- type5                  (map)
@@ -506,9 +510,9 @@ func init() {
 		cborDecoders[hdr(type5, byte(i))] = decodeType5
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type5, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type5, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type5, 30)] = makePanic("reserved")
+	cborDecoders[hdr(type5, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type5, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type5, 30)] = makePanic(ErrorInfoReserved)
 	cborDecoders[hdr(type5, indefiniteLength)] = decodeType5Indefinite
 
 	//-- type6
@@ -522,10 +526,10 @@ func init() {
 	cborDecoders[hdr(type6, info26)] = decodeTag
 	cborDecoders[hdr(type6, info27)] = decodeTag
 	// 1st-byte 28..31
-	cborDecoders[hdr(type6, 28)] = makePanic("reserved")
-	cborDecoders[hdr(type6, 29)] = makePanic("reserved")
-	cborDecoders[hdr(type6, 30)] = makePanic("reserved")
-	cborDecoders[hdr(type6, indefiniteLength)] = makePanic("indefinite -na-")
+	cborDecoders[hdr(type6, 28)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type6, 29)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type6, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type6, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
 
 	//-- type7                  (simple values / floats / break-stop)
 	// 1st-byte 0..19
@@ -546,8 +550,8 @@ func init() {
 	cborDecoders[hdr(type7, flt32)] = decodeFloat32
 	cborDecoders[hdr(type7, flt64)] = decodeFloat64
 	// 1st-byte 28..31
-	cborDecoders[hdr(type7, 28)] = makePanic("unassigned")
-	cborDecoders[hdr(type7, 29)] = makePanic("unassigned")
-	cborDecoders[hdr(type7, 30)] = makePanic("unassigned")
+	cborDecoders[hdr(type7, 28)] = makePanic(ErrorUnassigned)
+	cborDecoders[hdr(type7, 29)] = makePanic(ErrorUnassigned)
+	cborDecoders[hdr(type7, 30)] = makePanic(ErrorUnassigned)
 	cborDecoders[hdr(type7, itemBreak)] = decodeBreakCode
 }

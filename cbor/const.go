@@ -2,48 +2,68 @@ package cbor
 
 import "errors"
 
+// ErrorUnknownType to encode
+var ErrorUnknownType = errors.New("cbor.unknownType")
+
+// ErrorExpectedInteger to encode
+var ErrorExpectedInteger = errors.New("cbor.expectedInteger")
+
 // ErrorEmptyText to scan
-var ErrorEmptyText = errors.New("gson.emptyText")
+var ErrorEmptyText = errors.New("cbor.emptyText")
 
 // ErrorExpectedNil expected a `nil` token while scanning.
-var ErrorExpectedNil = errors.New("gson.exptectedNil")
+var ErrorExpectedNil = errors.New("cbor.exptectedNil")
 
 // ErrorExpectedTrue expected a `true` token while scanning.
-var ErrorExpectedTrue = errors.New("gson.exptectedTrue")
+var ErrorExpectedTrue = errors.New("cbor.exptectedTrue")
 
 // ErrorExpectedFalse expected a `false` token while scanning.
-var ErrorExpectedFalse = errors.New("gson.exptectedFalse")
+var ErrorExpectedFalse = errors.New("cbor.exptectedFalse")
 
 // ErrorExpectedClosearray expected a `]` token while scanning.
-var ErrorExpectedClosearray = errors.New("gson.exptectedCloseArray")
+var ErrorExpectedClosearray = errors.New("cbor.exptectedCloseArray")
 
 // ErrorExpectedKey expected a `key-string` token while scanning.
-var ErrorExpectedKey = errors.New("gson.exptectedKey")
+var ErrorExpectedKey = errors.New("cbor.exptectedKey")
 
 // ErrorExpectedColon expected a `:` token while scanning.
-var ErrorExpectedColon = errors.New("gson.exptectedColon")
+var ErrorExpectedColon = errors.New("cbor.exptectedColon")
 
 // ErrorExpectedCloseobject expected a `}` token while scanning.
-var ErrorExpectedCloseobject = errors.New("gson.exptectedCloseobject")
+var ErrorExpectedCloseobject = errors.New("cbor.exptectedCloseobject")
 
 // ErrorExpectedToken expected a valid json token while scanning.
-var ErrorExpectedToken = errors.New("gson.exptectedToken")
-
-// ErrorExpectedNum expected a `number` token while scanning.
-var ErrorExpectedNum = errors.New("gson.exptectedNum")
+var ErrorExpectedToken = errors.New("cbor.exptectedToken")
 
 // ErrorExpectedString expected a `string` token while scanning.
-var ErrorExpectedString = errors.New("gson.exptectedString")
+var ErrorExpectedString = errors.New("cbor.exptectedString")
 
-// ErrorInvalidDocumentText is returned for misconstructed JSON text.
-var ErrorInvalidDocumentText = errors.New("gson.invalidDocumentText")
+// ErrorInfoReserved for info values 28,29,30.
+var ErrorInfoReserved = errors.New("cbor.infoReserved")
 
-// ErrorInvalidDocumentType is returned for misconstructed JSON text.
-var ErrorInvalidDocumentType = errors.New("gson.invalidDocumentType")
+// ErrorInfoIndefinite for info indefinite.
+var ErrorInfoIndefinite = errors.New("cbor.infoIndefinite")
 
-// ErrorInvalidValueType is returned for misconstructed JSON text.
-var ErrorInvalidValueType = errors.New("gson.invalidValueType")
+// ErrorUnassigned for info indefinite.
+var ErrorUnassigned = errors.New("cbor.unassigned")
 
-// ErrorEmptyDocument is returned when Document does not contain a
-// valid value.
-var ErrorEmptyDocument = errors.New("gson.emptyDocument")
+// ErrorByteString byte string decoding not supported for cbor->json.
+var ErrorByteString = errors.New("cbor.byteString")
+
+// ErrorExpectedIndefinite for arrays and maps for cbor->json.
+var ErrorExpectedIndefinite = errors.New("cbor.expectedIndefinite")
+
+// ErrorTagNotSupported for arrays and maps for cbor->json.
+var ErrorTagNotSupported = errors.New("cbor.tagNotSupported")
+
+// ErrorUndefined cannot decode simple-type undefined.
+var ErrorUndefined = errors.New("cbor.undefined")
+
+// ErrorSimpleType unsupported simple-type.
+var ErrorSimpleType = errors.New("cbor.simpleType")
+
+// ErrorFloat16 simple type not supported.
+var ErrorFloat16 = errors.New("cbor.float16")
+
+// ErrorBreakcode simple type not supported with breakcode.
+var ErrorBreakcode = errors.New("cbor.breakcode")
