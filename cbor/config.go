@@ -53,8 +53,12 @@ func (config *Config) Decode(buf []byte) (interface{}, int) {
 }
 
 // Parse input JSON text to cbor binary.
-func (config *Config) ParseJson(
-	txt string, out []byte) (int, string) {
-
+func (config *Config) ParseJson(txt string, out []byte) (string, int) {
 	return scanToken(txt, out, config)
+}
+
+// ToJson converts CBOR binary data-item into JSON.
+func (config *Config) ToJson(in, out []byte) (int, int) {
+	n, m := cborTojson[in[0]](in, out)
+	return n, m
 }

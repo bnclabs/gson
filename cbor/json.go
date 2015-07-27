@@ -17,7 +17,7 @@ var nullStr = "null"
 var trueStr = "true"
 var falseStr = "false"
 
-func scanToken(txt string, out []byte, config *Config) (int, string) {
+func scanToken(txt string, out []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.Ws)
 
 	if len(txt) < 1 {
@@ -32,21 +32,21 @@ func scanToken(txt string, out []byte, config *Config) (int, string) {
 	case 'n':
 		if len(txt) >= 4 && txt[:4] == nullStr {
 			n := encodeNull(out)
-			return n, txt[4:]
+			return txt[4:], n
 		}
 		panic(ErrorExpectedNil)
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == trueStr {
 			n := encodeTrue(out)
-			return n, txt[4:]
+			return txt[4:], n
 		}
 		panic(ErrorExpectedTrue)
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == falseStr {
 			n := encodeFalse(out)
-			return n, txt[5:]
+			return txt[5:], n
 		}
 		panic(ErrorExpectedFalse)
 
@@ -54,15 +54,15 @@ func scanToken(txt string, out []byte, config *Config) (int, string) {
 		return scanString(txt, out)
 
 	case '[':
+		n, m := encodeArrayStart(out), 0
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
 			panic(ErrorExpectedClosearray)
 		} else if txt[0] == ']' {
-			n := encodeArray([]interface{}{}, out)
-			return n, txt[1:]
+			n += encodeBreakStop(out[n:])
+			return txt[1:], n
 		}
-		n, m := encodeArrayStart(out), 0
 		for {
-			m, txt = scanToken(txt, out[n:], config)
+			txt, m = scanToken(txt, out[n:], config)
 			n += m
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
 				panic(ErrorExpectedClosearray)
@@ -75,29 +75,26 @@ func scanToken(txt string, out []byte, config *Config) (int, string) {
 			}
 		}
 		n += encodeBreakStop(out[n:])
-		return n, txt[1:]
+		return txt[1:], n
 
 	case '{':
+		n := encodeMapStart(out)
 		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == '}' {
-			n := encodeMap([][2]interface{}{}, out)
-			return n, txt[1:]
+			n += encodeBreakStop(out[n:])
+			return txt[1:], n
 		} else if txt[0] != '"' {
 			panic(ErrorExpectedKey)
 		}
-		n, m := encodeMapStart(out), 0
+		var m int
 		for {
-			m, txt := scanString(txt, out[n:])
-			key := bytes2str(out[n : n+m])
-			if len(key) < 1 {
-				panic(ErrorExpectedKey)
-			}
+			txt, m = scanString(txt, out[n:])
 			n += m
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
 				panic(ErrorExpectedColon)
 			}
-			m, txt = scanToken(skipWS(txt[1:], config.Ws), out[n:], config)
+			txt, m = scanToken(skipWS(txt[1:], config.Ws), out[n:], config)
 			n += m
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
@@ -110,7 +107,8 @@ func scanToken(txt string, out []byte, config *Config) (int, string) {
 				panic(ErrorExpectedCloseobject)
 			}
 		}
-		return m, txt[1:]
+		n += encodeBreakStop(out[n:])
+		return txt[1:], n
 
 	default:
 		panic(ErrorExpectedToken)
@@ -145,7 +143,7 @@ func skipWS(txt string, ws SpaceKind) string {
 	return txt
 }
 
-func scanNum(txt string, nk NumberKind, out []byte) (int, string) {
+func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 	s, e, l, flt := 0, 1, len(txt), false
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
@@ -159,7 +157,7 @@ func scanNum(txt string, nk NumberKind, out []byte) (int, string) {
 		num, err := strconv.Atoi(txt[s:e])
 		if err == nil {
 			n := encodeInt64(int64(num), out)
-			return n, txt[e:]
+			return txt[e:], n
 		}
 		panic(err)
 
@@ -167,7 +165,7 @@ func scanNum(txt string, nk NumberKind, out []byte) (int, string) {
 		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
 		if err == nil {
 			n := encodeFloat64(num, out)
-			return n, txt[e:]
+			return txt[e:], n
 		}
 		panic(err)
 	}
@@ -177,15 +175,15 @@ func scanNum(txt string, nk NumberKind, out []byte) (int, string) {
 		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
 		if err == nil {
 			n := encodeFloat64(f, out)
-			return n, txt[e:]
+			return txt[e:], n
 		}
 		panic(err)
 	}
 	n := encodeInt64(int64(num), out)
-	return n, txt[e:]
+	return txt[e:], n
 }
 
-func scanString(txt string, out []byte) (int, string) {
+func scanString(txt string, out []byte) (string, int) {
 	if len(txt) < 2 {
 		panic(ErrorExpectedString)
 	}
@@ -199,12 +197,12 @@ func scanString(txt string, out []byte) (int, string) {
 			skipchar = true
 		} else if ch == '"' {
 			str := bytes2str(out[10:])
-			end := off + 1
+			end := off + 2
 			// use encoding/json for unmarshaling string.
 			if err := json.Unmarshal(str2bytes(txt[:end]), &str); err != nil {
 				panic(err)
 			}
-			return encodeText(str, out), txt[end:]
+			return txt[end:], encodeText(str, out)
 		}
 	}
 	panic(ErrorExpectedString)
@@ -241,17 +239,17 @@ var trueBin = []byte("true")
 var falseBin = []byte("false")
 
 func decodeNullTojson(buf, out []byte) (int, int) {
-	copy(buf, nullBin)
+	copy(out, nullBin)
 	return 1, 4
 }
 
 func decodeTrueTojson(buf, out []byte) (int, int) {
-	copy(buf, trueBin)
+	copy(out, trueBin)
 	return 1, 4
 }
 
 func decodeFalseTojson(buf, out []byte) (int, int) {
-	copy(buf, falseBin)
+	copy(out, falseBin)
 	return 1, 5
 }
 
@@ -344,14 +342,14 @@ func decodeType3Tojson(buf, out []byte) (int, int) {
 }
 
 func decodeType4IndefiniteTojson(buf, out []byte) (int, int) {
-	brkstp := hdr(type4, itemBreak)
+	brkstp := hdr(type7, itemBreak)
 	out[0] = '['
 	if buf[1] == brkstp {
 		out[1] = ']'
 		return 2, 2
 	}
 	n, m := 1, 1
-	for buf[n] == brkstp {
+	for buf[n] != brkstp {
 		x, y := cborTojson[buf[n]](buf[n:], out[m:])
 		m, n = m+y, n+x
 		out[m], m = ',', m+1
@@ -361,14 +359,14 @@ func decodeType4IndefiniteTojson(buf, out []byte) (int, int) {
 }
 
 func decodeType5IndefiniteTojson(buf, out []byte) (int, int) {
-	brkstp := hdr(type5, itemBreak)
+	brkstp := hdr(type7, itemBreak)
 	out[0] = '{'
 	if buf[1] == brkstp {
 		out[1] = '}'
 		return 2, 2
 	}
 	n, m := 1, 1
-	for buf[n] == brkstp {
+	for buf[n] != brkstp {
 		x, y := cborTojson[buf[n]](buf[n:], out[m:])
 		m, n = m+y, n+x
 		out[m], m = ':', m+1
@@ -377,7 +375,7 @@ func decodeType5IndefiniteTojson(buf, out []byte) (int, int) {
 		m, n = m+y, n+x
 		out[m], m = ',', m+1
 	}
-	out[m-1] = ']'
+	out[m-1] = '}'
 	return n + 1, m
 }
 
