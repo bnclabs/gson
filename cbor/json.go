@@ -159,7 +159,6 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 			n := encodeInt64(int64(num), out)
 			return txt[e:], n
 		}
-		panic(err)
 
 	} else if nk == FloatNumber {
 		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
@@ -167,18 +166,14 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 			n := encodeFloat64(num, out)
 			return txt[e:], n
 		}
-		panic(err)
 	}
 	// SmartNumber
-	num, err := strconv.Atoi(txt[s:e])
-	if err != nil {
-		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		if err == nil {
-			n := encodeFloat64(f, out)
-			return txt[e:], n
-		}
-		panic(err)
+	if flt {
+		f, _ := strconv.ParseFloat(string(txt[s:e]), 64)
+		n := encodeFloat64(f, out)
+		return txt[e:], n
 	}
+	num, _ := strconv.Atoi(txt[s:e])
 	n := encodeInt64(int64(num), out)
 	return txt[e:], n
 }

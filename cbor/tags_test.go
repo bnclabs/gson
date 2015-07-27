@@ -63,6 +63,18 @@ func TestEpoch(t *testing.T) {
 		buf[1] = 0x5a // instead of 0x3a
 		Decode(buf)
 	}()
+	// malformed epoch
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		buf := make([]byte, 16)
+		n := encodeTag(tagEpoch, buf)
+		n += encodeBytes([]byte{1, 2}, buf[n:])
+		Decode(buf)
+	}()
 }
 
 func TestEpochMicro(t *testing.T) {
@@ -167,6 +179,17 @@ func TestRegexp(t *testing.T) {
 	if ref.String() != (item.(*regexp.Regexp)).String() {
 		t.Errorf("expected %v got %v", ref, item)
 	}
+	// malformed reg-ex
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		n := encodeTag(tagRegexp, buf)
+		n += encodeText(`a([0-9]t*+`, buf[n:])
+		Decode(buf)
+	}()
 }
 
 func TestCborPrefix(t *testing.T) {

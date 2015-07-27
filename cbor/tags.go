@@ -194,10 +194,8 @@ func decodeEpoch(buf []byte) (interface{}, int) {
 		return Epoch(v), n
 	case float64:
 		return EpochMicro(v), n
-	default:
-		panic(fmt.Errorf("decodeEpoch(): neither int64 nor float64: %T", v))
 	}
-	return nil, 0
+	panic(fmt.Errorf("decodeEpoch(): neither int64 nor float64: %T", item))
 }
 
 func decodeBigNum(buf []byte) (interface{}, int) {
