@@ -318,9 +318,9 @@ func decodeType0Info27Tojson(buf, out []byte) (int, int) {
 
 func decodeType1Info27Tojson(buf, out []byte) (int, int) {
 	x := uint64(binary.BigEndian.Uint64(buf[1:]))
-	if x > 9223372036854775807 {
-		panic("number exceeds the limit of int64")
-	}
+	//if x > 9223372036854775807 {
+	//    panic("number exceeds the limit of int64")
+	//}
 	val, n := int64(-x)-1, 9
 	out = strconv.AppendInt(out[:0], val, 10)
 	return n, len(out)
@@ -328,10 +328,7 @@ func decodeType1Info27Tojson(buf, out []byte) (int, int) {
 
 func decodeType3Tojson(buf, out []byte) (int, int) {
 	ln, n := decodeLength(buf)
-	data, err := json.Marshal(bytes2str(buf[n : n+ln]))
-	if err != nil {
-		panic(err)
-	}
+	data, _ := json.Marshal(bytes2str(buf[n : n+ln]))
 	copy(out, data)
 	return n + ln, len(data)
 }

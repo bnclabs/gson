@@ -120,6 +120,13 @@ func TestJsonNumber(t *testing.T) {
 	if !reflect.DeepEqual(ref1, ref2) {
 		t.Errorf("mismatch %v, got %v", ref1, ref2)
 	}
+	// negative small integers
+	buf := make([]byte, 64)
+	n = encodeInt8(-1, buf)
+	_, m = decodeType1SmallIntTojson(buf, out)
+	if v := string(out[:m]); v != "-1" {
+		t.Errorf("expected -1, got %v", v)
+	}
 	// malformed numbers
 	func() {
 		defer func() {
@@ -148,6 +155,7 @@ func TestScanToken(t *testing.T) {
 		"treu",
 		"fale",
 		"[  ",
+		"[10  ",
 		"[10,  ",
 		"[10true",
 		"{10",
@@ -155,11 +163,40 @@ func TestScanToken(t *testing.T) {
 		`{"10":true  `,
 		`{"10":true10`,
 		`(`,
+		`"`,
+		`"hello\h"`,
+		`"hello`,
 	}
 	for _, tcase := range testcases {
 		panicfn(tcase)
 	}
 }
 
-func TestScanString(t *testing.T) {
+func TestFloat32(t *testing.T) {
+	var ref1, ref2 interface{}
+
+	buf, out := make([]byte, 64), make([]byte, 64)
+	n := encodeFloat32(float32(10.2), buf)
+	if err := json.Unmarshal([]byte("10.2"), &ref1); err != nil {
+		t.Errorf("json.Unmarshal() failed for %v: %v", buf[:n], err)
+	}
+
+	_, m := decodeFloat32Tojson(buf, out)
+	if err := json.Unmarshal(out[:m], &ref2); err != nil {
+		t.Errorf("json.Unmarshal() failed for cbor %v: %v", buf[:n], err)
+	}
+	if !reflect.DeepEqual(ref1, ref2) {
+		t.Errorf("mismatch %v, got %v", ref1, ref2)
+	}
+}
+
+func TestByteString(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("expected panic")
+		}
+	}()
+	buf, out := make([]byte, 16), make([]byte, 16)
+	n := encodeBytes([]byte{0xf5}, buf)
+	NewDefaultConfig().ToJson(buf[:n], out)
 }

@@ -152,6 +152,8 @@ func TestCborNum(t *testing.T) {
 		[2]interface{}{int32(32767), uint64(32767)},
 		[2]interface{}{int32(65535), uint64(65535)},
 		[2]interface{}{int32(2147483647), uint64(2147483647)},
+		[2]interface{}{int(-2147483648), int64(-2147483648)},
+		[2]interface{}{uint(2147483647), uint64(2147483647)},
 		[2]interface{}{uint64(0), uint64(0)},
 		[2]interface{}{uint64(23), uint64(23)},
 		[2]interface{}{uint64(24), uint64(24)},

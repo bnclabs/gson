@@ -129,21 +129,21 @@ func IsIndefiniteBytes(b Indefinite) bool {
 	return b == Indefinite(hdr(type2, indefiniteLength))
 }
 
-// IsIndefiniteBytes can be used to check the shape of
+// IsIndefiniteText can be used to check the shape of
 // data-item, like byte-string, string, array or map, that
 // is going to come afterwards.
 func IsIndefiniteText(b Indefinite) bool {
 	return b == Indefinite(hdr(type3, indefiniteLength))
 }
 
-// IsIndefiniteBytes can be used to check the shape of
+// IsIndefiniteArray can be used to check the shape of
 // data-item, like byte-string, string, array or map, that
 // is going to come afterwards.
 func IsIndefiniteArray(b Indefinite) bool {
 	return b == Indefinite(hdr(type4, indefiniteLength))
 }
 
-// IsIndefiniteBytes can be used to check the shape of
+// IsIndefiniteMap can be used to check the shape of
 // data-item, like byte-string, string, array or map, that
 // is going to come afterwards.
 func IsIndefiniteMap(b Indefinite) bool {

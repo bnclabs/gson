@@ -1,6 +1,7 @@
 package cbor
 
 import "testing"
+import "reflect"
 import "fmt"
 
 var _ = fmt.Sprintf("dummy")
@@ -64,5 +65,51 @@ func TestCborSimpleType(t *testing.T) {
 		if n != m || item.(byte) != byte(i) {
 			t.Errorf("fail codec simpletype extended: %v %v %v", n, m, item)
 		}
+	}
+}
+
+type testLocal byte
+
+func TestUndefined(t *testing.T) {
+	ref, buf := Undefined(simpleUndefined), make([]byte, 16)
+	n := Encode(ref, buf)
+	val, m := Decode(buf[:n])
+	if n != m {
+		t.Errorf("expected %v got %v", n, m)
+	} else if !reflect.DeepEqual(ref, val) {
+		t.Errorf("expected %v got %v", ref, val)
+	}
+	// test unknown type.
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		Encode(testLocal(10), buf)
+	}()
+}
+
+func TestIndefinite(t *testing.T) {
+	buf := make([]byte, 16)
+
+	encodeBytesStart(buf)
+	if IsIndefiniteBytes(Indefinite(buf[0])) == false {
+		t.Errorf("failed")
+	}
+
+	encodeTextStart(buf)
+	if IsIndefiniteText(Indefinite(buf[0])) == false {
+		t.Errorf("failed")
+	}
+
+	encodeArrayStart(buf)
+	if IsIndefiniteArray(Indefinite(buf[0])) == false {
+		t.Errorf("failed")
+	}
+
+	encodeMapStart(buf)
+	if IsIndefiniteMap(Indefinite(buf[0])) == false {
+		t.Errorf("failed")
 	}
 }
