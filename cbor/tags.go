@@ -46,7 +46,7 @@ const ( // pre-defined tag values
 	tagNegBignum              // as []bytes
 	tagDecimalFraction        // decimal fraction as array of [2]num
 	tagBigFloat               // as array of [2]num
-	// unasigned 6..20
+	// unassigned 6..20
 	// TODO: tagBase64URL, tagBase64, tagBase16
 	tagBase64URL = iota + 15 // interpret []byte as base64 format
 	tagBase64                // interpret []byte as base64 format

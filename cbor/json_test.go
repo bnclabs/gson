@@ -164,8 +164,6 @@ func TestScanToken(t *testing.T) {
 		`{"10":true10`,
 		`(`,
 		`"`,
-		`"hello\h"`,
-		`"hello`,
 	}
 	for _, tcase := range testcases {
 		panicfn(tcase)
@@ -199,4 +197,126 @@ func TestByteString(t *testing.T) {
 	buf, out := make([]byte, 16), make([]byte, 16)
 	n := encodeBytes([]byte{0xf5}, buf)
 	NewDefaultConfig().ToJson(buf[:n], out)
+}
+
+func BenchmarkParseJsonN(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson("null", out)
+	}
+}
+
+func BenchmarkToJsonN(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson("null", buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
+}
+
+func BenchmarkParseJsonI(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson("123456567", out)
+	}
+}
+
+func BenchmarkToJsonI(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson("123456567", buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
+}
+
+func BenchmarkParseJsonF(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson("1234.12312", out)
+	}
+}
+
+func BenchmarkToJsonF(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson("1234.12312", buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
+}
+
+func BenchmarkParseJsonB(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson("false", out)
+	}
+}
+
+func BenchmarkToJsonB(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson("false", buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
+}
+
+func BenchmarkParseJsonS(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`, out)
+	}
+}
+
+func BenchmarkToJsonS(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`, buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
+}
+
+func BenchmarkParseJsonA(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson(` [null,true,false,10,"tru\"e"]`, out)
+	}
+}
+
+func BenchmarkToJsonA(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(` [null,true,false,10,"tru\"e"]`, buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
+}
+
+func BenchmarkParseJsonM(b *testing.B) {
+	out := make([]byte, 1024)
+	config := NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		config.ParseJson(
+			`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`,
+			out)
+	}
+}
+func BenchmarkToJsonM(b *testing.B) {
+	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(
+		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`,
+		buf)
+	for i := 0; i < b.N; i++ {
+		config.ToJson(buf[:n], out)
+	}
 }

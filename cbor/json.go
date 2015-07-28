@@ -3,7 +3,6 @@ package cbor
 import "strconv"
 import "unicode"
 import "math"
-import "encoding/json"
 import "encoding/binary"
 
 //---- JSON to CBOR
@@ -16,6 +15,12 @@ import "encoding/binary"
 var nullStr = "null"
 var trueStr = "true"
 var falseStr = "false"
+
+// tag 37 is un-assigned as per spec and used here to encode
+// json-string, the difficulty is that JSON string are
+// not really utf8 encoded string (mostly meant for human
+// readability).
+const tagJsonString byte = 37
 
 func scanToken(txt string, out []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.Ws)
@@ -191,13 +196,10 @@ func scanString(txt string, out []byte) (string, int) {
 		} else if ch == '\\' {
 			skipchar = true
 		} else if ch == '"' {
-			str := bytes2str(out[10:])
 			end := off + 2
-			// use encoding/json for unmarshaling string.
-			if err := json.Unmarshal(str2bytes(txt[:end]), &str); err != nil {
-				panic(err)
-			}
-			return txt[end:], encodeText(str, out)
+			n := encodeTag(uint64(tagJsonString), out)
+			n += encodeText(txt[1:end-1], out[n:])
+			return txt[end:], n
 		}
 	}
 	panic(ErrorExpectedString)
@@ -256,8 +258,9 @@ func decodeFloat32Tojson(buf, out []byte) (int, int) {
 }
 
 func decodeFloat64Tojson(buf, out []byte) (int, int) {
-	item, n := decodeType0Info27(buf)
-	f := math.Float64frombits(item.(uint64))
+	item, n := uint64(binary.BigEndian.Uint64(buf[1:])), 9
+	// item, n := decodeType0Info27(buf) => to avoid memory allocation.
+	f := math.Float64frombits(item)
 	out = strconv.AppendFloat(out[:0], f, 'f', 6, 64)
 	return n, len(out)
 }
@@ -326,13 +329,6 @@ func decodeType1Info27Tojson(buf, out []byte) (int, int) {
 	return n, len(out)
 }
 
-func decodeType3Tojson(buf, out []byte) (int, int) {
-	ln, n := decodeLength(buf)
-	data, _ := json.Marshal(bytes2str(buf[n : n+ln]))
-	copy(out, data)
-	return n + ln, len(data)
-}
-
 func decodeType4IndefiniteTojson(buf, out []byte) (int, int) {
 	brkstp := hdr(type7, itemBreak)
 	out[0] = '['
@@ -369,6 +365,14 @@ func decodeType5IndefiniteTojson(buf, out []byte) (int, int) {
 	}
 	out[m-1] = '}'
 	return n + 1, m
+}
+
+func decodeTagJsonString(buf, out []byte) (int, int) {
+	ln, n := decodeLength(buf[2:])
+	out[0] = '"'
+	copy(out[1:], buf[2+n:2+n+ln])
+	out[ln+1] = '"'
+	return 2 + n + ln, ln + 2
 }
 
 // ---- decoders
@@ -425,7 +429,7 @@ func init() {
 	//-- type3                  (string)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type3, byte(i))] = decodeType3Tojson
+		cborTojson[hdr(type3, byte(i))] = makePanic(ErrorUnexpectedText)
 	}
 	// 1st-byte 28..31
 	cborTojson[hdr(type3, 28)] = makePanic(ErrorInfoReserved)
@@ -461,7 +465,7 @@ func init() {
 		cborTojson[hdr(type6, i)] = makePanic(ErrorTagNotSupported)
 	}
 	// 1st-byte 24..27
-	cborTojson[hdr(type6, info24)] = makePanic(ErrorTagNotSupported)
+	cborTojson[hdr(type6, info24)] = decodeTagJsonString
 	cborTojson[hdr(type6, info25)] = makePanic(ErrorTagNotSupported)
 	cborTojson[hdr(type6, info26)] = makePanic(ErrorTagNotSupported)
 	cborTojson[hdr(type6, info27)] = makePanic(ErrorTagNotSupported)

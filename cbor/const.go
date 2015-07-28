@@ -65,5 +65,8 @@ var ErrorSimpleType = errors.New("cbor.simpleType")
 // ErrorFloat16 simple type not supported.
 var ErrorFloat16 = errors.New("cbor.float16")
 
+// ErrorUnexpectedText should be prefixed by tagJsonString.
+var ErrorUnexpectedText = errors.New("cbor.unexpectedText")
+
 // ErrorBreakcode simple type not supported with breakcode.
 var ErrorBreakcode = errors.New("cbor.breakcode")

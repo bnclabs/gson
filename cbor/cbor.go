@@ -33,15 +33,7 @@ func EncodeSmallInt(item int8, buf []byte) int {
 // EncodeSimpleType that falls outside the golang native type.
 // code points 0..19 and 32..255
 func EncodeSimpleType(typcode byte, buf []byte) int {
-	if typcode < 20 {
-		buf[0] = hdr(type7, typcode)
-		return 1
-	} else if typcode < 32 {
-		panic("simpletype.lessthan32")
-	}
-	buf[0] = hdr(type7, simpleTypeByte)
-	buf[1] = typcode
-	return 2
+	return encodeSimpleType(typcode, buf)
 }
 
 // Encode golang data into cbor binary.

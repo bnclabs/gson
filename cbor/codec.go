@@ -286,6 +286,18 @@ func encodeUndefined(buf []byte) int {
 	return 1
 }
 
+func encodeSimpleType(typcode byte, buf []byte) int {
+	if typcode < 20 {
+		buf[0] = hdr(type7, typcode)
+		return 1
+	} else if typcode < 32 {
+		panic("simpletype.lessthan32")
+	}
+	buf[0] = hdr(type7, simpleTypeByte)
+	buf[1] = typcode
+	return 2
+}
+
 //---- decode functions
 
 func decodeNull(buf []byte) (interface{}, int) {
@@ -366,9 +378,16 @@ func decodeType1Info27(buf []byte) (interface{}, int) {
 }
 
 func decodeLength(buf []byte) (int, int) {
-	lbyte := (buf[0] & 0x1f) | type0 // fix the type from Type*->type0
-	ln, n := cborDecoders[lbyte](buf)
-	return int(ln.(uint64)), n
+	if y := info(buf[0]); y < info24 {
+		return int(y), 1
+	} else if y == info24 {
+		return int(buf[1]), 2
+	} else if y == info25 {
+		return int(binary.BigEndian.Uint16(buf[1:])), 3
+	} else if y == info26 {
+		return int(binary.BigEndian.Uint32(buf[1:])), 5
+	}
+	return int(binary.BigEndian.Uint64(buf[1:])), 9 // info27
 }
 
 func decodeType2(buf []byte) (interface{}, int) {
