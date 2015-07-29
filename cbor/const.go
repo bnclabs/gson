@@ -70,3 +70,9 @@ var ErrorUnexpectedText = errors.New("cbor.unexpectedText")
 
 // ErrorBreakcode simple type not supported with breakcode.
 var ErrorBreakcode = errors.New("cbor.breakcode")
+
+// ErrorExpectedCborPointer expect a cbor-pointer
+var ErrorExpectedCborPointer = errors.New("cbor.expectedCborPointer")
+
+// ErrorExpectedJsonPointer expect a json-pointer
+var ErrorExpectedJsonPointer = errors.New("cbor.expectedJsonPointer")
