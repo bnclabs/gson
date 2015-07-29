@@ -1,5 +1,8 @@
 package cbor
 
+import "strconv"
+import "bytes"
+
 const maxPartSize int = 1024
 
 // FromJsonPointer converts json path in RFC-6901 into cbor format,
@@ -82,4 +85,111 @@ func ToJsonPointer(bin []byte, out []byte) int {
 		}
 	}
 	return n
+}
+
+func lookup(part, doc []byte) (start, end int) {
+	if len(part) == 0 {
+		return 0, len(doc)
+
+	} else if doc[0] == hdr(type4, byte(indefiniteLength)) {
+		var index int
+		var err error
+		if part[0] == '-' {
+			index = -1
+		} else if index, err = strconv.Atoi(bytes2str(part)); err != nil {
+			panic(ErrorInvalidArrayOffset)
+		}
+		n := arrayIndex(doc[1:], index)
+		m := itemsEnd(doc[n:])
+		return n, n + m
+
+	} else if doc[0] == hdr(type5, byte(indefiniteLength)) {
+		n := mapIndex(doc[1:], part)
+		m := itemsEnd(doc[n:])   // key
+		p := itemsEnd(doc[n+m:]) // value
+		return n + m, n + m + p
+
+	}
+	panic(ErrorInvalidPointer)
+}
+
+func arrayIndex(arr []byte, index int) int {
+	count, n, brkstp := 0, 0, hdr(type7, itemBreak)
+	for {
+		if count == index {
+			return n
+		}
+		m := itemsEnd(arr[n:])
+		if arr[m] == brkstp && index == -1 {
+			return n
+		}
+		n += m
+		count++
+	}
+}
+
+func mapIndex(buf []byte, part []byte) int {
+	n, brkstp := 0, hdr(type7, itemBreak)
+	for n < len(buf) {
+		if buf[n] == brkstp {
+			panic(ErrorNoKey)
+		}
+		m := itemsEnd(buf[n:]) // key
+		if bytes.Compare(part, buf[n:m]) == 0 {
+			return n
+		}
+		p := itemsEnd(buf[n+m:]) // value
+		n += m + p
+	}
+	panic(ErrorMalformedDocument)
+}
+
+func itemsEnd(buf []byte) int {
+	brkstp := hdr(type7, itemBreak)
+	if m := major(buf[0]); m == type0 || m == type1 {
+		i := info(buf[0])
+		if i < info24 {
+			return 1
+		}
+		return (1 << (i - info24)) + 1
+
+	} else if m == type4 && info(buf[0]) == indefiniteLength {
+		n := 1 // skip indefiniteLength
+		n += arrayIndex(buf[n:], -1)
+		return n + itemsEnd(buf[n:]) + 1 // skip brkstp
+
+	} else if m == type5 && info(buf[0]) == indefiniteLength {
+		n := 1 // skip indefiniteLength
+		for n < len(buf) {
+			if buf[n] == brkstp {
+				return n + 1
+			}
+			n += itemsEnd(buf[n:]) // key
+			n += itemsEnd(buf[n:]) // value
+		}
+	}
+	panic(ErrorInvalidDocument)
+}
+
+func get(pointer []byte, doc []byte) []byte {
+	if !IsIndefiniteText(Indefinite(pointer[0])) {
+		panic(ErrorExpectedCborPointer)
+	}
+	i, brkstp := 1, hdr(type7, itemBreak)
+	n, m := 0, len(doc)
+	if pointer[i] == brkstp { // pointer is empty ""
+		return doc[n:m]
+	}
+	for i < len(pointer) && pointer[i] != brkstp {
+		doc = doc[n:m]
+		if pointer[i] == hdr(type6, info24) && pointer[i+1] == tagJsonString {
+			i += 2
+			ln, j := decodeLength(pointer[i:])
+			n, m = lookup(pointer[i+j:i+j+ln], doc)
+			i += j + ln
+			continue
+		}
+		panic(ErrorInvalidPointer)
+	}
+	return doc
 }

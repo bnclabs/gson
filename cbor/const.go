@@ -76,3 +76,18 @@ var ErrorExpectedCborPointer = errors.New("cbor.expectedCborPointer")
 
 // ErrorExpectedJsonPointer expect a json-pointer
 var ErrorExpectedJsonPointer = errors.New("cbor.expectedJsonPointer")
+
+// ErrorInvalidArrayOffset
+var ErrorInvalidArrayOffset = errors.New("cbor.invalidArrayOffset")
+
+// ErrorInvalidPointer
+var ErrorInvalidPointer = errors.New("cbor.invalidPointer")
+
+// ErrorNoKey
+var ErrorNoKey = errors.New("cbor.noKey")
+
+// ErrorMalformedDocument
+var ErrorMalformedDocument = errors.New("cbor.malformedDocument")
+
+// ErrorInvalidDocument
+var ErrorInvalidDocument = errors.New("cbor.invalidDocument")
