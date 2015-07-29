@@ -1,8 +1,6 @@
 package gson
 
-import (
-	"unicode/utf8"
-)
+import "unicode/utf8"
 
 func parsePointer(s []byte) [][]byte {
 	if len(s) == 0 {
