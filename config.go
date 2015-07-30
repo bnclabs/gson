@@ -1,7 +1,5 @@
 package gson
 
-import "fmt"
-
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 
@@ -41,28 +39,18 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 }
 
 // Parse input JSON text to a single go-native value.
-func (config *Config) Parse(txt string) (interface{}, string, error) {
-	tok, remtxt, err := scanToken(txt, config)
-	if err != nil {
-		err = fmt.Errorf("error `%v` before %v", err, len(txt)-len(remtxt))
-		return nil, "", err
-	}
-	return tok, remtxt, nil
+func (config *Config) Parse(txt string) (interface{}, string) {
+	return scanToken(txt, config)
 }
 
 // ParseMany will parse input JSON text to one or more go native
 // values.
-func (config *Config) ParseMany(txt string) ([]interface{}, string, error) {
+func (config *Config) ParseMany(txt string) ([]interface{}, string) {
 	var values []interface{}
-
-	ln := len(txt)
+	var tok interface{}
 	for len(txt) > 0 {
-		tok, txt, err := scanToken(txt, config)
-		if err != nil {
-			err = fmt.Errorf("error `%v` before %v", err, ln-len(txt))
-			return nil, "", err
-		}
+		tok, txt = scanToken(txt, config)
 		values = append(values, tok)
 	}
-	return values, txt, nil
+	return values, txt
 }

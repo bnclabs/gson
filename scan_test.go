@@ -6,6 +6,9 @@ import "io/ioutil"
 import "os"
 import "reflect"
 import "testing"
+import "fmt"
+
+var _ = fmt.Sprintf("dummy")
 
 var testcases = []string{
 	// null
@@ -34,21 +37,99 @@ var testcases = []string{
 	`"tru\te"`,
 	`"tru\u0123e"`,
 	`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`,
+	`"a\u1234"`,
+	`"http:\/\/"`,
+	`"invalid: \uD834x\uDD1E"`,
+	`"\"foobar\"\u003chtml\u003e [\u2028 \u2029]"`,
 	// array
 	` [  ] `,
 	`[]`,
 	` [ null, true, false, 10, "tru\"e" ] `,
+	`[{}]`,
 	// object
 	` { "a": null, "b" : true,"c":false, "d\"":10, "e":"tru\"e" } `,
 	` {  } `,
 	`{}`,
+	// from encoding/json
+	`true`,
+	`1`,
+	`1.2`,
+	`-5`,
+	`2`,
+	`2`,
+	`2`,
+	`2`,
+	"null",
+	`{"X": [1,2,3], "Y": 4}`,
+	`{"x": 1}`,
+	`{"F1":1,"F2":2,"F3":3}`,
+	`{"F1":1,"F2":2,"F3":3}`,
+	`{"k1":1,"k2":"s","k3":[1,2.0,3e-3],"k4":{"kk1":"s","kk2":2}}`,
+	`{"k1":1,"k2":"s","k3":[1,2.0,3e-3],"k4":{"kk1":"s","kk2":2}}`,
+	// raw values with whitespace
+	"\n true ",
+	"\t 1 ",
+	"\r 1.2 ",
+	"\t -5 \n",
+	"\t \"a\\u1234\" \n",
+	// Z has a "-" tag.
+	`{"Y": 1, "Z": 2}`,
+	`{"alpha": "abc", "alphabet": "xyz"}`,
+	`{"alpha": "abc"}`,
+	`{"alphabet": "xyz"}`,
+	// array tests
+	`[1, 2, 3]`,
+	`[1, 2, 3]`,
+	`[1, 2, 3]`,
+	// empty array to interface test
+	`[]`,
+	`null`,
+	`{"T":[]}`,
+	`{"T":null}`,
+	// unmarshal interface test
+	`{"T":false}`,
+	`{"T":false}`,
+	`[{"T":false}]`,
+	`[{"T":false}]`,
+	`{"M":{"T":false}}`,
+	// UnmarshalText interface test
+	`"X"`,
+	`"X"`,
+	`["X"]`,
+	`["X"]`,
+	`{"M":"X"}`,
+	`{"hello": 1}`,
+	`{"X": 1,"Y":2}`,
+	`{"X": 1,"Y":2}`,
+	// invalid UTF-8 is coerced to valid UTF-8.
+	"\"hello\xffworld\"",
+	"\"hello\xc2\xc2world\"",
+	"\"hello\xc2\xffworld\"",
+	"\"hello\\ud800world\"",
+	"\"hello\\ud800\\ud800world\"",
+	"\"hello\\ud800\\ud800world\"",
+	"\"hello\xed\xa0\x80\xed\xb0\x80world\"",
+	`{"2009-11-10T23:00:00Z": "hello world"}`,
+}
+
+func TestScan(t *testing.T) {
+	var ref interface{}
+
+	config := NewDefaultConfig()
+	for _, tcase := range testcases {
+		t.Logf("%v", tcase)
+		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
+			t.Errorf("error parsing i/p %q: %v", tcase, err)
+		}
+		if val, _ := config.Parse(tcase); reflect.DeepEqual(val, ref) == false {
+			t.Errorf("%q should be parsed as: %v, got %v", tcase, ref, val)
+		}
+	}
 }
 
 func TestScanNull(t *testing.T) {
 	config := NewDefaultConfig()
-	if val, remtxt, err := config.Parse("null"); err != nil {
-		t.Errorf("error parsing `null`: %v", err)
-	} else if remtxt != "" {
+	if val, remtxt := config.Parse("null"); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if val != nil {
 		t.Errorf("`null` should be parsed to nil")
@@ -64,9 +145,7 @@ func TestScanBool(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &refval); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if val, remtxt, err := config.Parse(test); err != nil {
-			t.Errorf("error parsing %q %v", test, err)
-		} else if remtxt != "" {
+		if val, remtxt := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(bool); !ok || v != refval.(bool) {
 			t.Errorf("%q should be parsed to %v", test, refval)
@@ -83,21 +162,17 @@ func TestScanIntegers(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if val, remtxt, err := config.Parse(test); err != nil {
-			t.Errorf("error parsing %q: %v", test, err)
-		} else if remtxt != "" {
+		if val, remtxt := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(int); !ok || v != int(ref.(float64)) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
 		config = NewConfig(StringNumber, AnsiSpace)
-		if val, remtxt, err := config.Parse(test); err != nil {
-			t.Errorf("error parsing %q: %v", test, err)
-		} else if remtxt != "" {
+		if val, remtxt := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(Number); !ok || string(v) != test {
-			t.Errorf("%q should be parsed as String-number")
+			t.Errorf("expected {%T,%v}, got {%T,%v} %v", v, v, test, test, ok)
 		}
 	}
 
@@ -108,28 +183,28 @@ func TestScanIntegers(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if val, remtxt, err := config.Parse(test); err != nil {
-			t.Errorf("error parsing %q: %v", test, err)
-		} else if remtxt != "" {
-			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
-		} else if v, ok := val.(float64); !ok || v != ref.(float64) {
+		val, _ := config.Parse(test)
+		if v, ok := val.(float64); !ok || v != ref.(float64) {
 			t.Errorf("%q int should be parsed to %v", test, ref)
 		}
 
-		config = NewConfig(IntNumber, AnsiSpace)
-		if err := json.Unmarshal([]byte(test), &ref); err != nil {
-			t.Fatalf("error parsing i/p %q: %v", test, err)
-		}
-		if _, remtxt, err := config.Parse(test); err == nil {
-			t.Errorf("expected error parsing float %q", test)
-		} else if remtxt == test {
-			t.Errorf("expected i/p returned as remaining text")
-		}
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("expected panic")
+				}
+			}()
+			config = NewConfig(IntNumber, AnsiSpace)
+			if err := json.Unmarshal([]byte(test), &ref); err != nil {
+				t.Fatalf("error parsing i/p %q: %v", test, err)
+			}
+			if _, remtxt := config.Parse(test); remtxt == test {
+				t.Errorf("expected %v got %v", test, remtxt)
+			}
+		}()
 
 		config = NewConfig(StringNumber, AnsiSpace)
-		if val, remtxt, err := config.Parse(test); err != nil {
-			t.Errorf("error parsing %q: %v", test, err)
-		} else if remtxt != "" {
+		if val, remtxt := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(Number); !ok || string(v) != test {
 			t.Errorf("%q should be parsed as String-number")
@@ -137,70 +212,77 @@ func TestScanIntegers(t *testing.T) {
 	}
 }
 
-func TestScan(t *testing.T) {
-	var ref interface{}
-
-	config := NewDefaultConfig()
-	for _, tcase := range testcases {
-		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
-			t.Errorf("error parsing i/p %q: %v", tcase, err)
-		}
-		if val, _, err := config.Parse(tcase); err != nil {
-			t.Errorf("error parsing %q: %v", tcase, err)
-		} else if reflect.DeepEqual(val, ref) == false {
-			t.Errorf("%q should be parsed as: %v, got %v", tcase, ref, val)
-		}
-	}
-}
-
 func TestScanEmpty(t *testing.T) {
 	config := NewDefaultConfig()
-	if _, _, err := scanToken("", config); err != ErrorEmptyText {
-		t.Errorf("fail expecting ErrorEmptyText: %v", err)
-	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("expected panic")
+		}
+	}()
+	scanToken("", config)
 }
 
 func TestScanMalformed(t *testing.T) {
-	config := NewDefaultConfig()
-	// malformed true
-	if _, _, err := scanToken("trre", config); err != ErrorExpectedTrue {
-		t.Errorf("fail expecting ErrorExpectedTrue: %v", err)
+	config := NewConfig(IntNumber, AnsiSpace)
+	testcases := []string{
+		"nill",  // malformed null
+		"trre",  // malformed true
+		"fllse", // malformed false
+		// malformed string
+		`"`,
+		`"  `,
+		`"汉语 `,
+		"\xed\xa0\x80", // RuneError
+		"\xed\xbf\xbf", // RuneError
+		`"g-clef: \uD834\uDD1E"`,
+		// malformed array
+		"[",
+		"[10",
+		"[10 20",
+		// malformed object
+		"{10:10}",
+		`{"" 10}`,
+		`{"10" 10}`,
+		`{"10": nill}`,
+		`{"10": null`,
+		` {"10": null 20`,
+		"<>", // malformed token
+		// syntax errors
+		`{"X": "foo", "Y"}`,
+		`[1, 2, 3+]`,
+		`{"X":12x}`,
+		"tru",
+		"fals",
+		"nul",
+		"123e",
+		`"hello`,
+		`[1,2,3`,
+		`{"key":1`,
+		`{"key":1,`,
+		// raw value errors
+		"\x01 42",
+		"\x01 true",
+		"\x01 1.2",
+		" 3.4 \x01",
+		"\x01 \"string\"",
+		// bad-utf8
+		"hello\xffworld",
+		"",
+		"\xff",
+		"\xff\xff",
+		"a\xffb",
+		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e",
 	}
-	// malformed false
-	if _, _, err := scanToken("fllse", config); err != ErrorExpectedFalse {
-		t.Errorf("fail expecting ErrorExpectedFalse: %v", err)
-	}
-	// malformed null
-	if _, _, err := scanToken("nill", config); err != ErrorExpectedNil {
-		t.Errorf("fail expecting ErrorExpectedNil: %v", err)
-	}
-	// malformed array
-	if _, _, err := scanToken("[nill]", config); err != ErrorExpectedNil {
-		t.Errorf("fail expecting ErrorExpectedNil in array: %v", err)
-	}
-	if _, _, err := scanToken("[10", config); err != ErrorExpectedClosearray {
-		t.Errorf("fail expecting ErrorExpectedClosearray: %v", err)
-	}
-	// malformed object
-	if _, _, err := scanToken("{10:10}", config); err != ErrorExpectedKey {
-		t.Errorf("fail expecting ErrorExpectedString: %v", err)
-	}
-	if _, _, err := scanToken(`{"" 10}`, config); err != ErrorExpectedKey {
-		t.Errorf("fail expecting ErrorExpectedKey: %v", err)
-	}
-	if _, _, err := scanToken(`{"10" 10}`, config); err != ErrorExpectedColon {
-		t.Errorf("fail expecting ErrorExpectedColon: %v", err)
-	}
-	if _, _, err := scanToken(`{"10": nill}`, config); err != ErrorExpectedNil {
-		t.Errorf("fail expecting ErrorExpectedNil: %v", err)
-	}
-	_, _, err := scanToken(`{"10": null`, config)
-	if err != ErrorExpectedCloseobject {
-		t.Errorf("fail expecting ErrorExpectedCloseobject: %v", err)
-	}
-	// malformed token
-	if _, _, err := scanToken("<>", config); err != ErrorExpectedToken {
-		t.Errorf("fail expecting ErrorExpectedToken: %v", err)
+	for _, tcase := range testcases {
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("expected panic")
+				}
+			}()
+			t.Logf("%v", tcase)
+			scanToken(tcase, config)
+		}()
 	}
 }
 
@@ -212,12 +294,10 @@ func TestCodeJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &ref); err != nil {
 		t.Errorf("error parsing codeJSON: %v", err)
 	}
-	if val, remtxt, err := config.Parse(string(data)); err != nil {
-		t.Errorf("error parsing codeJSON: %v", err)
-	} else if remtxt != "" {
+	if val, remtxt := config.Parse(string(data)); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if reflect.DeepEqual(val, ref) == false {
-		t.Error("codeJSON parsing failed with reference: %v", err)
+		t.Error("codeJSON parsing failed with reference: %v", ref)
 	}
 }
 
@@ -302,4 +382,54 @@ func codeJSON() []byte {
 		panic(err)
 	}
 	return data
+}
+
+var allValueIndent, allValueCompact, pallValueIndent, pallValueCompact []byte
+var mapValue []byte
+
+func init() {
+	var value interface{}
+	var err error
+
+	allValueIndent, err = ioutil.ReadFile("testdata/allValueIndent")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = json.Unmarshal(allValueIndent, &value); err != nil {
+		panic(err)
+	}
+	if allValueCompact, err = json.Marshal(value); err != nil {
+		panic(err)
+	}
+
+	pallValueIndent, err = ioutil.ReadFile("testdata/pallValueIndent")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = json.Unmarshal(pallValueIndent, &value); err != nil {
+		panic(err)
+	}
+	if pallValueCompact, err = json.Marshal(value); err != nil {
+		panic(err)
+	}
+
+	mapValue, err = ioutil.ReadFile("testdata/map")
+	if err != nil {
+		panic(err)
+	}
+
+	// composite tests
+	testcases = append(testcases, []string{
+		string(mapValue),
+		string(allValueIndent),
+		string(allValueCompact),
+		string(allValueIndent),
+		string(allValueCompact),
+		string(pallValueIndent),
+		string(pallValueCompact),
+		string(pallValueIndent),
+		string(pallValueCompact),
+	}...)
 }

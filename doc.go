@@ -31,9 +31,8 @@ func NewDocument(
 	switch v := value.(type) {
 	case []byte:
 		txt := bytes2str(v)
-		if m, _, err := config.Parse(txt); err != nil {
-			return nil, err
-		} else if val, ok := m.(map[string]interface{}); !ok {
+		m, _ := config.Parse(txt)
+		if val, ok := m.(map[string]interface{}); !ok {
 			return nil, ErrorInvalidDocumentType
 		} else {
 			doc.Mixin(val)

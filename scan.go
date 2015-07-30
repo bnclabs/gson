@@ -18,11 +18,11 @@ var falseLiteral = "false"
 // b. text remaining to be parsed.
 // c. error in the i/p text.
 // calling this function will scan for exactly one JSON value
-func scanToken(txt string, config *Config) (interface{}, string, error) {
+func scanToken(txt string, config *Config) (interface{}, string) {
 	txt = skipWS(txt, config.Ws)
 
 	if len(txt) < 1 {
-		return nil, txt, ErrorEmptyText
+		panic(ErrorJsonEmpty)
 	}
 
 	if digitCheck[txt[0]] == 1 {
@@ -30,99 +30,83 @@ func scanToken(txt string, config *Config) (interface{}, string, error) {
 	}
 
 	var tok interface{}
-	var err error
 
 	switch txt[0] {
 	case 'n':
 		if len(txt) >= 4 && txt[:4] == nullLiteral {
-			return nil, txt[4:], nil
+			return nil, txt[4:]
 		}
-		return nil, txt, ErrorExpectedNil
+		panic(ErrorExpectedNil)
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == trueLiteral {
-			return true, txt[4:], nil
+			return true, txt[4:]
 		}
-		return nil, txt, ErrorExpectedTrue
+		panic(ErrorExpectedTrue)
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == falseLiteral {
-			return false, txt[5:], nil
+			return false, txt[5:]
 		}
-		return nil, txt, ErrorExpectedFalse
+		panic(ErrorExpectedFalse)
 
 	case '"':
-		s, remtxt, err := scanString(str2bytes(txt))
-		return bytes2str(s), bytes2str(remtxt), err
+		s, remtxt := scanString(str2bytes(txt))
+		return string(s), bytes2str(remtxt)
 
 	case '[':
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
-			return nil, txt, ErrorExpectedClosearray
+			panic(ErrorExpectedClosearray)
 		} else if txt[0] == ']' {
-			return []interface{}{}, txt[1:], nil
+			return []interface{}{}, txt[1:]
 		}
 		arr := make([]interface{}, 0, len(txt)/10)
 		for {
-			tok, txt, err = scanToken(txt, config)
-			if err != nil {
-				return nil, txt, err
-			}
+			tok, txt = scanToken(txt, config)
 			arr = append(arr, tok)
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				return nil, txt, ErrorExpectedClosearray
+				panic(ErrorExpectedClosearray)
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
-				return nil, txt, ErrorExpectedClosearray
+				panic(ErrorExpectedClosearray)
 			}
 		}
-		return arr, txt[1:], nil
+		return arr, txt[1:]
 
 	case '{':
 		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == '}' {
-			return map[string]interface{}{}, txt[1:], nil
+			return map[string]interface{}{}, txt[1:]
 		} else if txt[0] != '"' {
-			return nil, txt, ErrorExpectedKey
+			panic(ErrorExpectedKey)
 		}
 		m := make(map[string]interface{})
 		for {
-			s, remtxt, err := scanString(str2bytes(txt))
+			s, remtxt := scanString(str2bytes(txt))
 			key := bytes2str(s)
 			txt = bytes2str(remtxt)
-			if err != nil {
-				return nil, txt, err
-			} else if len(key) < 1 {
-				return nil, txt, ErrorExpectedKey
-			}
 
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				return nil, txt, ErrorExpectedColon
-			} else if txt[0] != ':' {
-				return nil, txt, ErrorExpectedColon
+			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
+				panic(ErrorExpectedColon)
 			}
-			tok, txt, err = scanToken(skipWS(txt[1:], config.Ws), config)
-			if err != nil {
-				return nil, txt, err
-			}
+			tok, txt = scanToken(skipWS(txt[1:], config.Ws), config)
 			m[key] = tok
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				return nil, txt, ErrorExpectedCloseobject
+				panic(ErrorExpectedCloseobject)
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == '}' {
 				break
 			} else {
-				return nil, txt, ErrorExpectedCloseobject
+				panic(ErrorExpectedCloseobject)
 			}
 		}
-		return m, txt[1:], nil
-
-	default:
-		return nil, txt, ErrorExpectedToken
+		return m, txt[1:]
 	}
+	panic(ErrorExpectedToken)
 }
 
 var spaceCode = [256]byte{ // TODO: size can be optimized
@@ -146,14 +130,16 @@ func skipWS(txt string, ws SpaceKind) string {
 		return ""
 
 	case AnsiSpace:
-		for spaceCode[txt[0]] == 1 {
-			txt = txt[1:]
+		i := 0
+		for i < len(txt) && spaceCode[txt[i]] == 1 {
+			i++
 		}
+		txt = txt[i:]
 	}
 	return txt
 }
 
-func scanNum(txt string, nk NumberKind) (interface{}, string, error) {
+func scanNum(txt string, nk NumberKind) (interface{}, string) {
 	s, e, l := 0, 1, len(txt)
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
@@ -162,14 +148,17 @@ func scanNum(txt string, nk NumberKind) (interface{}, string, error) {
 
 	switch nk {
 	case StringNumber:
-		return Number(txt[s:e]), txt[e:], nil
+		return Number(txt[s:e]), txt[e:]
 
 	case IntNumber:
 		num, err := strconv.Atoi(string(txt[s:e]))
-		return num, txt[e:], err
+		if err != nil {
+			panic(ErrorExpectedJsonInteger)
+		}
+		return num, txt[e:]
 	}
-	num, err := strconv.ParseFloat(string(txt[s:e]), 64)
-	return num, txt[e:], err
+	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
+	return num, txt[e:]
 }
 
 var escapeCode = [256]byte{ // TODO: size can be optimized
@@ -184,9 +173,9 @@ var escapeCode = [256]byte{ // TODO: size can be optimized
 	't':  '\t',
 }
 
-func scanString(txt []byte) ([]byte, []byte, error) {
+func scanString(txt []byte) ([]byte, []byte) {
 	if len(txt) < 2 {
-		return nil, txt, ErrorExpectedString
+		panic(ErrorExpectedString)
 	}
 
 	e := 1
@@ -201,19 +190,19 @@ func scanString(txt []byte) ([]byte, []byte, error) {
 		}
 		r, size := utf8.DecodeRune(txt[e:])
 		if r == utf8.RuneError && size == 1 {
-			return nil, txt, ErrorExpectedString
+			break
 		}
 		e += size
 		if e == len(txt) {
-			return nil, txt, ErrorExpectedString
+			panic(ErrorExpectedString)
 		}
 	}
 
 	if txt[e] == '"' { // done we have nothing to unquote
-		return txt[1:e], txt[e+1:], nil
+		return txt[1:e], txt[e+1:]
 	}
 
-	out := make([]byte, len(txt)+2*utf8.UTFMax)
+	out := make([]byte, (len(txt)+2)*utf8.UTFMax)
 	oute := copy(out, txt[:e]) // copy so far
 
 loop:
@@ -228,7 +217,7 @@ loop:
 			if txt[e+1] == 'u' {
 				r := getu4(txt[e:])
 				if r < 0 { // invalid
-					return nil, txt, ErrorExpectedString
+					panic(ErrorExpectedString)
 				}
 				e += 6
 				if utf16.IsSurrogate(r) {
@@ -251,7 +240,7 @@ loop:
 			}
 
 		case c < ' ': // control character is invalid
-			return nil, txt, ErrorExpectedString
+			panic(ErrorExpectedString)
 
 		case c < utf8.RuneSelf: // ASCII
 			out[oute] = c
@@ -266,9 +255,9 @@ loop:
 	}
 
 	if out[oute] == '"' {
-		return out[1:oute], txt[e:], nil
+		return out[1:oute], txt[e:]
 	}
-	return nil, txt, ErrorExpectedString
+	panic(ErrorExpectedString)
 }
 
 // getu4 decodes \uXXXX from the beginning of s, returning the hex value,

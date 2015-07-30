@@ -5,7 +5,17 @@ import "errors"
 // MetaFields for a document.
 var MetaFields = []string{"_id"}
 
-//**** error codes ****//
+// ErrorJsonEmpty to scan
+var ErrorJsonEmpty = errors.New("gson.jsonEmpty")
+
+// ErrorExpectedJsonInteger expected a `integer` while scanning.
+var ErrorExpectedJsonInteger = errors.New("gson.expectedJsonInteger")
+
+// ErrorExpectedJsonFloat expected a `float` while scanning.
+var ErrorExpectedJsonFloat = errors.New("gson.expectedJsonFloat")
+
+// ErrorExpectedJsonKey expected a `key` while scanning a map.
+var ErrorExpectedJsonKey = errors.New("gson.expectedJsonKey")
 
 // ErrorInvalidDocumentText is returned for misconstructed JSON text.
 var ErrorInvalidDocumentText = errors.New("gson.invalidDocumentText")
@@ -19,9 +29,6 @@ var ErrorInvalidValueType = errors.New("gson.invalidValueType")
 // ErrorEmptyDocument is returned when Document does not contain a
 // valid value.
 var ErrorEmptyDocument = errors.New("gson.emptyDocument")
-
-// ErrorEmptyText to scan
-var ErrorEmptyText = errors.New("gson.emptyText")
 
 // ErrorExpectedNil expected a `nil` token while scanning.
 var ErrorExpectedNil = errors.New("gson.exptectedNil")
