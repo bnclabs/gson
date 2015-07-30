@@ -1,3 +1,12 @@
+// Types from golang standard library and custom defined types int
+// this package that are encoded using cbor-tags.
+//
+//   * Epoch : in seconds since epoch.
+//   * EpochMicro: in micro-seconds epoch.
+//   * DecimalFraction: m*(10**e)
+//   * BigFloat: m*(2**e)
+//   * Cbor: a cbor encoded binary data item.
+//   * CborPrefix: to self indentify a binary blog as cbor.
 package cbor
 
 import "time"
@@ -29,7 +38,7 @@ type EpochMicro float64
 type DecimalFraction [2]interface{}
 
 // BigFloat tagged-type, combine an integer mantissa with a base-2
-// scaling factor, m*(10**e). As int64{e,m}.
+// scaling factor, m*(2**e). As int64{e,m}.
 type BigFloat [2]interface{}
 
 // Cbor tagged-type, byte-string of cbor data-item.

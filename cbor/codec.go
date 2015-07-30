@@ -1,5 +1,16 @@
-// codec converts golang native types into cbor binary blob and vice-versa.
-
+// Following golang native types are supported,
+//
+//   * nil, true, false.
+//   * native integer types, and its alias, of all width.
+//   * float32, float64.
+//   * slice of bytes.
+//   * native string.
+//   * slice of interface - []interface{}.
+//   * map of string to interface{} - map[string]interface{}.
+//
+// Custom types defined by this package can also be encoded using cbor.
+//
+//   * Undefined - to encode a data-item as undefined.
 package cbor
 
 import "encoding/binary"

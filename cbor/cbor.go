@@ -1,6 +1,5 @@
-// Package cbor implements RFC-7049 to encode and decode
-// data in
-
+// Package cbor implements RFC-7049 to encode golang data into
+// binary format and vice-versa.
 package cbor
 
 import "time"
@@ -8,7 +7,7 @@ import "math/big"
 import "regexp"
 
 // MaxSmallInt is the maximum integer value that can be stored
-// as assiative value.
+// as associative value.
 const MaxSmallInt = 23
 
 // Undefined type as part of simple-type codepoint-23.

@@ -1,16 +1,19 @@
+// Package also provides encoding algorithm from json to cbor
+// and vice-versa.
+//
+//   * number can be encoded as integer or float.
+//   * string is wrapped as `tagJsonString` data-item, to avoid
+//     marshalling and unmarshalling json-string to utf8.
+//   * arrays and maps are encoded using indefinite encoding.
+//   * byte-string encoding is not used.
 package cbor
+
+// TODO: encode integer as string itself.
 
 import "strconv"
 import "unicode"
 import "math"
 import "encoding/binary"
-
-//---- JSON to CBOR
-// a. directly uses cbor.codec functions to encode and decode stuff
-// b. number can be encoded as integer or float.
-// c. string is parsed as per encoding/json reference.
-// d. arrays and maps are encoded using indefinite encoding.
-// e. byte-string encoding is not used.
 
 var nullStr = "null"
 var trueStr = "true"
