@@ -26,7 +26,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.Ws)
 
 	if len(txt) < 1 {
-		panic(ErrorEmptyText)
+		panic(ErrorJsonEmpty)
 	}
 
 	if numCheck[txt[0]] == 1 {
@@ -39,21 +39,21 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			n := encodeNull(out)
 			return txt[4:], n
 		}
-		panic(ErrorExpectedNil)
+		panic(ErrorExpectedJsonNil)
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == trueStr {
 			n := encodeTrue(out)
 			return txt[4:], n
 		}
-		panic(ErrorExpectedTrue)
+		panic(ErrorExpectedJsonTrue)
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == falseStr {
 			n := encodeFalse(out)
 			return txt[5:], n
 		}
-		panic(ErrorExpectedFalse)
+		panic(ErrorExpectedJsonFalse)
 
 	case '"':
 		return scanString(txt, out)
@@ -61,7 +61,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 	case '[':
 		n, m := encodeArrayStart(out), 0
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
-			panic(ErrorExpectedClosearray)
+			panic(ErrorExpectedJsonClosearray)
 		} else if txt[0] == ']' {
 			n += encodeBreakStop(out[n:])
 			return txt[1:], n
@@ -70,13 +70,13 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			txt, m = scanToken(txt, out[n:], config)
 			n += m
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				panic(ErrorExpectedClosearray)
+				panic(ErrorExpectedJsonClosearray)
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
-				panic(ErrorExpectedClosearray)
+				panic(ErrorExpectedJsonClosearray)
 			}
 		}
 		n += encodeBreakStop(out[n:])
@@ -89,7 +89,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			n += encodeBreakStop(out[n:])
 			return txt[1:], n
 		} else if txt[0] != '"' {
-			panic(ErrorExpectedKey)
+			panic(ErrorExpectedJsonKey)
 		}
 		var m int
 		for {
@@ -97,26 +97,26 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			n += m
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
-				panic(ErrorExpectedColon)
+				panic(ErrorExpectedJsonColon)
 			}
 			txt, m = scanToken(skipWS(txt[1:], config.Ws), out[n:], config)
 			n += m
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				panic(ErrorExpectedCloseobject)
+				panic(ErrorExpectedJsonCloseobject)
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == '}' {
 				break
 			} else {
-				panic(ErrorExpectedCloseobject)
+				panic(ErrorExpectedJsonCloseobject)
 			}
 		}
 		n += encodeBreakStop(out[n:])
 		return txt[1:], n
 
 	default:
-		panic(ErrorExpectedToken)
+		panic(ErrorExpectedJsonToken)
 	}
 }
 
@@ -156,7 +156,7 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 		}
 	}
 	if nk == IntNumber && flt {
-		panic(ErrorExpectedInteger)
+		panic(ErrorExpectedJsonInteger)
 
 	} else if nk == IntNumber {
 		num, err := strconv.Atoi(txt[s:e])
@@ -185,7 +185,7 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 
 func scanString(txt string, out []byte) (string, int) {
 	if len(txt) < 2 {
-		panic(ErrorExpectedString)
+		panic(ErrorExpectedJsonString)
 	}
 
 	skipchar := false
@@ -202,7 +202,7 @@ func scanString(txt string, out []byte) (string, int) {
 			return txt[end:], n
 		}
 	}
-	panic(ErrorExpectedString)
+	panic(ErrorExpectedJsonString)
 }
 
 var intCheck = [256]byte{}
@@ -394,10 +394,10 @@ func init() {
 	cborTojson[hdr(type0, info26)] = decodeType0Info26Tojson
 	cborTojson[hdr(type0, info27)] = decodeType0Info27Tojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type0, 28)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type0, 29)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type0, 30)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type0, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborTojson[hdr(type0, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type0, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type0, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type0, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type1                  (signed integer)
 	// 1st-byte 0..23
@@ -410,10 +410,10 @@ func init() {
 	cborTojson[hdr(type1, info26)] = decodeType1Info26Tojson
 	cborTojson[hdr(type1, info27)] = decodeType1Info27Tojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type1, 28)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type1, 29)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type1, 30)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type1, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborTojson[hdr(type1, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type1, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type1, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type1, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type2                  (byte string)
 	// 1st-byte 0..27
@@ -432,31 +432,31 @@ func init() {
 		cborTojson[hdr(type3, byte(i))] = makePanic(ErrorUnexpectedText)
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type3, 28)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type3, 29)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type3, 30)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type3, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborTojson[hdr(type3, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type3, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type3, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type3, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type4                  (array)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type4, byte(i))] = makePanic(ErrorExpectedIndefinite)
+		cborTojson[hdr(type4, byte(i))] = makePanic(ErrorDecodeIndefinite)
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type4, 28)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type4, 29)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type4, 30)] = makePanic(ErrorInfoReserved)
+	cborTojson[hdr(type4, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type4, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type4, 30)] = makePanic(ErrorDecodeInfoReserved)
 	cborTojson[hdr(type4, indefiniteLength)] = decodeType4IndefiniteTojson
 
 	//-- type5                  (map)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type5, byte(i))] = makePanic(ErrorExpectedIndefinite)
+		cborTojson[hdr(type5, byte(i))] = makePanic(ErrorDecodeIndefinite)
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type5, 28)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type5, 29)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type5, 30)] = makePanic(ErrorInfoReserved)
+	cborTojson[hdr(type5, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type5, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type5, 30)] = makePanic(ErrorDecodeInfoReserved)
 	cborTojson[hdr(type5, indefiniteLength)] = decodeType5IndefiniteTojson
 
 	//-- type6
@@ -470,15 +470,15 @@ func init() {
 	cborTojson[hdr(type6, info26)] = makePanic(ErrorTagNotSupported)
 	cborTojson[hdr(type6, info27)] = makePanic(ErrorTagNotSupported)
 	// 1st-byte 28..31
-	cborTojson[hdr(type6, 28)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type6, 29)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type6, 30)] = makePanic(ErrorInfoReserved)
-	cborTojson[hdr(type6, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborTojson[hdr(type6, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type6, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type6, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type6, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type7                  (simple values / floats / break-stop)
 	// 1st-byte 0..19
 	for i := byte(0); i < 20; i++ {
-		cborTojson[hdr(type7, i)] = makePanic(ErrorUnassigned)
+		cborTojson[hdr(type7, i)] = makePanic(ErrorDecodeSimpleType)
 	}
 	// 1st-byte 20..23
 	cborTojson[hdr(type7, simpleTypeFalse)] = decodeFalseTojson
@@ -491,8 +491,8 @@ func init() {
 	cborTojson[hdr(type7, flt32)] = decodeFloat32Tojson
 	cborTojson[hdr(type7, flt64)] = decodeFloat64Tojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type7, 28)] = makePanic(ErrorUnassigned)
-	cborTojson[hdr(type7, 29)] = makePanic(ErrorUnassigned)
-	cborTojson[hdr(type7, 30)] = makePanic(ErrorUnassigned)
+	cborTojson[hdr(type7, 28)] = makePanic(ErrorDecodeSimpleType)
+	cborTojson[hdr(type7, 29)] = makePanic(ErrorDecodeSimpleType)
+	cborTojson[hdr(type7, 30)] = makePanic(ErrorDecodeSimpleType)
 	cborTojson[hdr(type7, itemBreak)] = makePanic(ErrorBreakcode)
 }

@@ -38,26 +38,6 @@ func TestCborSimpleType(t *testing.T) {
 
 	}
 
-	// test encodint type7/simpletype reserved
-	for i := 20; i < 32; i++ {
-		func() {
-			defer func() {
-				if r := recover(); r == nil {
-					t.Errorf("expected panic")
-				}
-			}()
-			EncodeSimpleType(byte(i), buf)
-		}()
-	}
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		Decode([]byte{0xf8, 31})
-	}()
-
 	// test decoding typ7/simpletype extended byte
 	for i := 32; i < 255; i++ {
 		n := EncodeSimpleType(byte(i), buf)

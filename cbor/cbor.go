@@ -30,8 +30,8 @@ func EncodeSmallInt(item int8, buf []byte) int {
 	return 1
 }
 
-// EncodeSimpleType that falls outside the golang native type.
-// code points 0..19 and 32..255
+// EncodeSimpleType that falls outside golang native type.
+// code points 0..19 and 32..255 are un-assigned.
 func EncodeSimpleType(typcode byte, buf []byte) int {
 	return encodeSimpleType(typcode, buf)
 }

@@ -48,23 +48,16 @@ func TestCborFalse(t *testing.T) {
 	}
 }
 
-func TestCborUndefined(t *testing.T) {
-	buf := make([]byte, 10)
-
-	if n := encodeUndefined(buf); n != 1 {
-		t.Errorf("fail Encode undefined: %v want 1", n)
-	} else if item, m := Decode(buf); m != 1 {
-		t.Errorf("fail Decode on undefined len: %v want 1", m)
-	} else if item.(Undefined) != Undefined(simpleUndefined) {
-		t.Errorf("fail Decode on undefined: %T %v", item, item)
-	}
-}
-
 func TestCborUint8(t *testing.T) {
 	buf := make([]byte, 20)
 	for i := uint16(0); i <= 255; i++ {
 		n := encodeUint8(uint8(i), buf)
 		val, m := Decode(buf)
+		if i < 24 && n != 1 {
+			t.Errorf("fail code uint8(%v) < 24, got %v", i, n)
+		} else if i > 24 && n != 2 {
+			t.Errorf("fail code uint8(%v) > 24, got %v", i, n)
+		}
 		if n != m || val.(uint64) != uint64(i) {
 			t.Errorf("fail codec uint8: %v %v %v", n, m, val)
 		}
@@ -76,6 +69,11 @@ func TestCborInt8(t *testing.T) {
 	for i := int16(-128); i <= 127; i++ {
 		n := encodeInt8(int8(i), buf)
 		val, m := Decode(buf)
+		if -23 <= i && i <= 23 && n != 1 {
+			t.Errorf("fail code int8(%v), expected 1 got %v", i, n)
+		} else if -23 > i && i > 23 && n != 2 {
+			t.Errorf("fail code int8(%v), expected 2 got %v", i, n)
+		}
 		if num1, ok := val.(int64); ok && (n != m || num1 != int64(i)) {
 			t.Errorf("fail codec uint8: %v %v %v", n, m, num1)
 		} else if num2, ok := val.(uint64); ok && (n != m || num2 != uint64(i)) {
@@ -322,6 +320,18 @@ func TestCborBreakStop(t *testing.T) {
 		t.Errorf("fail code text-start: %v wanted %v", m, n)
 	} else if !reflect.DeepEqual(val, BreakStop(0xff)) {
 		t.Errorf("fail code text-start: %x wanted 0xff", buf[0])
+	}
+}
+
+func TestCborUndefined(t *testing.T) {
+	buf := make([]byte, 10)
+
+	if n := encodeUndefined(buf); n != 1 {
+		t.Errorf("fail Encode undefined: %v want 1", n)
+	} else if item, m := Decode(buf); m != 1 {
+		t.Errorf("fail Decode on undefined len: %v want 1", m)
+	} else if item.(Undefined) != Undefined(simpleUndefined) {
+		t.Errorf("fail Decode on undefined: %T %v", item, item)
 	}
 }
 

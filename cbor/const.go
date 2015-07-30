@@ -2,56 +2,59 @@ package cbor
 
 import "errors"
 
-// ErrorUnknownType to encode
-var ErrorUnknownType = errors.New("cbor.unknownType")
+// ErrorDecodeInfoReserved cannot decoding reserved info values 28,29,30.
+var ErrorDecodeInfoReserved = errors.New("cbor.decodeInfoReserved")
 
-// ErrorExpectedInteger to encode
-var ErrorExpectedInteger = errors.New("cbor.expectedInteger")
+// ErrorDecodeSimpleType cannot decode invalid simple type.
+var ErrorDecodeSimpleType = errors.New("cbor.decodeSimpleType")
 
-// ErrorEmptyText to scan
-var ErrorEmptyText = errors.New("cbor.emptyText")
+// ErrorDecodeFloat16 cannot decode float16.
+var ErrorDecodeFloat16 = errors.New("cbor.decodeFloat16")
 
-// ErrorExpectedNil expected a `nil` token while scanning.
-var ErrorExpectedNil = errors.New("cbor.exptectedNil")
+// ErrorDecodeExceedInt64 cannot decode float16.
+var ErrorDecodeExceedInt64 = errors.New("cbor.decodeExceedInt64")
 
-// ErrorExpectedTrue expected a `true` token while scanning.
-var ErrorExpectedTrue = errors.New("cbor.exptectedTrue")
+// ErrorJsonEmpty to scan
+var ErrorJsonEmpty = errors.New("cbor.jsonEmpty")
 
-// ErrorExpectedFalse expected a `false` token while scanning.
-var ErrorExpectedFalse = errors.New("cbor.exptectedFalse")
+// ErrorDecodeIndefinite cannot decode indefinite item.
+var ErrorDecodeIndefinite = errors.New("cbor.decodeIndefinite")
 
-// ErrorExpectedClosearray expected a `]` token while scanning.
-var ErrorExpectedClosearray = errors.New("cbor.exptectedCloseArray")
+// ErrorExpectedJsonInteger expected a `number` while scanning.
+var ErrorExpectedJsonInteger = errors.New("cbor.expectedJsonInteger")
 
-// ErrorExpectedKey expected a `key-string` token while scanning.
-var ErrorExpectedKey = errors.New("cbor.exptectedKey")
+// ErrorExpectedJsonNil expected a `nil` token while scanning.
+var ErrorExpectedJsonNil = errors.New("cbor.exptectedJsonNil")
 
-// ErrorExpectedColon expected a `:` token while scanning.
-var ErrorExpectedColon = errors.New("cbor.exptectedColon")
+// ErrorExpectedJsonTrue expected a `true` token while scanning.
+var ErrorExpectedJsonTrue = errors.New("cbor.exptectedJsonTrue")
 
-// ErrorExpectedCloseobject expected a `}` token while scanning.
-var ErrorExpectedCloseobject = errors.New("cbor.exptectedCloseobject")
+// ErrorExpectedJsonFalse expected a `false` token while scanning.
+var ErrorExpectedJsonFalse = errors.New("cbor.exptectedJsonFalse")
 
-// ErrorExpectedToken expected a valid json token while scanning.
-var ErrorExpectedToken = errors.New("cbor.exptectedToken")
+// ErrorExpectedJsonClosearray expected a `]` token while scanning.
+var ErrorExpectedJsonClosearray = errors.New("cbor.exptectedJsonCloseArray")
 
-// ErrorExpectedString expected a `string` token while scanning.
-var ErrorExpectedString = errors.New("cbor.exptectedString")
+// ErrorExpectedJsonKey expected a `key-string` token while scanning.
+var ErrorExpectedJsonKey = errors.New("cbor.exptectedJsonKey")
 
-// ErrorInfoReserved for info values 28,29,30.
-var ErrorInfoReserved = errors.New("cbor.infoReserved")
+// ErrorExpectedJsonColon expected a `:` token while scanning.
+var ErrorExpectedJsonColon = errors.New("cbor.exptectedJsonColon")
 
-// ErrorInfoIndefinite for info indefinite.
-var ErrorInfoIndefinite = errors.New("cbor.infoIndefinite")
+// ErrorExpectedJsonCloseobject expected a `}` token while scanning.
+var ErrorExpectedJsonCloseobject = errors.New("cbor.exptectedJsonCloseobject")
 
-// ErrorUnassigned for info indefinite.
-var ErrorUnassigned = errors.New("cbor.unassigned")
+// ErrorExpectedJsonToken expected a valid json token while scanning.
+var ErrorExpectedJsonToken = errors.New("cbor.exptectedJsonToken")
+
+// ErrorExpectedJsonString expected a `string` token while scanning.
+var ErrorExpectedJsonString = errors.New("cbor.exptectedJsonString")
+
+// ErrorExpectedJsonIndefinite for arrays and maps while scanning.
+var ErrorExpectedJsonIndefinite = errors.New("cbor.expectedJsonIndefinite")
 
 // ErrorByteString byte string decoding not supported for cbor->json.
 var ErrorByteString = errors.New("cbor.byteString")
-
-// ErrorExpectedIndefinite for arrays and maps for cbor->json.
-var ErrorExpectedIndefinite = errors.New("cbor.expectedIndefinite")
 
 // ErrorTagNotSupported for arrays and maps for cbor->json.
 var ErrorTagNotSupported = errors.New("cbor.tagNotSupported")
@@ -91,3 +94,6 @@ var ErrorMalformedDocument = errors.New("cbor.malformedDocument")
 
 // ErrorInvalidDocument
 var ErrorInvalidDocument = errors.New("cbor.invalidDocument")
+
+// ErrorUnknownType to encode
+var ErrorUnknownType = errors.New("cbor.unknownType")

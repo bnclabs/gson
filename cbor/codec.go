@@ -1,3 +1,5 @@
+// codec converts golang native types into cbor binary blob and vice-versa.
+
 package cbor
 
 import "encoding/binary"
@@ -34,7 +36,7 @@ const ( // simple types for type7
 	flt16          // IEEE 754 Half-Precision Float
 	flt32          // IEEE 754 Single-Precision Float
 	flt64          // IEEE 754 Double-Precision Float
-	// 28..30 un-assigned
+	// 28..30 reserved
 	itemBreak = 31 // stop-code for indefinite-length items
 )
 
@@ -287,11 +289,9 @@ func encodeUndefined(buf []byte) int {
 }
 
 func encodeSimpleType(typcode byte, buf []byte) int {
-	if typcode < 20 {
+	if typcode < 32 {
 		buf[0] = hdr(type7, typcode)
 		return 1
-	} else if typcode < 32 {
-		panic("simpletype.lessthan32")
 	}
 	buf[0] = hdr(type7, simpleTypeByte)
 	buf[1] = typcode
@@ -313,14 +313,11 @@ func decodeTrue(buf []byte) (interface{}, int) {
 }
 
 func decodeSimpleTypeByte(buf []byte) (interface{}, int) {
-	if buf[1] < 32 {
-		panic("simpletype.malformed")
-	}
 	return buf[1], 2
 }
 
 func decodeFloat16(buf []byte) (interface{}, int) {
-	panic("not implemented")
+	panic(ErrorDecodeFloat16)
 }
 
 func decodeFloat32(buf []byte) (interface{}, int) {
@@ -372,7 +369,7 @@ func decodeType0Info27(buf []byte) (interface{}, int) {
 func decodeType1Info27(buf []byte) (interface{}, int) {
 	x := uint64(binary.BigEndian.Uint64(buf[1:]))
 	if x > 9223372036854775807 {
-		panic("number exceeds the limit of int64")
+		panic(ErrorDecodeExceedInt64)
 	}
 	return int64(-x) - 1, 9
 }
@@ -469,10 +466,10 @@ func init() {
 	cborDecoders[hdr(type0, info26)] = decodeType0Info26
 	cborDecoders[hdr(type0, info27)] = decodeType0Info27
 	// 1st-byte 28..31
-	cborDecoders[hdr(type0, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type0, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type0, 30)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type0, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborDecoders[hdr(type0, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type0, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type0, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type0, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type1                  (signed integer)
 	// 1st-byte 0..23
@@ -485,10 +482,10 @@ func init() {
 	cborDecoders[hdr(type1, info26)] = decodeType1Info26
 	cborDecoders[hdr(type1, info27)] = decodeType1Info27
 	// 1st-byte 28..31
-	cborDecoders[hdr(type1, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type1, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type1, 30)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type1, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborDecoders[hdr(type1, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type1, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type1, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type1, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type2                  (byte string)
 	// 1st-byte 0..27
@@ -496,9 +493,9 @@ func init() {
 		cborDecoders[hdr(type2, byte(i))] = decodeType2
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type2, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type2, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type2, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type2, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type2, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type2, 30)] = makePanic(ErrorDecodeInfoReserved)
 	cborDecoders[hdr(type2, indefiniteLength)] = decodeType2Indefinite
 
 	//-- type3                  (string)
@@ -507,9 +504,9 @@ func init() {
 		cborDecoders[hdr(type3, byte(i))] = decodeType3
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type3, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type3, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type3, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type3, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type3, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type3, 30)] = makePanic(ErrorDecodeInfoReserved)
 	cborDecoders[hdr(type3, indefiniteLength)] = decodeType3Indefinite
 
 	//-- type4                  (array)
@@ -518,9 +515,9 @@ func init() {
 		cborDecoders[hdr(type4, byte(i))] = decodeType4
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type4, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type4, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type4, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type4, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type4, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type4, 30)] = makePanic(ErrorDecodeInfoReserved)
 	cborDecoders[hdr(type4, indefiniteLength)] = decodeType4Indefinite
 
 	//-- type5                  (map)
@@ -529,9 +526,9 @@ func init() {
 		cborDecoders[hdr(type5, byte(i))] = decodeType5
 	}
 	// 1st-byte 28..31
-	cborDecoders[hdr(type5, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type5, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type5, 30)] = makePanic(ErrorInfoReserved)
+	cborDecoders[hdr(type5, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type5, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type5, 30)] = makePanic(ErrorDecodeInfoReserved)
 	cborDecoders[hdr(type5, indefiniteLength)] = decodeType5Indefinite
 
 	//-- type6
@@ -545,12 +542,12 @@ func init() {
 	cborDecoders[hdr(type6, info26)] = decodeTag
 	cborDecoders[hdr(type6, info27)] = decodeTag
 	// 1st-byte 28..31
-	cborDecoders[hdr(type6, 28)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type6, 29)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type6, 30)] = makePanic(ErrorInfoReserved)
-	cborDecoders[hdr(type6, indefiniteLength)] = makePanic(ErrorInfoIndefinite)
+	cborDecoders[hdr(type6, 28)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type6, 29)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type6, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborDecoders[hdr(type6, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
-	//-- type7                  (simple values / floats / break-stop)
+	//-- type7                  (simple types / floats / break-stop)
 	// 1st-byte 0..19
 	for i := byte(0); i < 20; i++ {
 		cborDecoders[hdr(type7, i)] =
@@ -569,8 +566,8 @@ func init() {
 	cborDecoders[hdr(type7, flt32)] = decodeFloat32
 	cborDecoders[hdr(type7, flt64)] = decodeFloat64
 	// 1st-byte 28..31
-	cborDecoders[hdr(type7, 28)] = makePanic(ErrorUnassigned)
-	cborDecoders[hdr(type7, 29)] = makePanic(ErrorUnassigned)
-	cborDecoders[hdr(type7, 30)] = makePanic(ErrorUnassigned)
+	cborDecoders[hdr(type7, 28)] = makePanic(ErrorDecodeSimpleType)
+	cborDecoders[hdr(type7, 29)] = makePanic(ErrorDecodeSimpleType)
+	cborDecoders[hdr(type7, 30)] = makePanic(ErrorDecodeSimpleType)
 	cborDecoders[hdr(type7, itemBreak)] = decodeBreakCode
 }
