@@ -1,4 +1,4 @@
-// Types from golang standard library and custom defined types int
+// Types from golang standard library and custom defined types in
 // this package that are encoded using cbor-tags.
 //
 //   * Epoch : in seconds since epoch.
@@ -85,13 +85,13 @@ func encodeDateTime(dt interface{}, buf []byte) int {
 	switch v := dt.(type) {
 	case time.Time: // rfc3339, as refined by section 3.3 rfc4287
 		n += encodeTag(tagDateTime, buf)
-		n += Encode(v.Format(time.RFC3339), buf[n:]) // TODO: make this config.
+		n += encode(v.Format(time.RFC3339), buf[n:]) // TODO: make this config.
 	case Epoch:
 		n += encodeTag(tagEpoch, buf)
-		n += Encode(int64(v), buf[n:])
+		n += encode(int64(v), buf[n:])
 	case EpochMicro:
 		n += encodeTag(tagEpoch, buf)
-		n += Encode(float64(v), buf[n:])
+		n += encode(float64(v), buf[n:])
 	}
 	return n
 }
@@ -104,7 +104,7 @@ func encodeBigNum(num *big.Int, buf []byte) int {
 	} else {
 		n += encodeTag(tagPosBignum, buf)
 	}
-	n += Encode(bytes, buf[n:])
+	n += encode(bytes, buf[n:])
 	return n
 }
 
@@ -186,7 +186,7 @@ func decodeTag(buf []byte) (interface{}, int) {
 }
 
 func decodeDateTime(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
+	item, n := decode(buf)
 	item, err := time.Parse(time.RFC3339, item.(string))
 	if err != nil {
 		panic("decodeDateTime(): malformed time.RFC3339")
@@ -195,7 +195,7 @@ func decodeDateTime(buf []byte) (interface{}, int) {
 }
 
 func decodeEpoch(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
+	item, n := decode(buf)
 	switch v := item.(type) {
 	case int64:
 		return Epoch(v), n
@@ -208,14 +208,14 @@ func decodeEpoch(buf []byte) (interface{}, int) {
 }
 
 func decodeBigNum(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
+	item, n := decode(buf)
 	num := big.NewInt(0).SetBytes(item.([]byte))
 	return num, n
 }
 
 func decodeDecimalFraction(buf []byte) (interface{}, int) {
-	e, x := Decode(buf)
-	m, y := Decode(buf[x:])
+	e, x := decode(buf)
+	m, y := decode(buf[x:])
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
 			return DecimalFraction([2]interface{}{int64(a), int64(b)}), x + y
@@ -229,8 +229,8 @@ func decodeDecimalFraction(buf []byte) (interface{}, int) {
 }
 
 func decodeBigFloat(buf []byte) (interface{}, int) {
-	e, x := Decode(buf)
-	m, y := Decode(buf[x:])
+	e, x := decode(buf)
+	m, y := decode(buf[x:])
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
 			return BigFloat([2]interface{}{int64(a), int64(b)}), x + y
@@ -244,12 +244,12 @@ func decodeBigFloat(buf []byte) (interface{}, int) {
 }
 
 func decodeCborEnc(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
+	item, n := decode(buf)
 	return Cbor(item.([]uint8)), n
 }
 
 func decodeRegexp(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
+	item, n := decode(buf)
 	s := item.(string)
 	re, err := regexp.Compile(s)
 	if err != nil {
@@ -259,6 +259,6 @@ func decodeRegexp(buf []byte) (interface{}, int) {
 }
 
 func decodeCborPrefix(buf []byte) (interface{}, int) {
-	item, n := Decode(buf)
+	item, n := decode(buf)
 	return CborPrefix(item.([]byte)), n
 }

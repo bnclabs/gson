@@ -1,3 +1,6 @@
+// Package cbor implements RFC-7049 to encode golang data into
+// binary format and vice-versa.
+//
 // Following golang native types are supported,
 //
 //   * nil, true, false.
@@ -13,8 +16,11 @@
 //   * Undefined - to encode a data-item as undefined.
 package cbor
 
-import "encoding/binary"
 import "math"
+import "math/big"
+import "regexp"
+import "time"
+import "encoding/binary"
 
 const ( // major types.
 	type0 byte = iota << 5 // unsigned integer
@@ -257,7 +263,7 @@ func encodeArray(items []interface{}, buf []byte) int {
 func encodeArrayItems(items []interface{}, buf []byte) int {
 	n := 0
 	for _, item := range items {
-		n += Encode(item, buf[n:])
+		n += encode(item, buf[n:])
 	}
 	return n
 }
@@ -277,8 +283,8 @@ func encodeMap(items [][2]interface{}, buf []byte) int {
 func encodeMapItems(items [][2]interface{}, buf []byte) int {
 	n := 0
 	for _, item := range items {
-		n += Encode(item[0], buf[n:])
-		n += Encode(item[1], buf[n:])
+		n += encode(item[0], buf[n:])
+		n += encode(item[1], buf[n:])
 	}
 	return n
 }
@@ -307,6 +313,77 @@ func encodeSimpleType(typcode byte, buf []byte) int {
 	buf[0] = hdr(type7, simpleTypeByte)
 	buf[1] = typcode
 	return 2
+}
+
+func encode(item interface{}, out []byte) int {
+	n := 0
+	switch v := item.(type) {
+	case nil:
+		n += encodeNull(out)
+	case bool:
+		if v {
+			n += encodeTrue(out)
+		} else {
+			n += encodeFalse(out)
+		}
+	case int8:
+		n += encodeInt8(v, out)
+	case uint8:
+		n += encodeUint8(v, out)
+	case int16:
+		n += encodeInt16(v, out)
+	case uint16:
+		n += encodeUint16(v, out)
+	case int32:
+		n += encodeInt32(v, out)
+	case uint32:
+		n += encodeUint32(v, out)
+	case int:
+		n += encodeInt64(int64(v), out)
+	case int64:
+		n += encodeInt64(v, out)
+	case uint:
+		n += encodeUint64(uint64(v), out)
+	case uint64:
+		n += encodeUint64(v, out)
+	case float32:
+		n += encodeFloat32(v, out)
+	case float64:
+		n += encodeFloat64(v, out)
+	case []byte:
+		n += encodeBytes(v, out)
+	case string:
+		n += encodeText(v, out)
+	case []interface{}:
+		n += encodeArray(v, out)
+	case [][2]interface{}:
+		n += encodeMap(v, out)
+	// simple types
+	case Undefined:
+		n += encodeUndefined(out)
+	// tagged encoding
+	case time.Time: // tag-0
+		n += encodeDateTime(v, out)
+	case Epoch: // tag-1
+		n += encodeDateTime(v, out)
+	case EpochMicro: // tag-1
+		n += encodeDateTime(v, out)
+	case *big.Int:
+		n += encodeBigNum(v, out)
+	case DecimalFraction:
+		n += encodeDecimalFraction(v, out)
+	case BigFloat:
+		n += encodeBigFloat(v, out)
+	case Cbor:
+		n += encodeCbor(v, out)
+	case *regexp.Regexp:
+		n += encodeRegexp(v, out)
+	case CborPrefix:
+		n += encodeCborPrefix(v, out)
+	default:
+		panic(ErrorUnknownType)
+	}
+	return n
 }
 
 //---- decode functions
@@ -424,7 +501,7 @@ func decodeType4(buf []byte) (interface{}, int) {
 	ln, n := decodeLength(buf)
 	arr := make([]interface{}, ln)
 	for i := 0; i < ln; i++ {
-		item, n1 := Decode(buf[n:])
+		item, n1 := decode(buf[n:])
 		arr[i], n = item, n+n1
 	}
 	return arr, n
@@ -438,8 +515,8 @@ func decodeType5(buf []byte) (interface{}, int) {
 	ln, n := decodeLength(buf)
 	pairs := make([][2]interface{}, ln)
 	for i := 0; i < ln; i++ {
-		key, n1 := Decode(buf[n:])
-		value, n2 := Decode(buf[n+n1:])
+		key, n1 := decode(buf[n:])
+		value, n2 := decode(buf[n+n1:])
 		pairs[i] = [2]interface{}{key, value}
 		n = n + n1 + n2
 	}
@@ -456,6 +533,11 @@ func decodeBreakCode(buf []byte) (interface{}, int) {
 
 func decodeUndefined(buf []byte) (interface{}, int) {
 	return Undefined(simpleUndefined), 1
+}
+
+func decode(buf []byte) (interface{}, int) {
+	item, n := cborDecoders[buf[0]](buf)
+	return item, n
 }
 
 //---- decoders

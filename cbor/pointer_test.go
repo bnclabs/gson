@@ -24,10 +24,11 @@ var tcasesJSONPointers = []string{
 
 func TestCborPointer(t *testing.T) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
 	for _, tcase := range tcasesJSONPointers {
 		t.Logf(tcase)
-		n := FromJsonPointer([]byte(tcase), buf)
-		m := ToJsonPointer(buf[:n], out)
+		n := config.FromJsonPointer([]byte(tcase), buf)
+		m := config.ToJsonPointer(buf[:n], out)
 		if result := string(out[:m]); tcase != result {
 			t.Errorf("expected %q, got %q", tcase, result)
 		}

@@ -11,14 +11,15 @@ var _ = fmt.Sprintf("dummy")
 
 func TestDateTime(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 
 	ref, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05+07:00")
 	if err != nil {
 		t.Errorf("time.Parse() failed: %v", err)
 	}
 
-	n := Encode(ref, buf)
-	item, m := Decode(buf[:n])
+	n := config.Encode(ref, buf)
+	item, m := config.Decode(buf[:n])
 	if n != 28 || n != m {
 		t.Errorf("expected %v got %v %v", 28, n, m)
 	}
@@ -34,18 +35,19 @@ func TestDateTime(t *testing.T) {
 			}
 		}()
 		buf[5] = 'a'
-		Decode(buf[:n])
+		config.Decode(buf[:n])
 	}()
 }
 
 func TestEpoch(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 
 	// positive and negative epoch
 	for _, val := range [2]int64{1000000, -100000} {
 		ref := Epoch(val)
-		n := Encode(ref, buf)
-		item, m := Decode(buf[:n])
+		n := config.Encode(ref, buf)
+		item, m := config.Decode(buf[:n])
 		if n != 6 || n != m {
 			t.Errorf("expected %v got %v %v", 6, n, m)
 		}
@@ -61,7 +63,7 @@ func TestEpoch(t *testing.T) {
 			}
 		}()
 		buf[1] = 0x5a // instead of 0x3a
-		Decode(buf)
+		config.Decode(buf)
 	}()
 	// malformed epoch
 	func() {
@@ -73,17 +75,18 @@ func TestEpoch(t *testing.T) {
 		buf := make([]byte, 16)
 		n := encodeTag(tagEpoch, buf)
 		n += encodeBytes([]byte{1, 2}, buf[n:])
-		Decode(buf)
+		config.Decode(buf)
 	}()
 }
 
 func TestEpochMicro(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	// positive and negative epoch in uS.
 	for _, val := range [2]float64{1000000.123456, -100000.123456} {
 		ref := EpochMicro(val)
-		n := Encode(ref, buf)
-		item, m := Decode(buf[:n])
+		n := config.Encode(ref, buf)
+		item, m := config.Decode(buf[:n])
 		if n != 10 || n != m {
 			t.Errorf("expected %v got %v %v", 10, n, m)
 		}
@@ -95,13 +98,14 @@ func TestEpochMicro(t *testing.T) {
 
 func TestBigNum(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	// positive and negative bignums
 	for _, val := range [2]int64{1000, -1000} {
 		bigx := big.NewInt(9223372036854775807)
 		bigy := big.NewInt(val)
 		bigz := big.NewInt(0).Mul(bigx, bigy)
-		n := Encode(bigz, buf)
-		item, m := Decode(buf[:n])
+		n := config.Encode(bigz, buf)
+		item, m := config.Decode(buf[:n])
 		if n != 12 || n != m {
 			t.Errorf("expected %v got %v %v", 12, n, m)
 		}
@@ -113,6 +117,7 @@ func TestBigNum(t *testing.T) {
 
 func TestDecimalFraction(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	// for positive
 	refs := []DecimalFraction{
 		DecimalFraction([2]interface{}{int64(-10), int64(-23)}),
@@ -121,8 +126,8 @@ func TestDecimalFraction(t *testing.T) {
 		DecimalFraction([2]interface{}{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
-		n := Encode(ref, buf)
-		item, m := Decode(buf[:n])
+		n := config.Encode(ref, buf)
+		item, m := config.Decode(buf[:n])
 		if n != 3 || n != m {
 			t.Errorf("expected %v got %v %v", 3, n, m)
 		}
@@ -134,6 +139,7 @@ func TestDecimalFraction(t *testing.T) {
 
 func TestBigFloat(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	refs := []BigFloat{
 		BigFloat([2]interface{}{int64(-10), int64(-23)}),
 		BigFloat([2]interface{}{int64(-10), int64(23)}),
@@ -141,8 +147,8 @@ func TestBigFloat(t *testing.T) {
 		BigFloat([2]interface{}{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
-		n := Encode(ref, buf)
-		item, m := Decode(buf[:n])
+		n := config.Encode(ref, buf)
+		item, m := config.Decode(buf[:n])
 		if n != 3 || n != m {
 			t.Errorf("expected %v got %v %v", 3, n, m)
 		}
@@ -154,9 +160,10 @@ func TestBigFloat(t *testing.T) {
 
 func TestCbor(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	ref := Cbor([]byte("hello world"))
-	n := Encode(ref, buf)
-	item, m := Decode(buf[:n])
+	n := config.Encode(ref, buf)
+	item, m := config.Decode(buf[:n])
 	if n != 14 || n != m {
 		t.Errorf("expected %v got %v %v", 14, n, m)
 	}
@@ -167,12 +174,13 @@ func TestCbor(t *testing.T) {
 
 func TestRegexp(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	ref, err := regexp.Compile(`a([0-9]t*)+`)
 	if err != nil {
 		t.Errorf("compiling regex")
 	}
-	n := Encode(ref, buf)
-	item, m := Decode(buf[:n])
+	n := config.Encode(ref, buf)
+	item, m := config.Decode(buf[:n])
 	if n != 14 || n != m {
 		t.Errorf("expected %v got %v %v", 14, n, m)
 	}
@@ -188,15 +196,16 @@ func TestRegexp(t *testing.T) {
 		}()
 		n := encodeTag(tagRegexp, buf)
 		n += encodeText(`a([0-9]t*+`, buf[n:])
-		Decode(buf)
+		config.Decode(buf)
 	}()
 }
 
 func TestCborPrefix(t *testing.T) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	ref := CborPrefix([]byte("hello world"))
-	n := Encode(ref, buf)
-	item, m := Decode(buf[:n])
+	n := config.Encode(ref, buf)
+	item, m := config.Decode(buf[:n])
 	if n != 15 || n != m {
 		t.Errorf("expected %v got %v %v", 15, n, m)
 	}
