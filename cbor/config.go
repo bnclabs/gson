@@ -53,7 +53,7 @@ type Config struct {
 // NewDefaultConfig returns a new configuration factory, with default
 // values,
 //      Nk: FloatNumber
-//      Ws: SpaceKind
+//      Ws: UnicodeSpace
 func NewDefaultConfig() *Config {
 	return NewConfig(SmartNumber, UnicodeSpace)
 }
