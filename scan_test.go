@@ -163,69 +163,129 @@ func TestCodeJSON(t *testing.T) {
 	}
 }
 
-func BenchmarkScanNumFloat(b *testing.B) {
+func BenchmarkScanNumF(b *testing.B) {
 	in := "100000.23"
+	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
 		scanNum(in, FloatNumber)
 	}
 }
 
-func BenchmarkScanNumString(b *testing.B) {
+func BenchmarkJsonNumF(b *testing.B) {
+	var val interface{}
+	in := []byte("100000.23")
+	b.SetBytes(int64(len(in)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(in, &val)
+	}
+}
+
+func BenchmarkScanNumS(b *testing.B) {
 	in := "100000.23"
+	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
 		scanNum(in, StringNumber)
 	}
 }
 
+func BenchmarkJsonNumS(b *testing.B) {
+	var val interface{}
+	in := []byte("100000.23")
+	b.SetBytes(int64(len(in)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(in, &val)
+	}
+}
+
 func BenchmarkScanString(b *testing.B) {
 	in := []byte(`"汉语 / 漢語; Hàn\b \tyǔ "`)
+	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
 		scanString(in)
 	}
 }
 
-//func BenchmarkSmallJSONPkg(b *testing.B) {
-//    txt := []byte(`{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`)
-//    p := NewParser(FloatNumber, AnsiSpace, false /*jsonp*/)
-//    b.SetBytes(int64(len(txt)))
-//    for i := 0; i < b.N; i++ {
-//        if _, _, err := p.Parse(txt); err != nil {
-//            b.Fatal(err)
-//        }
-//    }
-//}
-//
-//func BenchmarkSmallJSON(b *testing.B) {
-//    var m map[string]interface{}
-//    txt := []byte(`{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`)
-//    b.SetBytes(int64(len(txt)))
-//    for i := 0; i < b.N; i++ {
-//        if err := json.Unmarshal(txt, &m); err != nil {
-//            b.Fatal(err)
-//        }
-//    }
-//}
-//
-//func BenchmarkCodeJSONPkg(b *testing.B) {
-//    p := NewParser(FloatNumber, AnsiSpace, false /*jsonp*/)
-//    b.SetBytes(int64(len(codeJSON)))
-//    for i := 0; i < b.N; i++ {
-//        if _, _, err := p.Parse(codeJSON); err != nil {
-//            b.Fatal(err)
-//        }
-//    }
-//}
-//
-//func BenchmarkCodeJSON(b *testing.B) {
-//    var m map[string]interface{}
-//    b.SetBytes(int64(len(codeJSON)))
-//    for i := 0; i < b.N; i++ {
-//        if err := json.Unmarshal(codeJSON, &m); err != nil {
-//            b.Fatal(err)
-//        }
-//    }
-//}
-//
+func BenchmarkJsonString(b *testing.B) {
+	var val interface{}
+	in := []byte(`"汉语 / 漢語; Hàn\b \tyǔ "`)
+	b.SetBytes(int64(len(in)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(in, &val)
+	}
+}
+
+func BenchmarkParseArr5(b *testing.B) {
+	txt := ` [null,true,false,10,"tru\"e"]`
+	config := NewConfig(FloatNumber, AnsiSpace)
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		config.Parse(txt)
+	}
+}
+
+func BenchmarkJsonArr5(b *testing.B) {
+	var a []interface{}
+	txt := []byte(` [null,true,false,10,"tru\"e"]`)
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(txt, &a)
+	}
+}
+
+func BenchmarkParseMap5(b *testing.B) {
+	txt := `{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`
+	config := NewConfig(FloatNumber, AnsiSpace)
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		config.Parse(txt)
+	}
+}
+
+func BenchmarkJsonMap5(b *testing.B) {
+	var m map[string]interface{}
+	txt := []byte(`{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`)
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(txt, &m)
+	}
+}
+
+func BenchmarkParseTypical(b *testing.B) {
+	txt := string(typicalJSON())
+	config := NewConfig(FloatNumber, AnsiSpace)
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		config.Parse(txt)
+	}
+}
+
+func BenchmarkJsonTypical(b *testing.B) {
+	var m map[string]interface{}
+	txt := typicalJSON()
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(txt, &m)
+	}
+}
+
+func BenchmarkParseCodegz(b *testing.B) {
+	txt := string(codeJSON())
+	config := NewConfig(FloatNumber, AnsiSpace)
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		config.Parse(txt)
+	}
+}
+
+func BenchmarkJsonCodegz(b *testing.B) {
+	var m map[string]interface{}
+	txt := codeJSON()
+	b.SetBytes(int64(len(txt)))
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(txt, &m)
+	}
+}
+
 func codeJSON() []byte {
 	f, err := os.Open("testdata/code.json.gz")
 	if err != nil {
@@ -237,6 +297,19 @@ func codeJSON() []byte {
 		panic(err)
 	}
 	data, err := ioutil.ReadAll(gz)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func typicalJSON() []byte {
+	f, err := os.Open("testdata/typical.json")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		panic(err)
 	}

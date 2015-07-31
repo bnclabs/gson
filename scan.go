@@ -29,8 +29,6 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		return scanNum(txt, config.Nk)
 	}
 
-	var tok interface{}
-
 	switch txt[0] {
 	case 'n':
 		if len(txt) >= 4 && txt[:4] == nullLiteral {
@@ -62,6 +60,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		}
 		arr := make([]interface{}, 0, len(txt)/10)
 		for {
+			var tok interface{}
 			tok, txt = scanToken(txt, config)
 			arr = append(arr, tok)
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
@@ -85,8 +84,9 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		}
 		m := make(map[string]interface{})
 		for {
+			var tok interface{}
 			s, remtxt := scanString(str2bytes(txt))
-			key := bytes2str(s)
+			key := string(s)
 			txt = bytes2str(remtxt)
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {

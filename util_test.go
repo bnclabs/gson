@@ -13,3 +13,17 @@ func TestStr2Bytes(t *testing.T) {
 		t.Errorf(`fail str2bytes("")`)
 	}
 }
+
+func BenchmarkBytes2Str(b *testing.B) {
+	bs := []byte("hello world")
+	for i := 0; i < b.N; i++ {
+		bytes2str(bs)
+	}
+}
+
+func BenchmarkStr2Bytes(b *testing.B) {
+	s := "hello world"
+	for i := 0; i < b.N; i++ {
+		str2bytes(s)
+	}
+}
