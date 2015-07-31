@@ -28,12 +28,14 @@ type Config struct {
 	Ws SpaceKind
 }
 
-// NewDefaultConfig returns a new configuration factory
+// NewDefaultConfig returns a new configuration with default values.
+//      Nk: FloatNumber
+//      Ws: UnicodeSpace
 func NewDefaultConfig() *Config {
 	return NewConfig(FloatNumber, UnicodeSpace)
 }
 
-// NewConfig returns a new configuration factory
+// NewConfig returns a new configuration.
 func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 	return &Config{Nk: nk, Ws: ws}
 }
@@ -53,4 +55,9 @@ func (config *Config) ParseMany(txt string) ([]interface{}, string) {
 		values = append(values, tok)
 	}
 	return values, txt
+}
+
+// ListPointers json-pointers in object parsed from json text.
+func ListPointers(value interface{}) []string {
+	return allpaths(value)
 }
