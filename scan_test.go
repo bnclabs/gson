@@ -4,116 +4,27 @@ import "compress/gzip"
 import "encoding/json"
 import "io/ioutil"
 import "os"
+import "strings"
 import "reflect"
 import "testing"
 import "fmt"
 
 var _ = fmt.Sprintf("dummy")
 
-var testcases = []string{
-	// null
-	"null",
-	// boolean
-	"true",
-	"false",
-	// integers
-	"10",
-	"0.1",
-	"-0.1",
-	"10.1",
-	"-10.1",
-	"-10E-1",
-	"-10e+1",
-	"10E-1",
-	"10e+1",
-	// string
-	`"true"`,
-	`"tru\"e"`,
-	`"tru\\e"`,
-	`"tru\be"`,
-	`"tru\fe"`,
-	`"tru\ne"`,
-	`"tru\re"`,
-	`"tru\te"`,
-	`"tru\u0123e"`,
-	`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`,
-	`"a\u1234"`,
-	`"http:\/\/"`,
-	`"invalid: \uD834x\uDD1E"`,
-	`"\"foobar\"\u003chtml\u003e [\u2028 \u2029]"`,
-	// array
-	` [  ] `,
-	`[]`,
-	` [ null, true, false, 10, "tru\"e" ] `,
-	`[{}]`,
-	// object
-	` { "a": null, "b" : true,"c":false, "d\"":10, "e":"tru\"e" } `,
-	` {  } `,
-	`{}`,
-	// from encoding/json
-	`true`,
-	`1`,
-	`1.2`,
-	`-5`,
-	`2`,
-	`2`,
-	`2`,
-	`2`,
-	"null",
-	`{"X": [1,2,3], "Y": 4}`,
-	`{"x": 1}`,
-	`{"F1":1,"F2":2,"F3":3}`,
-	`{"F1":1,"F2":2,"F3":3}`,
-	`{"k1":1,"k2":"s","k3":[1,2.0,3e-3],"k4":{"kk1":"s","kk2":2}}`,
-	`{"k1":1,"k2":"s","k3":[1,2.0,3e-3],"k4":{"kk1":"s","kk2":2}}`,
-	// raw values with whitespace
-	"\n true ",
-	"\t 1 ",
-	"\r 1.2 ",
-	"\t -5 \n",
-	"\t \"a\\u1234\" \n",
-	// Z has a "-" tag.
-	`{"Y": 1, "Z": 2}`,
-	`{"alpha": "abc", "alphabet": "xyz"}`,
-	`{"alpha": "abc"}`,
-	`{"alphabet": "xyz"}`,
-	// array tests
-	`[1, 2, 3]`,
-	`[1, 2, 3]`,
-	`[1, 2, 3]`,
-	// empty array to interface test
-	`[]`,
-	`null`,
-	`{"T":[]}`,
-	`{"T":null}`,
-	// unmarshal interface test
-	`{"T":false}`,
-	`{"T":false}`,
-	`[{"T":false}]`,
-	`[{"T":false}]`,
-	`{"M":{"T":false}}`,
-	// UnmarshalText interface test
-	`"X"`,
-	`"X"`,
-	`["X"]`,
-	`["X"]`,
-	`{"M":"X"}`,
-	`{"hello": 1}`,
-	`{"X": 1,"Y":2}`,
-	`{"X": 1,"Y":2}`,
-	// invalid UTF-8 is coerced to valid UTF-8.
-	"\"hello\xffworld\"",
-	"\"hello\xc2\xc2world\"",
-	"\"hello\xc2\xffworld\"",
-	"\"hello\\ud800world\"",
-	"\"hello\\ud800\\ud800world\"",
-	"\"hello\\ud800\\ud800world\"",
-	"\"hello\xed\xa0\x80\xed\xb0\x80world\"",
-	`{"2009-11-10T23:00:00Z": "hello world"}`,
-}
-
 func TestScan(t *testing.T) {
 	var ref interface{}
+
+	testcases := append(scan_valid, []string{
+		string(mapValue),
+		string(allValueIndent),
+		string(allValueCompact),
+		string(allValueIndent),
+		string(allValueCompact),
+		string(pallValueIndent),
+		string(pallValueCompact),
+		string(pallValueIndent),
+		string(pallValueCompact),
+	}...)
 
 	config := NewDefaultConfig()
 	for _, tcase := range testcases {
@@ -224,56 +135,7 @@ func TestScanEmpty(t *testing.T) {
 
 func TestScanMalformed(t *testing.T) {
 	config := NewConfig(IntNumber, AnsiSpace)
-	testcases := []string{
-		"nill",  // malformed null
-		"trre",  // malformed true
-		"fllse", // malformed false
-		// malformed string
-		`"`,
-		`"  `,
-		`"汉语 `,
-		"\xed\xa0\x80", // RuneError
-		"\xed\xbf\xbf", // RuneError
-		`"g-clef: \uD834\uDD1E"`,
-		// malformed array
-		"[",
-		"[10",
-		"[10 20",
-		// malformed object
-		"{10:10}",
-		`{"" 10}`,
-		`{"10" 10}`,
-		`{"10": nill}`,
-		`{"10": null`,
-		` {"10": null 20`,
-		"<>", // malformed token
-		// syntax errors
-		`{"X": "foo", "Y"}`,
-		`[1, 2, 3+]`,
-		`{"X":12x}`,
-		"tru",
-		"fals",
-		"nul",
-		"123e",
-		`"hello`,
-		`[1,2,3`,
-		`{"key":1`,
-		`{"key":1,`,
-		// raw value errors
-		"\x01 42",
-		"\x01 true",
-		"\x01 1.2",
-		" 3.4 \x01",
-		"\x01 \"string\"",
-		// bad-utf8
-		"hello\xffworld",
-		"",
-		"\xff",
-		"\xff\xff",
-		"a\xffb",
-		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e",
-	}
-	for _, tcase := range testcases {
+	for _, tcase := range scan_invalid {
 		func() {
 			defer func() {
 				if r := recover(); r == nil {
@@ -301,29 +163,27 @@ func TestCodeJSON(t *testing.T) {
 	}
 }
 
-//func BenchmarkScanNumFloat(b *testing.B) {
-//    in := []byte("100000.23")
-//    for i := 0; i < b.N; i++ {
-//        scanNum(in, FloatNumber)
-//    }
-//}
-//
-//func BenchmarkScanNumString(b *testing.B) {
-//    in := []byte("100000.23")
-//    for i := 0; i < b.N; i++ {
-//        scanNum(in, StringNumber)
-//    }
-//}
-//
-//func BenchmarkScanString(b *testing.B) {
-//    in := []byte(`"汉语 / 漢語; Hàn\b \tyǔ "`)
-//    for i := 0; i < b.N; i++ {
-//        if _, _, err := scanString(in); err != nil {
-//            b.Fatal(err)
-//        }
-//    }
-//}
-//
+func BenchmarkScanNumFloat(b *testing.B) {
+	in := "100000.23"
+	for i := 0; i < b.N; i++ {
+		scanNum(in, FloatNumber)
+	}
+}
+
+func BenchmarkScanNumString(b *testing.B) {
+	in := "100000.23"
+	for i := 0; i < b.N; i++ {
+		scanNum(in, StringNumber)
+	}
+}
+
+func BenchmarkScanString(b *testing.B) {
+	in := []byte(`"汉语 / 漢語; Hàn\b \tyǔ "`)
+	for i := 0; i < b.N; i++ {
+		scanString(in)
+	}
+}
+
 //func BenchmarkSmallJSONPkg(b *testing.B) {
 //    txt := []byte(`{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`)
 //    p := NewParser(FloatNumber, AnsiSpace, false /*jsonp*/)
@@ -366,7 +226,6 @@ func TestCodeJSON(t *testing.T) {
 //    }
 //}
 //
-
 func codeJSON() []byte {
 	f, err := os.Open("testdata/code.json.gz")
 	if err != nil {
@@ -386,6 +245,8 @@ func codeJSON() []byte {
 
 var allValueIndent, allValueCompact, pallValueIndent, pallValueCompact []byte
 var mapValue []byte
+var scan_valid []string
+var scan_invalid []string
 
 func init() {
 	var value interface{}
@@ -420,16 +281,45 @@ func init() {
 		panic(err)
 	}
 
-	// composite tests
-	testcases = append(testcases, []string{
-		string(mapValue),
-		string(allValueIndent),
-		string(allValueCompact),
-		string(allValueIndent),
-		string(allValueCompact),
-		string(pallValueIndent),
-		string(pallValueCompact),
-		string(pallValueIndent),
-		string(pallValueCompact),
-	}...)
+	scan_valid_b, err := ioutil.ReadFile("testdata/scan_valid")
+	if err != nil {
+		panic(err)
+	}
+	scan_valid = []string{}
+	for _, s := range strings.Split(string(scan_valid_b), "\n") {
+		if strings.Trim(s, " ") != "" {
+			scan_valid = append(scan_valid, s)
+		}
+	}
+	scan_valid = append(scan_valid, []string{
+		"\"hello\xffworld\"",
+		"\"hello\xc2\xc2world\"",
+		"\"hello\xc2\xffworld\"",
+		"\"hello\xed\xa0\x80\xed\xb0\x80world\""}...)
+
+	scan_invalid_b, err := ioutil.ReadFile("testdata/scan_invalid")
+	if err != nil {
+		panic(err)
+	}
+	scan_invalid = []string{}
+	for _, s := range strings.Split(string(scan_invalid_b), "\n") {
+		if strings.Trim(s, " ") != "" {
+			scan_invalid = append(scan_invalid, s)
+		}
+	}
+	scan_invalid = append(scan_invalid, []string{
+		"\xed\xa0\x80", // RuneError
+		"\xed\xbf\xbf", // RuneError
+		// raw value errors
+		"\x01 42",
+		"\x01 true",
+		"\x01 1.2",
+		" 3.4 \x01",
+		"\x01 \"string\"",
+		// bad-utf8
+		"hello\xffworld",
+		"\xff",
+		"\xff\xff",
+		"a\xffb",
+		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e"}...)
 }
