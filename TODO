@@ -1,0 +1,27 @@
+gson/
+    - json -> golang (DONE)
+    - golang -> json (use encoding/json)
+    - golang -> pointers (DONE)
+    - json -> pointers (TODO)
+    - golang pointer SET/DEL/GET (TODO)
+    - json pointer SET/DEL/GET (TODO)
+
+cbor/
+    - cbor -> golang (DONE)
+    - golang -> cbor (DONE)
+    - cbor -> pointers (TODO)
+    - cbor pointer SET/DEL/GET (TODO)
+
+collate/
+    - golang -> collate (TODO)
+    - collate -> golang (TODO)
+    - json -> collate (TODO)
+    - collate -> json (TODO)
+    - cbor -> collate (TODO)
+    - collate -> cbor (TODO)
+
+schema/
+    - TODO
+
+patch/
+    - TODO
