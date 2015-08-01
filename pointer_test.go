@@ -25,14 +25,16 @@ var tcasesJSONPointers = []struct {
 }
 
 func TestParsePointer(t *testing.T) {
+	config := NewDefaultConfig()
 	for _, tcase := range tcasesJSONPointers {
-		parts := parsePointer([]byte(tcase.in))
-		if len(parts) != len(tcase.ref) {
-			t.Errorf("failed on %q %v", tcase.in, parts)
+		t.Logf("input pointer %q", tcase.in)
+		segments := config.ParsePointer(tcase.in)
+		if len(segments) != len(tcase.ref) {
+			t.Errorf("expected %v, got %v", len(tcase.ref), len(segments))
 		} else {
 			for i, x := range tcase.ref {
-				if string(parts[i]) != string(x) {
-					t.Errorf("failed on %q %q", tcase.in, parts[i])
+				if string(segments[i]) != string(x) {
+					t.Errorf("expected %q, got %q", tcase.ref, segments[i])
 				}
 			}
 		}
@@ -40,42 +42,48 @@ func TestParsePointer(t *testing.T) {
 }
 
 func TestEncodePointer(t *testing.T) {
-	out := make([]byte, 0, 1024)
+	config := NewDefaultConfig()
+	out := make([]byte, 1024)
 	for _, tcase := range tcasesJSONPointers {
-		outs := encodePointer(tcase.ref, out)
-		if outs != tcase.in {
-			t.Errorf("failed on %q %q", tcase.in, outs)
+		t.Logf("input %v", tcase.ref)
+		n := config.EncodePointer(tcase.ref, out)
+		if outs := string(out[:n]); outs != tcase.in {
+			t.Errorf("expected %q, %q", tcase.in, outs)
 		}
 	}
 }
 
-func BenchmarkParsePointerSmall(b *testing.B) {
+func BenchmarkParsePtrSmall(b *testing.B) {
+	config := NewDefaultConfig()
 	path := "/foo/g/0"
 	for i := 0; i < b.N; i++ {
-		parsePointer([]byte(path))
+		config.ParsePointer(path)
 	}
 }
 
-func BenchmarkParsePointerMedium(b *testing.B) {
+func BenchmarkParsePtrMed(b *testing.B) {
+	config := NewDefaultConfig()
 	path := "/foo/g~1n~1r/0/hello"
 	for i := 0; i < b.N; i++ {
-		parsePointer([]byte(path))
+		config.ParsePointer(path)
 	}
 }
 
-func BenchmarkParsePointerLarge(b *testing.B) {
-	out := make([]byte, 0, 1024)
-	path := encodePointer([]string{"a", "ab", "a~b", "a/b", "a~/~/b"}, out)
+func BenchmarkParsePtrLarge(b *testing.B) {
+	config := NewDefaultConfig()
+	out := make([]byte, 1024)
+	n := config.EncodePointer([]string{"a", "ab", "a~b", "a/b", "a~/~/b"}, out)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parsePointer([]byte(path))
+		config.ParsePointer(string(out[:n]))
 	}
 }
 
-func BenchmarkEncodePointerLarge(b *testing.B) {
+func BenchmarkEncPtrLarge(b *testing.B) {
+	config := NewDefaultConfig()
 	path := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
-	out := make([]byte, 0, 1024)
+	out := make([]byte, 1024)
 	for i := 0; i < b.N; i++ {
-		encodePointer(path, out)
+		config.EncodePointer(path, out)
 	}
 }

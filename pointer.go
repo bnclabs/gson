@@ -3,63 +3,70 @@ package gson
 import "strconv"
 import "unicode/utf8"
 
-func parsePointer(s []byte) [][]byte {
-	if len(s) == 0 {
-		return [][]byte{}
+func parsePointer(in string) []string {
+	segments := make([]string, 0, 2)
+	if len(in) == 0 {
+		return segments
 	}
 
-	u := [6]byte{}
-
-	parts := make([][]byte, 0, 3)
-	part := make([]byte, 0, len(s))
-	for i := 0; i < len(s); {
+	i, j, s, u, part := 0, 0, str2bytes(in), [6]byte{}, [2048]byte{}
+	for i < len(s) {
 		if s[i] == '~' {
 			if s[i+1] == '1' {
-				part = append(part, '/')
-				i += 2
+				part[j] = '/'
+				i, j = i+2, j+1
 
 			} else if s[i+1] == '0' {
-				part = append(part, '~')
-				i += 2
+				part[j] = '~'
+				i, j = i+2, j+1
 			}
 
 		} else if s[i] == '/' {
-			if len(part) > 0 {
-				parts = append(parts, part)
-				part = make([]byte, 0, len(s))
+			if j > 0 {
+				segments = append(segments, string(part[:j]))
+				j = 0
 			}
 			i++
 
 		} else if s[i] < utf8.RuneSelf {
-			part = append(part, s[i])
-			i++
+			part[j] = s[i]
+			i, j = i+1, j+1
 
 		} else {
 			r, size := utf8.DecodeRune(s[i:])
-			i += size
-			parti := utf8.EncodeRune(u[:], r)
-			part = append(part, u[:parti]...)
+			sizej := utf8.EncodeRune(u[:], r)
+			copy(part[j:], u[:sizej])
+			i, j = i+size, j+sizej
 		}
 	}
-
-	return append(parts, part)
+	if s[len(s)-1] == '/' || j > 0 {
+		segments = append(segments, string(part[:j]))
+	}
+	return segments
 }
 
-func encodePointer(p []string, out []byte) string {
+func encodePointer(p []string, out []byte) int {
+	n := 0
 	for _, s := range p {
-		out = append(out, '/')
+		out[n] = '/'
+		n++
 		for _, c := range []byte(s) {
 			switch c {
 			case '/':
-				out = append(out, '~', '1')
+				out[n] = '~'
+				out[n+1] = '1'
+				n += 2
 			case '~':
-				out = append(out, '~', '0')
+				out[n] = '~'
+				out[n+1] = '0'
+				n += 2
 			default:
-				out = append(out, c)
+				out[n] = c
+				n++
 			}
 		}
 	}
-	return string(out)
+	return n
 }
 
 func allpaths(value interface{}) []string {

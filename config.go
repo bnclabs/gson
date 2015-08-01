@@ -57,6 +57,15 @@ func (config *Config) ParseMany(txt string) ([]interface{}, string) {
 	return values, txt
 }
 
+// ParsePointer parse input JSON pointer into segments.
+func (config *Config) ParsePointer(pointer string) (segments []string) {
+	return parsePointer(pointer)
+}
+
+func (config *Config) EncodePointer(segments []string, pointer []byte) int {
+	return encodePointer(segments, pointer)
+}
+
 // ListPointers json-pointers in object parsed from json text.
 func ListPointers(value interface{}) []string {
 	return allpaths(value)
