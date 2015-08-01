@@ -70,31 +70,32 @@ func encodePointer(p []string, out []byte) int {
 }
 
 func allpaths(value interface{}) []string {
-	var pointers []string
+	pointers := make([]string, 0, 4)
 
 	switch v := value.(type) {
 	case []interface{}:
 		if len(v) > 0 {
-			pointers = make([]string, 0, 4)
 			for i, val := range v {
 				prefix := "/" + strconv.Itoa(i)
+				pointers = append(pointers, prefix)
 				for _, pointer := range allpaths(val) {
 					pointers = append(pointers, prefix+pointer)
 				}
 			}
 		}
+		pointers = append(pointers, "/-")
 
 	case map[string]interface{}:
-		pointers = make([]string, 0, 4)
-		pointers = append(pointers, "")
 		if len(v) > 0 {
 			for key, val := range v {
 				prefix := "/" + key
+				pointers = append(pointers, prefix)
 				for _, pointer := range allpaths(val) {
 					pointers = append(pointers, prefix+pointer)
 				}
 			}
 		}
+		pointers = append(pointers, "/-")
 	}
 	return pointers
 }

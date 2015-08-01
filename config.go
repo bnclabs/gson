@@ -67,6 +67,8 @@ func (config *Config) EncodePointer(segments []string, pointer []byte) int {
 }
 
 // ListPointers json-pointers in object parsed from json text.
-func ListPointers(value interface{}) []string {
-	return allpaths(value)
+func (config *Config) ListPointers(value interface{}) []string {
+	pointers := allpaths(value)
+	pointers = append(pointers, "")
+	return pointers
 }
