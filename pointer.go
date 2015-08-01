@@ -3,8 +3,7 @@ package gson
 import "strconv"
 import "unicode/utf8"
 
-func parsePointer(in string) []string {
-	segments := make([]string, 0, 2)
+func parsePointer(in string, segments []string) []string {
 	if len(in) == 0 {
 		return segments
 	}

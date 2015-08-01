@@ -2,9 +2,9 @@ package gson
 
 import "compress/gzip"
 import "encoding/json"
+import "strings"
 import "io/ioutil"
 import "os"
-import "strings"
 import "reflect"
 import "testing"
 import "fmt"
@@ -151,7 +151,7 @@ func TestScanMalformed(t *testing.T) {
 func TestCodeJSON(t *testing.T) {
 	var ref interface{}
 
-	data := codeJSON()
+	data := testdataFile("testdata/code.json.gz")
 	config := NewDefaultConfig()
 	if err := json.Unmarshal(data, &ref); err != nil {
 		t.Errorf("error parsing codeJSON: %v", err)
@@ -251,7 +251,7 @@ func BenchmarkJsonMap5(b *testing.B) {
 }
 
 func BenchmarkParseTypical(b *testing.B) {
-	txt := string(typicalJSON())
+	txt := string(testdataFile("testdata/typical.json"))
 	config := NewConfig(FloatNumber, AnsiSpace)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
@@ -261,7 +261,7 @@ func BenchmarkParseTypical(b *testing.B) {
 
 func BenchmarkJsonTypical(b *testing.B) {
 	var m map[string]interface{}
-	txt := typicalJSON()
+	txt := testdataFile("testdata/typical.json")
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
 		json.Unmarshal(txt, &m)
@@ -269,7 +269,7 @@ func BenchmarkJsonTypical(b *testing.B) {
 }
 
 func BenchmarkParseCodegz(b *testing.B) {
-	txt := string(codeJSON())
+	txt := string(testdataFile("testdata/code.json.gz"))
 	config := NewConfig(FloatNumber, AnsiSpace)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
@@ -279,39 +279,35 @@ func BenchmarkParseCodegz(b *testing.B) {
 
 func BenchmarkJsonCodegz(b *testing.B) {
 	var m map[string]interface{}
-	txt := codeJSON()
+	txt := testdataFile("testdata/code.json.gz")
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
 		json.Unmarshal(txt, &m)
 	}
 }
 
-func codeJSON() []byte {
-	f, err := os.Open("testdata/code.json.gz")
+func testdataFile(filename string) []byte {
+	f, err := os.Open(filename)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	gz, err := gzip.NewReader(f)
-	if err != nil {
-		panic(err)
-	}
-	data, err := ioutil.ReadAll(gz)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
 
-func typicalJSON() []byte {
-	f, err := os.Open("testdata/typical.json")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		panic(err)
+	var data []byte
+	if strings.HasSuffix(filename, ".gz") {
+		gz, err := gzip.NewReader(f)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(gz)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		data, err = ioutil.ReadAll(f)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return data
 }
