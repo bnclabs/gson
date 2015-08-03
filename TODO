@@ -1,6 +1,6 @@
 gson/
     - json -> golang (DONE)
-    - golang -> json (use encoding/json)
+    - golang -> json (use encoding/json:Marshal)
     - golang -> pointers (DONE)
     - json -> pointers (TODO)
     - golang pointer SET/DEL/GET (TODO)
