@@ -40,13 +40,14 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 	return &Config{Nk: nk, Ws: ws}
 }
 
-// Parse input JSON text to a single go-native value.
+// Parse input JSON text to a single go-native value. If text is
+// invalid raises panic.
 func (config *Config) Parse(txt string) (interface{}, string) {
 	return scanToken(txt, config)
 }
 
 // ParseMany will parse input JSON text to one or more go native
-// values.
+// values. If text is invalid raises panic.
 func (config *Config) ParseMany(txt string) ([]interface{}, string) {
 	var values []interface{}
 	var tok interface{}
@@ -71,4 +72,26 @@ func (config *Config) ListPointers(value interface{}) []string {
 	pointers := allpaths(value)
 	pointers = append(pointers, "")
 	return pointers
+}
+
+// Get field or nested field specified by json pointer ptr.
+func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
+	segments := config.ParsePointer(ptr, []string{})
+	return get(segments, doc)
+}
+
+// Set field or nested field specified by json pointer ptr.
+func (config *Config) Set(
+	ptr string, doc, item interface{}) (newdoc, old interface{}) {
+
+	segments := config.ParsePointer(ptr, []string{})
+	return set(segments, doc, item)
+}
+
+// Delete field or nested field specified by json pointer ptr.
+func (config *Config) Delete(
+	ptr string, doc interface{}) (newdoc, old interface{}) {
+
+	segments := config.ParsePointer(ptr, []string{})
+	return del(segments, doc)
 }

@@ -1,11 +1,48 @@
+// custom scanner for parsing json text. should be faster
+// than encoding/json's Unmarshal API.
+
 package gson
 
 import "strconv"
+import "errors"
 import "unicode"
 import "unicode/utf8"
 import "unicode/utf16"
 
-// Number placeholder type when number is represted in str format,
+// ErrorJsonEmpty to scan
+var ErrorJsonEmpty = errors.New("gson.jsonEmpty")
+
+// ErrorExpectedNil expected a `nil` token while scanning.
+var ErrorExpectedNil = errors.New("gson.exptectedNil")
+
+// ErrorExpectedTrue expected a `true` token while scanning.
+var ErrorExpectedTrue = errors.New("gson.exptectedTrue")
+
+// ErrorExpectedFalse expected a `false` token while scanning.
+var ErrorExpectedFalse = errors.New("gson.exptectedFalse")
+
+// ErrorExpectedJsonInteger expected a `integer` while scanning.
+var ErrorExpectedJsonInteger = errors.New("gson.expectedJsonInteger")
+
+// ErrorExpectedClosearray expected a `]` token while scanning.
+var ErrorExpectedClosearray = errors.New("gson.exptectedCloseArray")
+
+// ErrorExpectedKey expected a `key-string` token while scanning.
+var ErrorExpectedKey = errors.New("gson.exptectedKey")
+
+// ErrorExpectedColon expected a `:` token while scanning.
+var ErrorExpectedColon = errors.New("gson.exptectedColon")
+
+// ErrorExpectedCloseobject expected a `}` token while scanning.
+var ErrorExpectedCloseobject = errors.New("gson.exptectedCloseobject")
+
+// ErrorExpectedToken expected a valid json token while scanning.
+var ErrorExpectedToken = errors.New("gson.exptectedToken")
+
+// ErrorExpectedString expected a `string` token while scanning.
+var ErrorExpectedString = errors.New("gson.exptectedString")
+
+// Number placeholder type when number is represented in str format,
 // used for delayed parsing.
 type Number string
 
@@ -86,7 +123,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		for {
 			var tok interface{}
 			s, remtxt := scanString(str2bytes(txt))
-			key := string(s)
+			key := string(s) // NOTE: empty string is also a valid key
 			txt = bytes2str(remtxt)
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
@@ -157,6 +194,8 @@ func scanNum(txt string, nk NumberKind) (interface{}, string) {
 		}
 		return num, txt[e:]
 	}
+	// NOTE: ignore the error because we have only picked
+	// valid text to parse.
 	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
 	return num, txt[e:]
 }

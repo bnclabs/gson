@@ -1,10 +1,10 @@
 gson/
     - json -> golang (DONE)
-    - golang -> json (use encoding/json:Marshal)
+    - golang -> json (TODO: use encoding/json:Marshal)
     - golang -> pointers (DONE)
-    - json -> pointers (TODO)
-    - golang pointer SET/DEL/GET (TODO)
-    - json pointer SET/DEL/GET (TODO)
+    - json -> pointers (TODO: use json->golang->pointers)
+    - golang pointer SET/DEL/GET (DONE)
+    - json pointer SET/DEL/GET (TODO: use json->golang->golang-pointer)
 
 cbor/
     - cbor -> golang (DONE)
