@@ -8,12 +8,67 @@
 //   * byte-string encoding is not used.
 package cbor
 
-// TODO: encode integer as string itself.
-
 import "strconv"
 import "unicode"
 import "math"
+import "errors"
 import "encoding/binary"
+
+// TODO: encode integer as string itself.
+
+// ErrorJsonEmpty to scan
+var ErrorJsonEmpty = errors.New("cbor.jsonEmpty")
+
+// ErrorExpectedJsonInteger expected a `number` while scanning.
+var ErrorExpectedJsonInteger = errors.New("cbor.expectedJsonInteger")
+
+// ErrorExpectedJsonNil expected a `nil` token while scanning.
+var ErrorExpectedJsonNil = errors.New("cbor.exptectedJsonNil")
+
+// ErrorExpectedJsonTrue expected a `true` token while scanning.
+var ErrorExpectedJsonTrue = errors.New("cbor.exptectedJsonTrue")
+
+// ErrorExpectedJsonFalse expected a `false` token while scanning.
+var ErrorExpectedJsonFalse = errors.New("cbor.exptectedJsonFalse")
+
+// ErrorExpectedJsonClosearray expected a `]` token while scanning.
+var ErrorExpectedJsonClosearray = errors.New("cbor.exptectedJsonCloseArray")
+
+// ErrorExpectedJsonKey expected a `key-string` token while scanning.
+var ErrorExpectedJsonKey = errors.New("cbor.exptectedJsonKey")
+
+// ErrorExpectedJsonColon expected a `:` token while scanning.
+var ErrorExpectedJsonColon = errors.New("cbor.exptectedJsonColon")
+
+// ErrorExpectedJsonCloseobject expected a `}` token while scanning.
+var ErrorExpectedJsonCloseobject = errors.New("cbor.exptectedJsonCloseobject")
+
+// ErrorExpectedJsonToken expected a valid json token while scanning.
+var ErrorExpectedJsonToken = errors.New("cbor.exptectedJsonToken")
+
+// ErrorExpectedJsonString expected a `string` token while scanning.
+var ErrorExpectedJsonString = errors.New("cbor.exptectedJsonString")
+
+// ErrorByteString byte string decoding not supported for cbor->json.
+var ErrorByteString = errors.New("cbor.byteString")
+
+// ErrorTagNotSupported for arrays and maps for cbor->json.
+var ErrorTagNotSupported = errors.New("cbor.tagNotSupported")
+
+// ErrorUndefined cannot decode simple-type undefined.
+var ErrorUndefined = errors.New("cbor.undefined")
+
+// ErrorSimpleType unsupported simple-type.
+var ErrorSimpleType = errors.New("cbor.simpleType")
+
+// ErrorFloat16 simple type not supported.
+var ErrorFloat16 = errors.New("cbor.float16")
+
+// ErrorUnexpectedText should be prefixed by tagJsonString.
+var ErrorUnexpectedText = errors.New("cbor.unexpectedText")
+
+// ErrorBreakcode simple type not supported with breakcode.
+var ErrorBreakcode = errors.New("cbor.breakcode")
 
 var nullStr = "null"
 var trueStr = "true"

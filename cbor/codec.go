@@ -20,7 +20,14 @@ import "math"
 import "math/big"
 import "regexp"
 import "time"
+import "errors"
 import "encoding/binary"
+
+// ErrorDecodeFloat16 cannot decode float16.
+var ErrorDecodeFloat16 = errors.New("cbor.decodeFloat16")
+
+// ErrorDecodeExceedInt64 cannot decode float16.
+var ErrorDecodeExceedInt64 = errors.New("cbor.decodeExceedInt64")
 
 const ( // major types.
 	type0 byte = iota << 5 // unsigned integer

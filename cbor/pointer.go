@@ -11,6 +11,25 @@ package cbor
 
 import "strconv"
 import "bytes"
+import "errors"
+
+// ErrorInvalidArrayOffset
+var ErrorInvalidArrayOffset = errors.New("cbor.invalidArrayOffset")
+
+// ErrorInvalidPointer
+var ErrorInvalidPointer = errors.New("cbor.invalidPointer")
+
+// ErrorNoKey
+var ErrorNoKey = errors.New("cbor.noKey")
+
+// ErrorMalformedDocument
+var ErrorMalformedDocument = errors.New("cbor.malformedDocument")
+
+// ErrorInvalidDocument
+var ErrorInvalidDocument = errors.New("cbor.invalidDocument")
+
+// ErrorUnknownType to encode
+var ErrorUnknownType = errors.New("cbor.unknownType")
 
 const maxPartSize int = 1024
 

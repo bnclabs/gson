@@ -1,5 +1,5 @@
 // Types from golang standard library and custom defined types in
-// this package that are encoded using cbor-tags.
+// this package that are encoded using RFC-7049 cbor-tags.
 //
 //   * Epoch : in seconds since epoch.
 //   * EpochMicro: in micro-seconds epoch.
