@@ -9,6 +9,8 @@ gson/
 cbor/
     - cbor -> golang (DONE)
     - golang -> cbor (DONE)
+    - cbor -> json (DONE)
+    - json -> cbor (DONE)
     - cbor -> pointers (TODO)
     - cbor pointer SET/DEL/GET (TODO)
 

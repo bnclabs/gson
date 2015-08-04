@@ -22,7 +22,8 @@ const (
 	UnicodeSpace
 )
 
-// Config for document factory
+// Config for parsing json to golang, parsing json-pointers and,
+// Get, Set and Delete operations on document fields using json-pointers.
 type Config struct {
 	Nk NumberKind
 	Ws SpaceKind
@@ -63,11 +64,13 @@ func (config *Config) ParsePointer(pointer string, segments []string) []string {
 	return parsePointer(pointer, segments)
 }
 
+// EncodePointer compliments ParsePointer to convert parsed
+// `segments` back to json-pointer.
 func (config *Config) EncodePointer(segments []string, pointer []byte) int {
 	return encodePointer(segments, pointer)
 }
 
-// ListPointers json-pointers in object parsed from json text.
+// ListPointers from value.
 func (config *Config) ListPointers(value interface{}) []string {
 	pointers := allpaths(value)
 	pointers = append(pointers, "")
@@ -80,7 +83,9 @@ func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
 	return get(segments, doc)
 }
 
-// Set field or nested field specified by json pointer ptr.
+// Set field or nested field specified by json pointer ptr. If input
+// `doc` is of type []interface{}, `newdoc` return the updated slice,
+// along with the old value.
 func (config *Config) Set(
 	ptr string, doc, item interface{}) (newdoc, old interface{}) {
 
@@ -89,8 +94,10 @@ func (config *Config) Set(
 }
 
 // Delete field or nested field specified by json pointer ptr.
+// If input `doc` is of type []interface{}, `newdoc` return
+// the updated slice, along with the deleted value.
 func (config *Config) Delete(
-	ptr string, doc interface{}) (newdoc, old interface{}) {
+	ptr string, doc interface{}) (newdoc, deleted interface{}) {
 
 	segments := config.ParsePointer(ptr, []string{})
 	return del(segments, doc)
