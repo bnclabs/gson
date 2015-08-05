@@ -74,12 +74,6 @@ var nullStr = "null"
 var trueStr = "true"
 var falseStr = "false"
 
-// tag 37 is un-assigned as per spec and used here to encode
-// json-string, the difficulty is that JSON string are
-// not really utf8 encoded string (mostly meant for human
-// readability).
-const tagJsonString byte = 37
-
 func scanToken(txt string, out []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.Ws)
 
@@ -223,6 +217,12 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 			return txt[e:], n
 		}
 
+	} else if nk == FloatNumber32 {
+		num, err := strconv.ParseFloat(string(txt[s:e]), 32)
+		if err == nil {
+			n := encodeFloat32(float32(num), out)
+			return txt[e:], n
+		}
 	} else if nk == FloatNumber {
 		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
 		if err == nil {
@@ -231,12 +231,19 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 		}
 	}
 	// SmartNumber
-	if flt {
+	if flt && nk == SmartNumber32 {
+		f, _ := strconv.ParseFloat(string(txt[s:e]), 32)
+		n := encodeFloat32(float32(f), out)
+		return txt[e:], n
+	} else if flt {
 		f, _ := strconv.ParseFloat(string(txt[s:e]), 64)
 		n := encodeFloat64(f, out)
 		return txt[e:], n
 	}
-	num, _ := strconv.Atoi(txt[s:e])
+	num, err := strconv.Atoi(txt[s:e])
+	if err != nil {
+		panic(ErrorExpectedJsonInteger)
+	}
 	n := encodeInt64(int64(num), out)
 	return txt[e:], n
 }
@@ -309,8 +316,9 @@ func decodeFalseTojson(buf, out []byte) (int, int) {
 }
 
 func decodeFloat32Tojson(buf, out []byte) (int, int) {
-	item, n := decodeType0Info26(buf)
-	f := math.Float32frombits(uint32(item.(uint64)))
+	item, n := uint64(binary.BigEndian.Uint32(buf[1:])), 5
+	// item, n := decodeType0Info26(buf) => to avoid memory allocation.
+	f := math.Float32frombits(uint32(item))
 	out = strconv.AppendFloat(out[:0], float64(f), 'f', 6, 32)
 	return n, len(out)
 }
@@ -319,7 +327,7 @@ func decodeFloat64Tojson(buf, out []byte) (int, int) {
 	item, n := uint64(binary.BigEndian.Uint64(buf[1:])), 9
 	// item, n := decodeType0Info27(buf) => to avoid memory allocation.
 	f := math.Float64frombits(item)
-	out = strconv.AppendFloat(out[:0], f, 'f', 6, 64)
+	out = strconv.AppendFloat(out[:0], f, 'f', 17, 64)
 	return n, len(out)
 }
 
@@ -387,6 +395,35 @@ func decodeType1Info27Tojson(buf, out []byte) (int, int) {
 	return n, len(out)
 }
 
+// this is to support strings that are encoded via golang,
+// but used by cbor->json decoder.
+func decodeType3Tojson(buf, out []byte) (int, int) {
+	ln, n := decodeLength(buf)
+	out[0] = '"'
+	copy(out[1:], buf[n:n+ln])
+	out[ln+1] = '"'
+	return n + ln, ln + 2
+}
+
+// this to support arrays thar are encoded via golang,
+// but used by cbor->json decoder
+func decodeType4Tojson(buf, out []byte) (int, int) {
+	ln, n := decodeLength(buf)
+	out[0] = '['
+	if ln == 0 {
+		out[1] = ']'
+		return n, 2
+	}
+	m := 1
+	for ; ln > 0; ln-- {
+		x, y := cborTojson[buf[n]](buf[n:], out[m:])
+		m, n = m+y, n+x
+		out[m], m = ',', m+1
+	}
+	out[m-1] = ']'
+	return n, m
+}
+
 func decodeType4IndefiniteTojson(buf, out []byte) (int, int) {
 	brkstp := hdr(type7, itemBreak)
 	out[0] = '['
@@ -402,6 +439,29 @@ func decodeType4IndefiniteTojson(buf, out []byte) (int, int) {
 	}
 	out[m-1] = ']'
 	return n + 1, m
+}
+
+// this to support maps thar are encoded via golang,
+// but used by cbor->json decoder
+func decodeType5Tojson(buf, out []byte) (int, int) {
+	ln, n := decodeLength(buf)
+	out[0] = '{'
+	if ln == 0 {
+		out[1] = '}'
+		return n, 2
+	}
+	m := 1
+	for ; ln > 0; ln-- {
+		x, y := cborTojson[buf[n]](buf[n:], out[m:])
+		m, n = m+y, n+x
+		out[m], m = ':', m+1
+
+		x, y = cborTojson[buf[n]](buf[n:], out[m:])
+		m, n = m+y, n+x
+		out[m], m = ',', m+1
+	}
+	out[m-1] = '}'
+	return n, m
 }
 
 func decodeType5IndefiniteTojson(buf, out []byte) (int, int) {
@@ -487,34 +547,34 @@ func init() {
 	//-- type3                  (string)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type3, byte(i))] = makePanic(ErrorUnexpectedText)
+		cborTojson[hdr(type3, byte(i))] = decodeType3Tojson
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type3, 28)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type3, 29)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type3, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type3, 28)] = decodeType3Tojson
+	cborTojson[hdr(type3, 29)] = decodeType3Tojson
+	cborTojson[hdr(type3, 30)] = decodeType3Tojson
 	cborTojson[hdr(type3, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
 
 	//-- type4                  (array)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type4, byte(i))] = makePanic(ErrorDecodeIndefinite)
+		cborTojson[hdr(type4, byte(i))] = decodeType4Tojson
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type4, 28)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type4, 29)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type4, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type4, 28)] = decodeType4Tojson
+	cborTojson[hdr(type4, 29)] = decodeType4Tojson
+	cborTojson[hdr(type4, 30)] = decodeType4Tojson
 	cborTojson[hdr(type4, indefiniteLength)] = decodeType4IndefiniteTojson
 
 	//-- type5                  (map)
 	// 1st-byte 0..27
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type5, byte(i))] = makePanic(ErrorDecodeIndefinite)
+		cborTojson[hdr(type5, byte(i))] = decodeType5Tojson
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type5, 28)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type5, 29)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type5, 30)] = makePanic(ErrorDecodeInfoReserved)
+	cborTojson[hdr(type5, 28)] = decodeType5Tojson
+	cborTojson[hdr(type5, 29)] = decodeType5Tojson
+	cborTojson[hdr(type5, 30)] = decodeType5Tojson
 	cborTojson[hdr(type5, indefiniteLength)] = decodeType5IndefiniteTojson
 
 	//-- type6

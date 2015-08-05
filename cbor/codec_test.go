@@ -2,7 +2,12 @@ package cbor
 
 import "testing"
 import "reflect"
+import "encoding/json"
+import "io/ioutil"
+import "strings"
 import "fmt"
+import "os"
+import "compress/gzip"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -282,12 +287,15 @@ func TestCborArray(t *testing.T) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// test text-start
-	if n := encodeArrayStart(buf); n != 1 {
-		t.Errorf("fail code text-start len: %v wanted 1", n)
-	} else if val, m := decode(buf); m != n {
+	n = encodeArrayStart(buf)
+	n += encode(uint64(1), buf[n:])
+	n += encodeBreakStop(buf[n:])
+	if n != 3 {
+		t.Errorf("fail code text-start len: %v wanted 3", n)
+	} else if val, m := decode(buf[:n]); m != n {
 		t.Errorf("fail code text-start size : %v wanted %v", m, n)
-	} else if !reflect.DeepEqual(val, Indefinite(0x9f)) {
-		t.Errorf("fail code text-start: %x wanted 0x9f", buf[0])
+	} else if ref := []interface{}{uint64(1)}; !reflect.DeepEqual(val, ref) {
+		t.Errorf("fail code text-start: {%T,%v} wanted {%T,%v}", val, val, ref, ref)
 	}
 }
 
@@ -303,12 +311,17 @@ func TestCborMap(t *testing.T) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// test text-start
-	if n := encodeMapStart(buf); n != 1 {
-		t.Errorf("fail code text-start len: %v wanted 1", n)
-	} else if val, m := decode(buf); m != n {
+	n = encodeMapStart(buf)
+	n += encode("a", buf[n:])
+	n += encode(1, buf[n:])
+	n += encodeBreakStop(buf[n:])
+	ref = [][2]interface{}{[2]interface{}{"a", uint64(1)}}
+	if n != 5 {
+		t.Errorf("fail code text-start len: %v wanted 5", n)
+	} else if val, m := decode(buf[:n]); m != n {
 		t.Errorf("fail code text-start size : %v wanted %v", m, n)
-	} else if !reflect.DeepEqual(val, Indefinite(0xbf)) {
-		t.Errorf("fail code text-start: %x wanted 0xbf", buf[0])
+	} else if !reflect.DeepEqual(val, ref) {
+		t.Errorf("fail code text-start: %v wanted %v", val, ref)
 	}
 }
 
@@ -342,6 +355,138 @@ func TestCborReserved(t *testing.T) {
 		}
 	}()
 	decode([]byte{hdr(type0, 28)})
+}
+
+func TestCborMaster(t *testing.T) {
+	var outval, ref interface{}
+
+	testcases := append(scan_valid, []string{
+		string(mapValue),
+		string(allValueIndent),
+		string(allValueCompact),
+		string(pallValueIndent),
+		string(pallValueCompact),
+	}...)
+
+	config := NewDefaultConfig()
+	cborout, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
+	for _, tcase := range testcases {
+		t.Logf("%v", tcase)
+		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
+			t.Fatalf("error parsing %q: %v", tcase, err)
+		}
+		// test ParseJson/ToJson
+		_, n := config.ParseJson(tcase, cborout)    // json -> cbor
+		_, q := config.ToJson(cborout[:n], jsonout) // cbor -> json
+		if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+			t.Fatalf("error parsing %q: %v", jsonout[:q], err)
+		} else if !reflect.DeepEqual(outval, ref) {
+			t.Fatalf("expected '%v', got '%v'", ref, outval)
+		}
+
+		value, _ := config.Decode(cborout[:n])     // cbor -> golang
+		p := config.Encode(value, cborout)         // golang -> cbor
+		_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
+		if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+			t.Fatalf("error parsing %q: %v", jsonout[:q], err)
+		} else if !reflect.DeepEqual(outval, ref) {
+			t.Fatalf("expected {%T,%v}, got {%T,%v}", value, value, outval, outval)
+		}
+	}
+}
+
+func TestCborSmartnum(t *testing.T) {
+	var outval, ref interface{}
+
+	data := testdataFile("../testdata/smartnum")
+	config := NewDefaultConfig()
+	cborout, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
+
+	if err := json.Unmarshal(data, &ref); err != nil {
+		t.Fatalf("error parsing code.json.gz: %v", err)
+	}
+
+	// test ParseJson/ToJson
+	_, n := config.ParseJson(string(data), cborout) // json -> cbor
+	_, q := config.ToJson(cborout[:n], jsonout)
+	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+		t.Logf("%v", string(jsonout[:q]))
+		t.Fatalf("error parsing code.json.gz: %v", err)
+	} else if !reflect.DeepEqual(ref, outval) {
+		t.Errorf("expected %v", ref)
+		t.Errorf("got-json %v", string(jsonout[:q]))
+		t.Fatalf("got %v", outval)
+	}
+
+	value, _ := config.Decode(cborout[:n])     // cbor -> golang
+	p := config.Encode(value, cborout)         // golang -> cbor
+	_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
+	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+		t.Fatalf("error parsing %v", err)
+	} else if err := json.Unmarshal(data, &value); err != nil {
+		t.Fatalf("error parsing code.json: %v", err)
+	} else if !reflect.DeepEqual(outval, value) {
+		t.Fatalf("expected %v", value)
+		t.Fatalf("got %v", outval)
+	}
+}
+
+func TestCborMalformed(t *testing.T) {
+	config := NewConfig(IntNumber, AnsiSpace)
+	out := make([]byte, 1024)
+	for _, tcase := range scan_invalid {
+		func() {
+			defer func() {
+				if tcase == `"g-clef: \uD834\uDD1E"` {
+				} else if r := recover(); r == nil {
+					t.Fatalf("expected panic")
+				}
+			}()
+			t.Logf("%v", tcase)
+			config.ParseJson(tcase, out)
+		}()
+	}
+}
+
+func TestCborCodeJSON(t *testing.T) {
+	var ref, outval interface{}
+
+	config := NewDefaultConfig()
+	cborout, jsonout := make([]byte, 10*1024*1024), make([]byte, 10*1024*1024)
+	data := testdataFile("../testdata/code.json.gz")
+
+	if err := json.Unmarshal(data, &ref); err != nil {
+		t.Fatalf("error parsing code.json.gz: %v", err)
+	}
+	ref = fixFloats(ref)
+
+	// test ParseJson/ToJson
+	_, n := config.ParseJson(string(data), cborout) // json -> cbor
+	_, q := config.ToJson(cborout[:n], jsonout)
+	t.Logf("%v %v %v %v", n, q, len(data), len(jsonout[:q]))
+	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+		t.Logf("%v", string(jsonout[:q]))
+		t.Fatalf("error parsing code.json.gz: %v", err)
+	} else {
+		outval = fixFloats(outval)
+		if !reflect.DeepEqual(ref, outval) {
+			t.Errorf("expected %v", ref)
+			t.Fatalf("got %v", outval)
+		}
+	}
+
+	value, _ := config.Decode(cborout[:n])     // cbor -> golang
+	p := config.Encode(value, cborout)         // golang -> cbor
+	_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
+	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+		t.Fatalf("error parsing %v", err)
+	} else {
+		outval = fixFloats(outval)
+		if !reflect.DeepEqual(outval, ref) {
+			t.Fatalf("expected %v", value)
+			t.Fatalf("got %v", outval)
+		}
+	}
 }
 
 func BenchmarkEncodeNull(b *testing.B) {
@@ -643,4 +788,129 @@ func BenchmarkDecodeMap5(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
+}
+
+var allValueIndent, allValueCompact, pallValueIndent, pallValueCompact []byte
+var mapValue []byte
+var scan_valid []string
+var scan_invalid []string
+
+func init() {
+	var value interface{}
+	var err error
+
+	allValueIndent, err = ioutil.ReadFile("../testdata/allValueIndent")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = json.Unmarshal(allValueIndent, &value); err != nil {
+		panic(err)
+	}
+	if allValueCompact, err = json.Marshal(value); err != nil {
+		panic(err)
+	}
+
+	pallValueIndent, err = ioutil.ReadFile("../testdata/pallValueIndent")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = json.Unmarshal(pallValueIndent, &value); err != nil {
+		panic(err)
+	}
+	if pallValueCompact, err = json.Marshal(value); err != nil {
+		panic(err)
+	}
+
+	mapValue, err = ioutil.ReadFile("../testdata/map")
+	if err != nil {
+		panic(err)
+	}
+
+	scan_valid_b, err := ioutil.ReadFile("../testdata/scan_valid")
+	if err != nil {
+		panic(err)
+	}
+	scan_valid = []string{}
+	for _, s := range strings.Split(string(scan_valid_b), "\n") {
+		if strings.Trim(s, " ") != "" {
+			scan_valid = append(scan_valid, s)
+		}
+	}
+	scan_valid = append(scan_valid, []string{
+		"\"hello\xffworld\"",
+		"\"hello\xc2\xc2world\"",
+		"\"hello\xc2\xffworld\"",
+		"\"hello\xed\xa0\x80\xed\xb0\x80world\""}...)
+
+	scan_invalid_b, err := ioutil.ReadFile("../testdata/scan_invalid")
+	if err != nil {
+		panic(err)
+	}
+	scan_invalid = []string{}
+	for _, s := range strings.Split(string(scan_invalid_b), "\n") {
+		if strings.Trim(s, " ") != "" {
+			scan_invalid = append(scan_invalid, s)
+		}
+	}
+	scan_invalid = append(scan_invalid, []string{
+		"\xed\xa0\x80", // RuneError
+		"\xed\xbf\xbf", // RuneError
+		// raw value errors
+		"\x01 42",
+		"\x01 true",
+		"\x01 1.2",
+		" 3.4 \x01",
+		"\x01 \"string\"",
+		// bad-utf8
+		"hello\xffworld",
+		"\xff",
+		"\xff\xff",
+		"a\xffb",
+		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e"}...)
+}
+
+func testdataFile(filename string) []byte {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	var data []byte
+	if strings.HasSuffix(filename, ".gz") {
+		gz, err := gzip.NewReader(f)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(gz)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		data, err = ioutil.ReadAll(f)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return data
+}
+
+func fixFloats(val interface{}) interface{} {
+	switch v := val.(type) {
+	case float64:
+		return float32(v)
+	case []interface{}:
+		for i, x := range v {
+			v[i] = fixFloats(x)
+		}
+		return v
+	case map[string]interface{}:
+		for p, q := range v {
+			v[p] = fixFloats(q)
+		}
+		return v
+	}
+	return val
 }

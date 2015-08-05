@@ -544,6 +544,29 @@ func decodeUndefined(buf []byte) (interface{}, int) {
 
 func decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
+	if _, ok := item.(Indefinite); ok {
+		brkstp := hdr(type7, itemBreak)
+		switch major(buf[0]) {
+		case type4:
+			arr := make([]interface{}, 0, 2)
+			for buf[n] != brkstp {
+				item, n1 := decode(buf[n:])
+				arr = append(arr, item)
+				n += n1
+			}
+			return arr, n + 1
+
+		case type5:
+			pairs := make([][2]interface{}, 0, 2)
+			for buf[n] != brkstp {
+				key, n1 := decode(buf[n:])
+				value, n2 := decode(buf[n+n1:])
+				pairs = append(pairs, [2]interface{}{key, value})
+				n = n + n1 + n2
+			}
+			return pairs, n + 1
+		}
+	}
 	return item, n
 }
 

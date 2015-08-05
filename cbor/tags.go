@@ -62,13 +62,20 @@ const ( // pre-defined tag values
 	tagBase16                // interpret []byte as base16 format
 	tagCborEnc               // embedd another CBOR message
 	// unassigned 25..31
-	tagURI          = iota + 32 // defined in rfc3986
+	tagURI          = iota + 22 // defined in rfc3986
 	tagBase64URLEnc             // base64 encoded url as text strings
 	tagBase64Enc                // base64 encoded byte-string as text strings
 	tagRegexp                   // PCRE and ECMA262 regular expression
 	tagMime                     // MIME defined by rfc2045
-	// unassigned 37..55798
-	tagCborPrefix = iota + 55799
+
+	// tag 37 is un-assigned as per spec and used here to encode
+	// json-string, the difficulty is that JSON string are
+	// not really utf8 encoded string (mostly meant for human
+	// readability).
+	tagJsonString
+
+	// unassigned 38..55798
+	tagCborPrefix = iota + 55783
 	// unassigned 55800..
 )
 
@@ -179,6 +186,10 @@ func decodeTag(buf []byte) (interface{}, int) {
 	case tagRegexp:
 		item, m := decodeRegexp(buf[n:])
 		return item, n + m
+
+	case tagJsonString:
+		ln, m := decodeLength(buf[n:])
+		return string(buf[n+m : n+m+ln]), n + m + ln
 	}
 	// tagCborPrefix:
 	item, m := decodeCborPrefix(buf[n:])

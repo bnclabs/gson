@@ -18,11 +18,16 @@ type NumberKind byte
 
 const (
 	// SmartNumber will either use str.Atoi to parse JSON numbers
-	// or fall back to float. Default.
+	// or fall back to float32. Default.
+	SmartNumber32 NumberKind = iota + 1
+	// SmartNumber will either use str.Atoi to parse JSON numbers
+	// or fall back to float64. Default.
 	SmartNumber NumberKind = iota + 1
 	// IntNumber will use str.Atoi to parse JSON numbers.
 	IntNumber
-	// FloatNumber will use strconv.ParseFloat to parse JSON numbers.
+	// FloatNumber will use 32 bit strconv.ParseFloat to parse JSON numbers.
+	FloatNumber32
+	// FloatNumber will use 64 bit strconv.ParseFloat to parse JSON numbers.
 	FloatNumber
 )
 
@@ -46,7 +51,9 @@ const (
 //   * out []byte, if present, saves o/p. must be sufficiently large.
 //   * buf []byte, if present, provides i/p.
 type Config struct {
+	// Nk number kind
 	Nk NumberKind
+	// Ws whitespace type
 	Ws SpaceKind
 }
 
@@ -209,4 +216,19 @@ func (config *Config) ToJsonPointer(bin []byte, out []byte) int {
 		}
 	}
 	return n
+}
+
+// Get field or nested field specified by cbor-pointer.
+func (config *Config) Get(doc, pointer, item []byte) int {
+	return get(doc, pointer, item)
+}
+
+// Set field or nested field specified by cbor-pointer.
+func (config *Config) Set(doc, pointer, item, newdoc, old []byte) (int, int) {
+	return set(doc, pointer, item, newdoc, old)
+}
+
+// Delete field or nested field specified by json pointer.
+func (config *Config) Delete(doc, pointer, newdoc, deleted []byte) (int, int) {
+	return del(doc, pointer, newdoc, deleted)
 }

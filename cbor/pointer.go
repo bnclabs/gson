@@ -155,20 +155,25 @@ func itemsEnd(buf []byte) int {
 	panic(ErrorInvalidDocument)
 }
 
-func get(doc, pointer []byte) []byte {
+func get(doc, pointer, item []byte) int {
 	n, m := lookup(pointer, doc)
-	return doc[n:m]
+	copy(item, doc[n:m])
+	return m - n
 }
 
-func set(doc, pointer, item, out []byte) {
+func set(doc, pointer, item, newdoc, old []byte) (int, int) {
 	n, m := lookup(pointer, doc)
-	copy(out, doc[:n])
-	copy(out, item)
-	copy(out, doc[m:])
+	copy(newdoc, doc[:n])
+	copy(newdoc, item)
+	copy(newdoc, doc[m:])
+	copy(old, doc[n:m])
+	return (n + len(item) + len(doc[m:])), m - n
 }
 
-func del(doc, pointer, out []byte) {
+func del(doc, pointer, newdoc, deleted []byte) (int, int) {
 	n, m := lookup(pointer, doc)
-	copy(out, doc[:n])
-	copy(out, doc[m:])
+	copy(newdoc, doc[:n])
+	copy(newdoc, doc[m:])
+	copy(deleted, doc[n:m])
+	return n + len(doc[m:]), m - n
 }
