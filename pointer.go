@@ -5,6 +5,7 @@ package gson
 
 import "strconv"
 import "errors"
+import "strings"
 import "unicode/utf8"
 
 // ErrorInvalidPointer supplied pointer is not valid.
@@ -103,7 +104,7 @@ func allpaths(doc interface{}) []string {
 	case map[string]interface{}:
 		if len(v) > 0 {
 			for key, val := range v {
-				prefix := "/" + key
+				prefix := "/" + escapeJp(key)
 				pointers = append(pointers, prefix)
 				for _, pointer := range allpaths(val) {
 					pointers = append(pointers, prefix+pointer)
@@ -113,6 +114,13 @@ func allpaths(doc interface{}) []string {
 		pointers = append(pointers, "/-")
 	}
 	return pointers
+}
+
+func escapeJp(key string) string {
+	if strings.ContainsAny(key, "~/") {
+		return strings.Replace(strings.Replace(key, "~", "~0", -1), "/", "~1", -1)
+	}
+	return key
 }
 
 func get(segments []string, doc interface{}) interface{} {

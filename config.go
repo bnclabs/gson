@@ -22,8 +22,9 @@ const (
 	UnicodeSpace
 )
 
-// Config for parsing json to golang, parsing json-pointers and,
-// Get, Set and Delete operations on document fields using json-pointers.
+// Config and access gson functions. All APIs to gson is defined via
+// config. To quickly get started, use NewDefaultConfig() that will
+// create a configuration with default values.
 type Config struct {
 	Nk NumberKind
 	Ws SpaceKind
@@ -42,21 +43,22 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 }
 
 // Parse input JSON text to a single go-native value. If text is
-// invalid raises panic.
+// invalid raises panic. Along with go-native value, remainig
+// unparsed text is returned.
 func (config *Config) Parse(txt string) (interface{}, string) {
 	return scanToken(txt, config)
 }
 
 // ParseMany will parse input JSON text to one or more go native
 // values. If text is invalid raises panic.
-func (config *Config) ParseMany(txt string) ([]interface{}, string) {
+func (config *Config) ParseMany(txt string) []interface{} {
 	var values []interface{}
 	var tok interface{}
 	for len(txt) > 0 {
 		tok, txt = scanToken(txt, config)
 		values = append(values, tok)
 	}
-	return values, txt
+	return values
 }
 
 // ParsePointer parse input JSON pointer into segments.
@@ -65,7 +67,8 @@ func (config *Config) ParsePointer(pointer string, segments []string) []string {
 }
 
 // EncodePointer compliments ParsePointer to convert parsed
-// `segments` back to json-pointer.
+// `segments` back to json-pointer. Converted pointer is available
+// in the `pointer` array and returns the length of pointer.
 func (config *Config) EncodePointer(segments []string, pointer []byte) int {
 	return encodePointer(segments, pointer)
 }
@@ -77,13 +80,13 @@ func (config *Config) ListPointers(value interface{}) []string {
 	return pointers
 }
 
-// Get field or nested field specified by json pointer ptr.
+// Get field or nested field specified by json pointer.
 func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
 	segments := config.ParsePointer(ptr, []string{})
 	return get(segments, doc)
 }
 
-// Set field or nested field specified by json pointer ptr. If input
+// Set field or nested field specified by json pointer. If input
 // `doc` is of type []interface{}, `newdoc` return the updated slice,
 // along with the old value.
 func (config *Config) Set(
@@ -93,7 +96,7 @@ func (config *Config) Set(
 	return set(segments, doc, item)
 }
 
-// Delete field or nested field specified by json pointer ptr.
+// Delete field or nested field specified by json pointer.
 // If input `doc` is of type []interface{}, `newdoc` return
 // the updated slice, along with the deleted value.
 func (config *Config) Delete(

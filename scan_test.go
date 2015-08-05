@@ -18,10 +18,6 @@ func TestScan(t *testing.T) {
 		string(mapValue),
 		string(allValueIndent),
 		string(allValueCompact),
-		string(allValueIndent),
-		string(allValueCompact),
-		string(pallValueIndent),
-		string(pallValueCompact),
 		string(pallValueIndent),
 		string(pallValueCompact),
 	}...)
