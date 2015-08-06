@@ -142,93 +142,41 @@ func (config *Config) ToJson(in, out []byte) (int, int) {
 }
 
 // FromJsonPointer converts json path in RFC-6901 into cbor format,
-func (config *Config) FromJsonPointer(path []byte, out []byte) int {
-	var part [maxPartSize]byte
-
-	if len(path) > 0 && path[0] != '/' {
+func (config *Config) FromJsonPointer(jsonptr, out []byte) int {
+	if len(jsonptr) > 0 && jsonptr[0] != '/' {
 		panic(ErrorExpectedJsonPointer)
 	}
-
-	n, off := encodeTextStart(out), 0
-	for i := 0; i < len(path); {
-		if path[i] == '~' {
-			if path[i+1] == '1' {
-				part[off] = '/'
-				off, i = off+1, i+2
-
-			} else if path[i+1] == '0' {
-				part[off] = '~'
-				off, i = off+1, i+2
-			}
-
-		} else if path[i] == '/' {
-			if off > 0 {
-				n += encodeTag(uint64(tagJsonString), out[n:])
-				n += encodeText(bytes2str(part[:off]), out[n:])
-				off = 0
-			}
-			i++
-
-		} else {
-			part[off] = path[i]
-			i, off = i+1, off+1
-		}
-	}
-	if off > 0 || (len(path) > 0 && path[len(path)-1] == '/') {
-		n += encodeTag(uint64(tagJsonString), out[n:])
-		n += encodeText(bytes2str(part[:off]), out[n:])
-	}
-
-	n += encodeBreakStop(out[n:])
-	return n
+	return fromJsonPointer(jsonptr, out)
 }
 
 // ToJsonPointer coverts cbor encoded path into json path RFC-6901
-func (config *Config) ToJsonPointer(bin []byte, out []byte) int {
-	if !config.IsIndefiniteText(Indefinite(bin[0])) {
+func (config *Config) ToJsonPointer(cborptr, out []byte) int {
+	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
 		panic(ErrorExpectedCborPointer)
 	}
-
-	i, n, brkstp := 1, 0, hdr(type7, itemBreak)
-	for {
-		if bin[i] == hdr(type6, info24) && bin[i+1] == tagJsonString {
-			i, out[n] = i+2, '/'
-			n += 1
-			ln, j := decodeLength(bin[i:])
-			ln, i = ln+i+j, i+j
-			for i < ln {
-				switch bin[i] {
-				case '/':
-					out[n], out[n+1] = '~', '1'
-					n += 2
-				case '~':
-					out[n], out[n+1] = '~', '0'
-					n += 2
-				default:
-					out[n] = bin[i]
-					n += 1
-				}
-				i++
-			}
-		}
-		if bin[i] == brkstp {
-			break
-		}
-	}
-	return n
+	return toJsonPointer(cborptr, out)
 }
 
 // Get field or nested field specified by cbor-pointer.
-func (config *Config) Get(doc, pointer, item []byte) int {
-	return get(doc, pointer, item)
+func (config *Config) Get(doc, cborptr, item []byte) int {
+	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
+		panic(ErrorExpectedCborPointer)
+	}
+	return get(doc, cborptr, item)
 }
 
 // Set field or nested field specified by cbor-pointer.
-func (config *Config) Set(doc, pointer, item, newdoc, old []byte) (int, int) {
-	return set(doc, pointer, item, newdoc, old)
+func (config *Config) Set(doc, cborptr, item, newdoc, old []byte) (int, int) {
+	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
+		panic(ErrorExpectedCborPointer)
+	}
+	return set(doc, cborptr, item, newdoc, old)
 }
 
 // Delete field or nested field specified by json pointer.
-func (config *Config) Delete(doc, pointer, newdoc, deleted []byte) (int, int) {
-	return del(doc, pointer, newdoc, deleted)
+func (config *Config) Delete(doc, cborptr, newdoc, deleted []byte) (int, int) {
+	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
+		panic(ErrorExpectedCborPointer)
+	}
+	return del(doc, cborptr, newdoc, deleted)
 }
