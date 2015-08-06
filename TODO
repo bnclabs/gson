@@ -1,4 +1,3 @@
-- testcase for cbor pointers.
 - test case for cbor get/set/del
 - validate gson get/set/del
 - validate cbor get/set/del
