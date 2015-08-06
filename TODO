@@ -1,3 +1,10 @@
+- testdata with complex string
+- validate cbor->gson->json
+- testcase for cbor pointers.
+- test case for cbor get/set/del
+- validate gson get/set/del
+- validate cbor get/set/del
+
 gson/
     - json -> golang (DONE)
     - golang -> json (TODO: use encoding/json:Marshal)
