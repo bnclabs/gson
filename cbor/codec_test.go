@@ -426,7 +426,7 @@ func TestCborSmartnum(t *testing.T) {
 	} else if err := json.Unmarshal(data, &value); err != nil {
 		t.Fatalf("error parsing code.json: %v", err)
 	} else if !reflect.DeepEqual(outval, value) {
-		t.Fatalf("expected %v", value)
+		t.Errorf("expected %v", value)
 		t.Fatalf("got %v", outval)
 	}
 }
@@ -460,7 +460,7 @@ func TestCborCodeJSON(t *testing.T) {
 	}
 	ref = fixFloats(ref)
 
-	// test ParseJson/ToJson
+	// json->cbor->json
 	_, n := config.ParseJson(string(data), cborout) // json -> cbor
 	_, q := config.ToJson(cborout[:n], jsonout)
 	t.Logf("%v %v %v %v", n, q, len(data), len(jsonout[:q]))
@@ -475,6 +475,7 @@ func TestCborCodeJSON(t *testing.T) {
 		}
 	}
 
+	// cbor->golang->cbor->json->golang
 	value, _ := config.Decode(cborout[:n])     // cbor -> golang
 	p := config.Encode(value, cborout)         // golang -> cbor
 	_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
@@ -483,7 +484,7 @@ func TestCborCodeJSON(t *testing.T) {
 	} else {
 		outval = fixFloats(outval)
 		if !reflect.DeepEqual(outval, ref) {
-			t.Fatalf("expected %v", value)
+			t.Errorf("expected %v", value)
 			t.Fatalf("got %v", outval)
 		}
 	}
