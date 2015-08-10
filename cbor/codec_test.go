@@ -458,7 +458,6 @@ func TestCborCodeJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &ref); err != nil {
 		t.Fatalf("error parsing code.json.gz: %v", err)
 	}
-	ref = fixFloats(ref)
 
 	// json->cbor->json
 	_, n := config.ParseJson(string(data), cborout) // json -> cbor
@@ -468,7 +467,6 @@ func TestCborCodeJSON(t *testing.T) {
 		t.Logf("%v", string(jsonout[:q]))
 		t.Fatalf("error parsing code.json.gz: %v", err)
 	} else {
-		outval = fixFloats(outval)
 		if !reflect.DeepEqual(ref, outval) {
 			t.Errorf("expected %v", ref)
 			t.Fatalf("got %v", outval)
@@ -482,7 +480,6 @@ func TestCborCodeJSON(t *testing.T) {
 	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
 		t.Fatalf("error parsing %v", err)
 	} else {
-		outval = fixFloats(outval)
 		if !reflect.DeepEqual(outval, ref) {
 			t.Errorf("expected %v", value)
 			t.Fatalf("got %v", outval)

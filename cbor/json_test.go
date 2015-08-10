@@ -180,6 +180,7 @@ func TestFloat32(t *testing.T) {
 	}
 
 	_, m := decodeFloat32Tojson(buf, out)
+	t.Logf("json - %v", string(out[:m]))
 	if err := json.Unmarshal(out[:m], &ref2); err != nil {
 		t.Errorf("json.Unmarshal() failed for cbor %v: %v", buf[:n], err)
 	}
