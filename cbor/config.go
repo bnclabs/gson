@@ -22,7 +22,7 @@ const (
 	SmartNumber32 NumberKind = iota + 1
 	// SmartNumber will either use str.Atoi to parse JSON numbers
 	// or fall back to float64. Default.
-	SmartNumber NumberKind = iota + 1
+	SmartNumber
 	// IntNumber will use str.Atoi to parse JSON numbers.
 	IntNumber
 	// FloatNumber will use 32 bit strconv.ParseFloat to parse JSON numbers.

@@ -11,6 +11,8 @@ package cbor
 
 import "strconv"
 import "bytes"
+
+//import "fmt"
 import "errors"
 
 // ErrorInvalidArrayOffset
@@ -21,6 +23,9 @@ var ErrorInvalidPointer = errors.New("cbor.invalidPointer")
 
 // ErrorNoKey
 var ErrorNoKey = errors.New("cbor.noKey")
+
+// ErrorExpectedCborKey
+var ErrorExpectedCborKey = errors.New("cbor.expectedCborKey")
 
 // ErrorMalformedDocument
 var ErrorMalformedDocument = errors.New("cbor.malformedDocument")
@@ -101,7 +106,7 @@ func toJsonPointer(cborptr, out []byte) int {
 }
 
 func partial(part, doc []byte) (start, end int) {
-	if doc[0] == hdr(type4, byte(indefiniteLength)) {
+	if doc[0] == hdr(type4, byte(indefiniteLength)) { // array
 		var index int
 		var err error
 		if part[0] == '-' {
@@ -109,14 +114,18 @@ func partial(part, doc []byte) (start, end int) {
 		} else if index, err = strconv.Atoi(bytes2str(part)); err != nil {
 			panic(ErrorInvalidArrayOffset)
 		}
-		n := arrayIndex(doc[1:], index)
+		n := 1
+		n += arrayIndex(doc[1:], index)
 		m := itemsEnd(doc[n:])
+		//fmt.Println("partial-arr", index, n, n+m, doc[n:n+m], string(part))
 		return n, n + m
 
-	} else if doc[0] == hdr(type5, byte(indefiniteLength)) {
-		n := mapIndex(doc[1:], part)
+	} else if doc[0] == hdr(type5, byte(indefiniteLength)) { // map
+		n := 1
+		n += mapIndex(doc[n:], part)
 		m := itemsEnd(doc[n:])   // key
 		p := itemsEnd(doc[n+m:]) // value
+		//fmt.Println("partial", n, n+m, n+m+p, doc[n+m:n+m+p], string(part))
 		return n + m, n + m + p
 	}
 	panic(ErrorInvalidPointer)
@@ -125,8 +134,9 @@ func partial(part, doc []byte) (start, end int) {
 func lookup(cborptr, doc []byte) (start, end int) {
 	i, brkstp := 1, hdr(type7, itemBreak)
 	n, m := 0, len(doc)
+	start, end = n, m
 	if cborptr[i] == brkstp { // cborptr is empty ""
-		return n, m
+		return start, end
 	}
 	for i < len(cborptr) && cborptr[i] != brkstp {
 		doc = doc[n:m]
@@ -135,38 +145,58 @@ func lookup(cborptr, doc []byte) (start, end int) {
 			ln, j := decodeLength(cborptr[i:])
 			n, m = partial(cborptr[i+j:i+j+ln], doc)
 			i += j + ln
+			start += n
+			end = start + (m - n)
+			//fmt.Println("len", ln, i, j, n, m, start, end, len(cborptr))
 			continue
 		}
 		panic(ErrorInvalidPointer)
 	}
-	return n, m
+	return start, end
 }
 
 func arrayIndex(arr []byte, index int) int {
-	count, n, brkstp := 0, 0, hdr(type7, itemBreak)
-	for index > 0 && count < index {
-		m := itemsEnd(arr[n:])
-		if index == -1 && arr[m] == brkstp {
+	count, prev, n, brkstp := 0, 0, 0, hdr(type7, itemBreak)
+	for arr[n] != brkstp {
+		if count == index {
 			return n
+		} else if arr[n] == brkstp {
+			panic(ErrorInvalidArrayOffset)
 		}
-		n += m
+		prev = n
+		n += itemsEnd(arr[n:])
 		count++
 	}
-	return n
+	if index == -1 && arr[n] == brkstp {
+		return prev
+	}
+	panic(ErrorInvalidArrayOffset)
 }
 
 func mapIndex(buf []byte, part []byte) int {
 	n, brkstp := 0, hdr(type7, itemBreak)
 	for n < len(buf) {
+		start := n
 		if buf[n] == brkstp {
 			panic(ErrorNoKey)
 		}
-		m := itemsEnd(buf[n:]) // key
-		if bytes.Compare(part, buf[n:m]) == 0 {
-			return n
+		// get key
+		if major(buf[n]) == type6 && buf[n+1] == tagJsonString {
+			n += 2
 		}
-		p := itemsEnd(buf[n+m:]) // value
-		n += m + p
+		if major(buf[n]) != type3 {
+			panic(ErrorExpectedCborKey)
+		}
+		ln, j := decodeLength(buf[n:])
+		n += j
+		m := n + ln
+		//fmt.Println("mapIndex", n, m, string(buf[n:m]), buf[start], start)
+		if bytes.Compare(part, buf[n:m]) == 0 {
+			return start
+		}
+		p := itemsEnd(buf[m:]) // value
+		//fmt.Println("mapIndex", n, m, p, string(buf[n:m]), start)
+		n = m + p
 	}
 	panic(ErrorMalformedDocument)
 }
@@ -186,11 +216,17 @@ func itemsEnd(buf []byte) int {
 
 	} else if mjr == type4 && info(buf[0]) == indefiniteLength { // array item
 		n := 1 // skip indefiniteLength
+		if buf[n] == brkstp {
+			return 2
+		}
 		n += arrayIndex(buf[n:], -1)
 		return n + itemsEnd(buf[n:]) + 1 // skip brkstp
 
 	} else if mjr == type5 && info(buf[0]) == indefiniteLength { // map item
 		n := 1 // skip indefiniteLength
+		if buf[n] == brkstp {
+			return 2
+		}
 		for n < len(buf) {
 			if buf[n] == brkstp {
 				return n + 1

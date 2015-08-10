@@ -22,6 +22,9 @@ var ErrorJsonEmpty = errors.New("cbor.jsonEmpty")
 // ErrorExpectedJsonInteger expected a `number` while scanning.
 var ErrorExpectedJsonInteger = errors.New("cbor.expectedJsonInteger")
 
+// ErrorExpectedJsonFloat64 expected a `number` while scanning.
+var ErrorExpectedJsonFloat64 = errors.New("cbor.expectedJsonFloat64")
+
 // ErrorExpectedJsonNil expected a `nil` token while scanning.
 var ErrorExpectedJsonNil = errors.New("cbor.exptectedJsonNil")
 

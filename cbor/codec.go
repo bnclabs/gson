@@ -225,15 +225,15 @@ func encodeInt64(item int64, buf []byte) int {
 }
 
 func encodeFloat32(item float32, buf []byte) int {
-	n := encodeUint32(math.Float32bits(item), buf)
-	buf[0] = type7 | flt32
-	return n
+	buf[0] = hdr(type7, flt32)
+	binary.BigEndian.PutUint32(buf[1:], math.Float32bits(item))
+	return 5
 }
 
 func encodeFloat64(item float64, buf []byte) int {
-	n := encodeUint64(math.Float64bits(item), buf)
-	buf[0] = type7 | flt64
-	return n
+	buf[0] = hdr(type7, flt64)
+	binary.BigEndian.PutUint64(buf[1:], math.Float64bits(item))
+	return 9
 }
 
 func encodeBytes(item []byte, buf []byte) int {
@@ -416,13 +416,13 @@ func decodeFloat16(buf []byte) (interface{}, int) {
 }
 
 func decodeFloat32(buf []byte) (interface{}, int) {
-	item, n := decodeType0Info26(buf)
-	return math.Float32frombits(uint32(item.(uint64))), n
+	item, n := binary.BigEndian.Uint32(buf[1:]), 5
+	return math.Float32frombits(item), n
 }
 
 func decodeFloat64(buf []byte) (interface{}, int) {
-	item, n := decodeType0Info27(buf)
-	return math.Float64frombits(item.(uint64)), n
+	item, n := binary.BigEndian.Uint64(buf[1:]), 9
+	return math.Float64frombits(item), n
 }
 
 func decodeType0SmallInt(buf []byte) (interface{}, int) {

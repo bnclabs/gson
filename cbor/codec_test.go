@@ -490,6 +490,27 @@ func TestCborCodeJSON(t *testing.T) {
 	}
 }
 
+func TestCborTypical(t *testing.T) {
+	config := NewConfig(FloatNumber, UnicodeSpace)
+	cbordoc, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
+
+	txt := string(testdataFile("../testdata/typical.json"))
+	_, n := config.ParseJson(txt, cbordoc)
+	p, q := config.ToJson(cbordoc[:n], jsonout)
+	if p != n {
+		t.Errorf("expected %v, got %v", n, q)
+	}
+	var ref, out interface{}
+	if err := json.Unmarshal([]byte(txt), &ref); err != nil {
+		t.Errorf("error parsing typical.json: %v", err)
+	} else if err := json.Unmarshal(jsonout[:q], &out); err != nil {
+		t.Errorf("error parsing typical.json: %v", err)
+	} else if !reflect.DeepEqual(ref, out) {
+		t.Errorf("expected %v", ref)
+		t.Errorf("got      %v", out)
+	}
+}
+
 func BenchmarkEncodeNull(b *testing.B) {
 	buf := make([]byte, 10)
 	for i := 0; i < b.N; i++ {

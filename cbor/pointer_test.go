@@ -2,6 +2,7 @@ package cbor
 
 import "testing"
 import "fmt"
+import "reflect"
 import "github.com/prataprc/gson"
 
 var _ = fmt.Sprintf("dummy")
@@ -32,6 +33,35 @@ func TestCborPointer(t *testing.T) {
 		m := config.ToJsonPointer(buf[:n], out)
 		if result := string(out[:m]); tcase != result {
 			t.Errorf("expected %q, got %q", tcase, result)
+		}
+	}
+}
+
+func TestTypicalPointers(t *testing.T) {
+	config := NewConfig(FloatNumber, UnicodeSpace)
+	cborptr := make([]byte, 1024)
+	cbordoc := make([]byte, 1024*1024)
+	item := make([]byte, 10*1024)
+
+	gsonc := gson.NewDefaultConfig()
+	txt := string(testdataFile("../testdata/typical.json"))
+	doc, _ := gsonc.Parse(txt)
+	pointers := gsonc.ListPointers(doc)
+	_, n := config.ParseJson(txt, cbordoc)
+	cbordoc = cbordoc[:n]
+	for _, ptr := range pointers {
+		if ln := len(ptr); ln > 0 && ptr[ln-1] == '-' {
+			continue
+		}
+		t.Logf("pointer %v", ptr)
+		ref := gsonc.Get(ptr, doc)
+		n := config.FromJsonPointer([]byte(ptr), cborptr)
+		//t.Logf("%v", cbordoc)
+		n = config.Get(cbordoc, cborptr[:n], item)
+		val, _ := config.Decode(item[:n])
+		if !reflect.DeepEqual(cborMap2golangMap(val), ref) {
+			fmsg := "expected {%T,%v} for ptr %q, got {%T,%v}"
+			t.Fatalf(fmsg, ref, ref, ptr, val, val)
 		}
 	}
 }
