@@ -322,7 +322,7 @@ func decodeFloat32Tojson(buf, out []byte) (int, int) {
 	item, n := uint64(binary.BigEndian.Uint32(buf[1:])), 5
 	// item, n := decodeType0Info26(buf) => to avoid memory allocation.
 	f := math.Float32frombits(uint32(item))
-	out = strconv.AppendFloat(out[:0], float64(f), 'f', 6, 32)
+	out = strconv.AppendFloat(out[:0], float64(f), 'f', 20, 32)
 	return n, len(out)
 }
 
@@ -330,7 +330,7 @@ func decodeFloat64Tojson(buf, out []byte) (int, int) {
 	item, n := uint64(binary.BigEndian.Uint64(buf[1:])), 9
 	// item, n := decodeType0Info27(buf) => to avoid memory allocation.
 	f := math.Float64frombits(item)
-	out = strconv.AppendFloat(out[:0], f, 'f', 17, 64)
+	out = strconv.AppendFloat(out[:0], f, 'f', 20, 64)
 	return n, len(out)
 }
 
