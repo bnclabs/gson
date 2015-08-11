@@ -299,3 +299,70 @@ func BenchmarkPtrCborJsonL(b *testing.B) {
 		config.ToJsonPointer(out[:m], jsonout)
 	}
 }
+
+func BenchmarkPtrCborGet(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("../testdata/typical.json"))
+
+	cbordoc := make([]byte, 10*1024)
+	_, n := config.ParseJson(txt, cbordoc)
+	cborptr := make([]byte, 10*1024)
+	config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr)
+	item := make([]byte, 10*1024)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		n = config.Get(cbordoc, cborptr, item)
+	}
+	b.SetBytes(int64(n))
+}
+
+func BenchmarkPtrCborSet(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("../testdata/typical.json"))
+
+	cbordoc := make([]byte, 10*1024)
+	config.ParseJson(txt, cbordoc)
+	cborptr := make([]byte, 10*1024)
+	config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr)
+	item := make([]byte, 10*1024)
+	itemref := 10
+	n := config.Encode(itemref, item)
+
+	newdoc := make([]byte, 10*1024)
+	old := make([]byte, 10*1024)
+
+	var x, y int
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		x, y = config.Set(cbordoc, cborptr, item[:n], newdoc, old)
+	}
+	b.SetBytes(int64(x + y))
+}
+
+func BenchmarkPtrCborPrepend(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("../testdata/typical.json"))
+
+	cbordoc := make([]byte, 10*1024)
+	config.ParseJson(txt, cbordoc)
+	cborptr1, cborptr2 := make([]byte, 10*1024), make([]byte, 10*1024)
+	config.FromJsonPointer([]byte("/projects/Sherri/members"), cborptr1)
+	config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr2)
+	item := make([]byte, 10*1024)
+	refitem := 10.0
+	n := config.Encode(refitem, item)
+
+	newdoc := make([]byte, 10*1024)
+
+	var x, z int
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		x = config.Prepend(cbordoc, cborptr1, item[:n], newdoc)
+		_, z = config.Delete(newdoc, cborptr2, cbordoc, item)
+	}
+	if val, _ := config.Decode(item); !reflect.DeepEqual(val, refitem) {
+		b.Fatalf("exptected %v, got %v", refitem, val)
+	}
+	b.SetBytes(int64(x + z))
+}
