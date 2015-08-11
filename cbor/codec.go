@@ -545,7 +545,6 @@ func decodeUndefined(buf []byte) (interface{}, int) {
 func decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
 	if _, ok := item.(Indefinite); ok {
-		brkstp := hdr(type7, itemBreak)
 		switch major(buf[0]) {
 		case type4:
 			arr := make([]interface{}, 0, 2)

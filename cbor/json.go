@@ -428,7 +428,6 @@ func decodeType4Tojson(buf, out []byte) (int, int) {
 }
 
 func decodeType4IndefiniteTojson(buf, out []byte) (int, int) {
-	brkstp := hdr(type7, itemBreak)
 	out[0] = '['
 	if buf[1] == brkstp {
 		out[1] = ']'
@@ -468,7 +467,6 @@ func decodeType5Tojson(buf, out []byte) (int, int) {
 }
 
 func decodeType5IndefiniteTojson(buf, out []byte) (int, int) {
-	brkstp := hdr(type7, itemBreak)
 	out[0] = '{'
 	if buf[1] == brkstp {
 		out[1] = '}'

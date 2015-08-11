@@ -104,7 +104,7 @@ func TestJsonNumber(t *testing.T) {
 	out := make([]byte, 64)
 	// test float-number
 	tcase := "10.2"
-	config = NewConfig(FloatNumber, UnicodeSpace)
+	config = NewDefaultConfig()
 	_, n := config.ParseJson(tcase, cborout)
 	if err := json.Unmarshal([]byte(tcase), &ref1); err != nil {
 		t.Errorf("json.Unmarshal() failed for tcase %v: %v", tcase, err)

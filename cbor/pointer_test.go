@@ -2,6 +2,7 @@ package cbor
 
 import "testing"
 import "fmt"
+import "encoding/json"
 import "reflect"
 import "github.com/prataprc/gson"
 
@@ -37,8 +38,8 @@ func TestCborPointer(t *testing.T) {
 	}
 }
 
-func TestTypicalPointers(t *testing.T) {
-	config := NewConfig(FloatNumber, UnicodeSpace)
+func TestCborTypicalPointers(t *testing.T) {
+	config := NewDefaultConfig()
 	cborptr := make([]byte, 1024)
 	cbordoc := make([]byte, 1024*1024)
 	item := make([]byte, 10*1024)
@@ -62,6 +63,189 @@ func TestTypicalPointers(t *testing.T) {
 		if !reflect.DeepEqual(cborMap2golangMap(val), ref) {
 			fmsg := "expected {%T,%v} for ptr %q, got {%T,%v}"
 			t.Fatalf(fmsg, ref, ref, ptr, val, val)
+		}
+	}
+}
+
+func TestCborGet(t *testing.T) {
+	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
+	testcases := [][2]interface{}{
+		[2]interface{}{"/a", 10.0},
+		[2]interface{}{"/arr/0", 1.0},
+		[2]interface{}{"/arr/1", 2.0},
+		[2]interface{}{"/dict/a", 10.0},
+		[2]interface{}{"/dict/b", 20.0},
+	}
+
+	cbordoc, cborptr := make([]byte, 1024), make([]byte, 1024)
+	item := make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(txt, cbordoc)
+	cbordoc = cbordoc[:n]
+	for _, tcase := range testcases {
+		ptr := tcase[0].(string)
+		ref := tcase[1]
+		t.Logf("%v", ptr)
+		n := config.FromJsonPointer([]byte(ptr), cborptr)
+		n = config.Get(cbordoc, cborptr[:n], item)
+		val, _ := config.Decode(item[:n]) // cbor->json
+		if !reflect.DeepEqual(cborMap2golangMap(val), ref) {
+			fmsg := "expected {%T,%v}, for ptr %v, got {%T,%v}"
+			t.Fatalf(fmsg, ref, ref, ptr, val, val)
+		}
+	}
+}
+
+func TestCborSet(t *testing.T) {
+	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
+	testcases := [][4]interface{}{
+		[4]interface{}{
+			"/a", 11.0, `10`, `{"a":11,"arr":[1,2],"dict":{"a":10,"b":20}}`},
+		[4]interface{}{
+			"/arr/0", 10.0, `1`, `{"a":11,"arr":[10,2],"dict":{"a":10,"b":20}}`},
+		[4]interface{}{
+			"/arr/1", 20.0, `2`, `{"a":11,"arr":[10,20],"dict":{"a":10,"b":20}}`},
+		[4]interface{}{
+			"/dict/a", 1.0, `10`, `{"a":11,"arr":[10,20],"dict":{"a":1,"b":20}}`},
+		[4]interface{}{
+			"/dict/b", 2.0, `20`, `{"a":11,"arr":[10,20],"dict":{"a":1,"b":2}}`},
+	}
+
+	// cbor initialization
+	cbordoc, cbordocnew := make([]byte, 1024), make([]byte, 1024)
+	cborptr := make([]byte, 1024)
+	item, itemold := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(txt, cbordoc)
+	cbordoc = cbordoc[:n]
+
+	for _, tcase := range testcases {
+		ptr := tcase[0].(string)
+		t.Logf("%v", ptr)
+		n := config.Encode(tcase[1], item)
+		item = item[:n]
+
+		config.FromJsonPointer([]byte(ptr), cborptr)
+		n, m := config.Set(cbordoc, cborptr /*[:n]*/, item, cbordocnew, itemold)
+		copy(cbordoc, cbordocnew[:n])
+		cbordoc = cbordoc[:n]
+
+		val, _ := config.Decode(cbordocnew[:n])
+		var vref, iref interface{}
+		if err := json.Unmarshal([]byte(tcase[3].(string)), &vref); err != nil {
+			t.Fatalf("parsing json: %v", err)
+		} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, vref) {
+			t.Fatalf("for %v expected %v, got %v", ptr, vref, v)
+		}
+		oval, _ := config.Decode(itemold[:m])
+		if err := json.Unmarshal([]byte(tcase[2].(string)), &iref); err != nil {
+			t.Fatalf("parsing json: %v", err)
+		} else if ov := cborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
+			t.Fatalf("for %v item expected %v, got %v", ptr, iref, ov)
+		}
+	}
+}
+
+func TestCborPrepend(t *testing.T) {
+	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
+	ftxt := `{"a": 10, "b": 20, "arr": [1,2,3],"dict":{"a":10,"b":20,"c":30}}`
+
+	// cbor initialization
+	cbordoc, cbordocnew := make([]byte, 1024), make([]byte, 1024)
+	cborptr, item := make([]byte, 1024), make([]byte, 1024)
+
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(txt, cbordoc)
+
+	// prepend "/", {"b": 20}
+	i := config.FromJsonPointer([]byte(""), cborptr)
+	s := `{"b":20}`
+	copy(item, str2bytes(s))
+	_, m := config.ParseJson(s, item)
+	n = config.Prepend(cbordoc[:n], cborptr[:i], item[1:m-1], cbordocnew)
+	copy(cbordoc, cbordocnew[:n])
+
+	// prepend "/arr" 3.0
+	config.FromJsonPointer([]byte("/arr"), cborptr)
+	m = config.Encode(float64(3.0), item)
+	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
+	copy(cbordoc, cbordocnew[:n])
+
+	// prepend "/dict/c" 30.0
+	config.FromJsonPointer([]byte("/dict"), cborptr)
+	s = `{"c": 30}`
+	_, m = config.ParseJson(s, item)
+	n = config.Prepend(cbordoc[:n], cborptr, item[1:m-1], cbordocnew)
+	copy(cbordoc, cbordocnew[:n])
+
+	val, _ := config.Decode(cbordoc[:n])
+	if err := json.Unmarshal([]byte(ftxt), &val); err != nil {
+		t.Fatalf("parsing json: %v", err)
+	} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, val) {
+		t.Fatalf("finally exptected %v, got %v", val, v)
+	}
+
+	// parent doc as an array
+	txt = `[1,2]`
+	ftxt = `[1,2,3]`
+	_, n = config.ParseJson(txt, cbordoc)
+
+	config.FromJsonPointer([]byte(""), cborptr)
+	m = config.Encode(float64(3.0), item)
+	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
+	copy(cbordoc, cbordocnew[:n])
+
+	val, _ = config.Decode(cbordoc[:n])
+	if err := json.Unmarshal([]byte(ftxt), &val); err != nil {
+		t.Fatalf("parsing json: %v", err)
+	} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, val) {
+		t.Fatalf("finally exptected %v, got %v", val, v)
+	}
+}
+
+func TestCborDel(t *testing.T) {
+	txt := `{"a": "10", "arr": [1,2], "dict": {"a":10, "b":20}}`
+	testcases := [][3]interface{}{
+		[3]interface{}{
+			"/a", `"10"`, `{"arr": [1,2], "dict": {"a":10, "b":20}}`},
+		[3]interface{}{
+			"/arr/1", `2`, `{"arr": [1], "dict": {"a":10, "b":20}}`},
+		[3]interface{}{
+			"/dict/a", `10`, `{"arr": [1], "dict": {"b":20}}`},
+		[3]interface{}{
+			"/dict", `{"b":20}`, `{"arr": [1]}`},
+		[3]interface{}{
+			"/arr", `[1]`, `{}`},
+	}
+
+	// cbor initialization
+	cbordoc, cbordocnew := make([]byte, 1024), make([]byte, 1024)
+	cborptr, itemold := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig()
+	_, n := config.ParseJson(txt, cbordoc)
+	cbordoc = cbordoc[:n]
+
+	for _, tcase := range testcases {
+		ptr := tcase[0].(string)
+		t.Logf("%v", ptr)
+
+		config.FromJsonPointer([]byte(ptr), cborptr)
+		n, m := config.Delete(cbordoc, cborptr, cbordocnew, itemold)
+		copy(cbordoc, cbordocnew[:n])
+		cbordoc = cbordoc[:n]
+
+		val, _ := config.Decode(cbordocnew[:n])
+		var vref, iref interface{}
+		if err := json.Unmarshal([]byte(tcase[2].(string)), &vref); err != nil {
+			t.Fatalf("parsing json: %v", err)
+		} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, vref) {
+			t.Fatalf("for %v expected %v, got %v", ptr, vref, v)
+		}
+		oval, _ := config.Decode(itemold[:m])
+		if err := json.Unmarshal([]byte(tcase[1].(string)), &iref); err != nil {
+			t.Fatalf("parsing json: %v", err)
+		} else if ov := cborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
+			t.Fatalf("for %v item expected %v, got %v", ptr, iref, ov)
 		}
 	}
 }

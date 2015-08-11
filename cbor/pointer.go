@@ -76,7 +76,7 @@ func fromJsonPointer(jsonptr, out []byte) int {
 }
 
 func toJsonPointer(cborptr, out []byte) int {
-	i, n, brkstp := 1, 0, hdr(type7, itemBreak)
+	i, n := 1, 0
 	for {
 		if cborptr[i] == hdr(type6, info24) && cborptr[i+1] == tagJsonString {
 			i, out[n] = i+2, '/'
@@ -105,62 +105,70 @@ func toJsonPointer(cborptr, out []byte) int {
 	return n
 }
 
-func partial(part, doc []byte) (start, end int) {
+func partial(part, doc []byte) (start, end int, key bool) {
 	if doc[0] == hdr(type4, byte(indefiniteLength)) { // array
 		var index int
 		var err error
-		if part[0] == '-' {
-			index = -1
-		} else if index, err = strconv.Atoi(bytes2str(part)); err != nil {
+		if index, err = strconv.Atoi(bytes2str(part)); err != nil {
 			panic(ErrorInvalidArrayOffset)
 		}
 		n := 1
 		n += arrayIndex(doc[1:], index)
 		m := itemsEnd(doc[n:])
 		//fmt.Println("partial-arr", index, n, n+m, doc[n:n+m], string(part))
-		return n, n + m
+		return n, n + m, false
 
 	} else if doc[0] == hdr(type5, byte(indefiniteLength)) { // map
 		n := 1
 		n += mapIndex(doc[n:], part)
+		if doc[n] == brkstp { // key not found
+			return n, n, false
+		}
 		m := itemsEnd(doc[n:])   // key
 		p := itemsEnd(doc[n+m:]) // value
 		//fmt.Println("partial", n, n+m, n+m+p, doc[n+m:n+m+p], string(part))
-		return n + m, n + m + p
+		return n, n + m + p, true
 	}
 	panic(ErrorInvalidPointer)
 }
 
-func lookup(cborptr, doc []byte) (start, end int) {
-	i, brkstp := 1, hdr(type7, itemBreak)
-	n, m := 0, len(doc)
+func lookup(cborptr, doc []byte) (start, end int, key bool) {
+	i, n, m := 1, 0, len(doc)
 	start, end = n, m
 	if cborptr[i] == brkstp { // cborptr is empty ""
-		return start, end
+		return start, end, false
 	}
+	var k, keyln int
 	for i < len(cborptr) && cborptr[i] != brkstp {
 		doc = doc[n:m]
 		if cborptr[i] == hdr(type6, info24) && cborptr[i+1] == tagJsonString {
+			if key {
+				start += 2 + k + keyln
+			}
 			i += 2
 			ln, j := decodeLength(cborptr[i:])
-			n, m = partial(cborptr[i+j:i+j+ln], doc)
+			n, m, key = partial(cborptr[i+j:i+j+ln], doc)
 			i += j + ln
 			start += n
 			end = start + (m - n)
+			if key {
+				keyln, k = decodeLength(doc[n+2:])
+				n += 2 + k + keyln
+			}
 			//fmt.Println("len", ln, i, j, n, m, start, end, len(cborptr))
 			continue
 		}
 		panic(ErrorInvalidPointer)
 	}
-	return start, end
+	return start, end, key
 }
 
 func arrayIndex(arr []byte, index int) int {
-	count, prev, n, brkstp := 0, 0, 0, hdr(type7, itemBreak)
+	count, prev, n := 0, 0, 0
 	for arr[n] != brkstp {
 		if count == index {
 			return n
-		} else if arr[n] == brkstp {
+		} else if index > 0 && arr[n] == brkstp {
 			panic(ErrorInvalidArrayOffset)
 		}
 		prev = n
@@ -174,11 +182,11 @@ func arrayIndex(arr []byte, index int) int {
 }
 
 func mapIndex(buf []byte, part []byte) int {
-	n, brkstp := 0, hdr(type7, itemBreak)
+	n := 0
 	for n < len(buf) {
 		start := n
-		if buf[n] == brkstp {
-			panic(ErrorNoKey)
+		if buf[n] == brkstp { // key-not-found
+			return n
 		}
 		// get key
 		if major(buf[n]) == type6 && buf[n+1] == tagJsonString {
@@ -202,7 +210,6 @@ func mapIndex(buf []byte, part []byte) int {
 }
 
 func itemsEnd(buf []byte) int {
-	brkstp := hdr(type7, itemBreak)
 	mjr, inf := major(buf[0]), info(buf[0])
 	if mjr == type0 || mjr == type1 { // integer item
 		if inf < info24 {
@@ -254,24 +261,59 @@ func itemsEnd(buf []byte) int {
 }
 
 func get(doc, cborptr, item []byte) int {
-	n, m := lookup(cborptr, doc)
+	n, m, key := lookup(cborptr, doc)
+	if n == m && doc[n] == brkstp {
+		panic(ErrorNoKey)
+	} else if key {
+		ln, j := decodeLength(doc[n+2:])
+		n += 2 + j + ln
+	}
 	copy(item, doc[n:m])
 	return m - n
 }
 
 func set(doc, cborptr, item, newdoc, old []byte) (int, int) {
-	n, m := lookup(cborptr, doc)
+	n, m, key := lookup(cborptr, doc)
+	if key {
+		ln, j := decodeLength(doc[n+2:])
+		n += 2 + j + ln
+	}
+	ln := len(item)
 	copy(newdoc, doc[:n])
-	copy(newdoc, item)
-	copy(newdoc, doc[m:])
+	copy(newdoc[n:], item)
+	copy(newdoc[n+ln:], doc[m:])
 	copy(old, doc[n:m])
-	return (n + len(item) + len(doc[m:])), m - n
+	return (n + ln + len(doc[m:])), m - n
+}
+
+func prepend(doc, cborptr, item, newdoc []byte) int {
+	n, _, key := lookup(cborptr, doc)
+	if key {
+		ln, j := decodeLength(doc[n+2:])
+		n += 2 + j + ln
+	}
+	ln := len(item)
+	copy(newdoc, doc[:n])
+	newdoc[n] = doc[n]
+	array := hdr(type4, byte(indefiniteLength))
+	property := hdr(type5, byte(indefiniteLength))
+	if doc[n] == array || doc[n] == property {
+		copy(newdoc[n+1:], item)
+		copy(newdoc[n+1+ln:], doc[n+1:])
+		return len(doc) + ln
+	}
+	panic(ErrorInvalidPointer)
 }
 
 func del(doc, cborptr, newdoc, deleted []byte) (int, int) {
-	n, m := lookup(cborptr, doc)
+	n, m, key := lookup(cborptr, doc)
 	copy(newdoc, doc[:n])
-	copy(newdoc, doc[m:])
-	copy(deleted, doc[n:m])
-	return n + len(doc[m:]), m - n
+	copy(newdoc[n:], doc[m:])
+	p := n
+	if key {
+		ln, j := decodeLength(doc[n+2:])
+		p = n + 2 + j + ln
+	}
+	copy(deleted, doc[p:m])
+	return n + len(doc[m:]), m - p
 }

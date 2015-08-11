@@ -488,7 +488,7 @@ func TestCborCodeJSON(t *testing.T) {
 }
 
 func TestCborTypical(t *testing.T) {
-	config := NewConfig(FloatNumber, UnicodeSpace)
+	config := NewDefaultConfig()
 	cbordoc, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
 
 	txt := string(testdataFile("../testdata/typical.json"))
