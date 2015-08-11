@@ -193,3 +193,45 @@ func BenchmarkEncPtrLarge(b *testing.B) {
 		config.EncodePointer(path, out)
 	}
 }
+
+func BenchmarkListPointers(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("testdata/typical.json"))
+	doc, _ := config.Parse(txt)
+	b.SetBytes(int64(len(txt)))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.ListPointers(doc)
+	}
+}
+
+func BenchmarkPtrGet(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("testdata/typical.json"))
+	doc, _ := config.Parse(txt)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.Get("/projects/Sherri/members/0", doc)
+	}
+}
+
+func BenchmarkPtrSet(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("testdata/typical.json"))
+	doc, _ := config.Parse(txt)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.Set("/projects/Sherri/members/0", doc, 10)
+	}
+}
+
+func BenchmarkPtrDelete(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("testdata/typical.json"))
+	doc, _ := config.Parse(txt)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.Delete("/projects/Sherri/members/0", doc)
+		config.Set("/projects/Sherri/members/-", doc, 10)
+	}
+}
