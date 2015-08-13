@@ -105,29 +105,41 @@ func toJsonPointer(cborptr, out []byte) int {
 	return n
 }
 
+func containerLen(doc []byte) (byte, int, int) {
+	mjr, inf := major(doc[0]), info(doc[0])
+	if mjr == type4 || mjr == type5 {
+		if inf == indefiniteLength {
+			return mjr, -1, 1
+		}
+		x, y := decodeLength(doc)
+		return mjr, x, y
+	}
+	return mjr, -1, 1
+}
+
 func partial(part, doc []byte) (start, end int, key bool) {
-	if doc[0] == hdr(type4, byte(indefiniteLength)) { // array
-		var index int
-		var err error
+	var err error
+	var index int
+	mjr, length, n := containerLen(doc)
+	if mjr == type4 { // array
 		if index, err = strconv.Atoi(bytes2str(part)); err != nil {
 			panic(ErrorInvalidArrayOffset)
 		}
-		n := 1
-		n += arrayIndex(doc[1:], index)
+		n += arrayIndex(doc[1:], index, length)
 		m := itemsEnd(doc[n:])
 		//fmt.Println("partial-arr", index, n, n+m, doc[n:n+m], string(part))
 		return n, n + m, false
 
-	} else if doc[0] == hdr(type5, byte(indefiniteLength)) { // map
-		n := 1
-		n += mapIndex(doc[n:], part)
-		if doc[n] == brkstp { // key not found
-			return n, n, false
+	} else if mjr == type5 { // map
+		m, found := mapIndex(doc[n:], part, length)
+		if !found { // key not found
+			return n + m, n + m, found
 		}
-		m := itemsEnd(doc[n:])   // key
+		n += m
+		m = itemsEnd(doc[n:])    // key
 		p := itemsEnd(doc[n+m:]) // value
 		//fmt.Println("partial", n, n+m, n+m+p, doc[n+m:n+m+p], string(part))
-		return n, n + m + p, true
+		return n, n + m + p, found
 	}
 	panic(ErrorInvalidPointer)
 }
@@ -155,7 +167,6 @@ func lookup(cborptr, doc []byte) (start, end int, key bool) {
 				keyln, k = decodeLength(doc[n+2:])
 				n += 2 + k + keyln
 			}
-			//fmt.Println("len", ln, i, j, n, m, start, end, len(cborptr))
 			continue
 		}
 		panic(ErrorInvalidPointer)
@@ -163,30 +174,32 @@ func lookup(cborptr, doc []byte) (start, end int, key bool) {
 	return start, end, key
 }
 
-func arrayIndex(arr []byte, index int) int {
+func arrayIndex(arr []byte, index, length int) int {
 	count, prev, n := 0, 0, 0
-	for arr[n] != brkstp {
+	for count == length || arr[n] != brkstp {
 		if count == index {
 			return n
-		} else if index > 0 && arr[n] == brkstp {
+		} else if index > 0 && (count == length || arr[n] == brkstp) {
 			panic(ErrorInvalidArrayOffset)
 		}
 		prev = n
 		n += itemsEnd(arr[n:])
 		count++
 	}
-	if index == -1 && arr[n] == brkstp {
+	if index == -1 && (count == length || arr[n] == brkstp) {
 		return prev
 	}
 	panic(ErrorInvalidArrayOffset)
 }
 
-func mapIndex(buf []byte, part []byte) int {
+func mapIndex(buf []byte, part []byte, length int) (int, bool) {
 	n := 0
 	for n < len(buf) {
 		start := n
-		if buf[n] == brkstp { // key-not-found
-			return n
+		if length == 0 { // key not-found
+			return n, false
+		} else if buf[n] == brkstp { // key-not-found
+			return n + 1, false
 		}
 		// get key
 		if major(buf[n]) == type6 && buf[n+1] == tagJsonString {
@@ -200,11 +213,12 @@ func mapIndex(buf []byte, part []byte) int {
 		m := n + ln
 		//fmt.Println("mapIndex", n, m, string(buf[n:m]), buf[start], start)
 		if bytes.Compare(part, buf[n:m]) == 0 {
-			return start
+			return start, true
 		}
 		p := itemsEnd(buf[m:]) // value
 		//fmt.Println("mapIndex", n, m, p, string(buf[n:m]), start)
 		n = m + p
+		length--
 	}
 	panic(ErrorMalformedDocument)
 }
@@ -221,25 +235,27 @@ func itemsEnd(buf []byte) int {
 		ln, j := decodeLength(buf)
 		return j + ln
 
-	} else if mjr == type4 && info(buf[0]) == indefiniteLength { // array item
-		n := 1 // skip indefiniteLength
-		if buf[n] == brkstp {
-			return 2
+	} else if mjr == type4 { // array item
+		_, length, n := containerLen(buf)
+		if length == 0 {
+			return n
+		} else if buf[n] == brkstp {
+			return n + 1
 		}
-		n += arrayIndex(buf[n:], -1)
+		n += arrayIndex(buf[n:], -1, length)
 		return n + itemsEnd(buf[n:]) + 1 // skip brkstp
 
-	} else if mjr == type5 && info(buf[0]) == indefiniteLength { // map item
-		n := 1 // skip indefiniteLength
-		if buf[n] == brkstp {
-			return 2
-		}
+	} else if mjr == type5 { // map item
+		_, length, n := containerLen(buf)
 		for n < len(buf) {
-			if buf[n] == brkstp {
+			if length == 0 {
+				return n
+			} else if buf[n] == brkstp {
 				return n + 1
 			}
 			n += itemsEnd(buf[n:]) // key
 			n += itemsEnd(buf[n:]) // value
+			length--
 		}
 
 	} else if mjr == type7 {
@@ -262,9 +278,10 @@ func itemsEnd(buf []byte) int {
 
 func get(doc, cborptr, item []byte) int {
 	n, m, key := lookup(cborptr, doc)
-	if n == m && doc[n] == brkstp {
+	if n == m {
 		panic(ErrorNoKey)
-	} else if key {
+
+	} else if key { // if lookup in into a map, skip key
 		ln, j := decodeLength(doc[n+2:])
 		n += 2 + j + ln
 	}
@@ -288,21 +305,32 @@ func set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 
 func prepend(doc, cborptr, item, newdoc []byte) int {
 	n, _, key := lookup(cborptr, doc)
-	if key {
+	if key { // n points to {key,value} pair
 		ln, j := decodeLength(doc[n+2:])
-		n += 2 + j + ln
+		n += 2 + j + ln // skip key
+	}
+	// n now points to value which can be an array or map.
+	mjr, inf := major(doc[n]), info(doc[n])
+	if mjr != type4 && mjr != type5 {
+		panic(ErrorInvalidPointer)
+	}
+	// copy every thing before value
+	copy(newdoc, doc[:n])
+	m := 0
+	if inf != indefiniteLength { // increment and copy length
+		ln, j := decodeLength(doc[n:])
+		ln, m = ln+1, m+j
+		n += encode(uint64(ln), newdoc)
+		newdoc[0] = hdr(mjr, info(newdoc[0]))
+	} else {
+		m = n
+		newdoc[n] = doc[m]
+		m, n = m+1, n+1
 	}
 	ln := len(item)
-	copy(newdoc, doc[:n])
-	newdoc[n] = doc[n]
-	array := hdr(type4, byte(indefiniteLength))
-	property := hdr(type5, byte(indefiniteLength))
-	if doc[n] == array || doc[n] == property {
-		copy(newdoc[n+1:], item)
-		copy(newdoc[n+1+ln:], doc[n+1:])
-		return len(doc) + ln
-	}
-	panic(ErrorInvalidPointer)
+	copy(newdoc[n:], item)
+	copy(newdoc[n+ln:], doc[m:])
+	return n + ln + len(doc[m:])
 }
 
 func del(doc, cborptr, newdoc, deleted []byte) (int, int) {

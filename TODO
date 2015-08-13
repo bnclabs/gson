@@ -1,4 +1,3 @@
-- test case for cbor get/set/del
 - validate gson get/set/del
 - validate cbor get/set/del
 
@@ -16,7 +15,7 @@ cbor/
     - cbor -> json (DONE)
     - json -> cbor (DONE)
     - cbor -> pointers (DONE)
-    - cbor pointer SET/DEL/GET (TODO)
+    - cbor pointer SET/DEL/GET (DONE)
 
 collate/
     - golang -> collate (TODO)

@@ -16,3 +16,6 @@ var ErrorExpectedCborPointer = errors.New("cbor.expectedCborPointer")
 
 // ErrorExpectedJsonPointer expect a json-pointer
 var ErrorExpectedJsonPointer = errors.New("cbor.expectedJsonPointer")
+
+// ErrorEmptyPointer json-pointer is "", not supported
+var ErrorEmptyPointer = errors.New("cbor.errorEmptyPointer")

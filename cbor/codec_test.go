@@ -432,7 +432,7 @@ func TestCborSmartnum(t *testing.T) {
 }
 
 func TestCborMalformed(t *testing.T) {
-	config := NewConfig(IntNumber, AnsiSpace)
+	config := NewConfig(IntNumber, AnsiSpace, true)
 	out := make([]byte, 1024)
 	for _, tcase := range scan_invalid {
 		func() {

@@ -81,7 +81,7 @@ func TestJsonNumber(t *testing.T) {
 		"9223372036854775807", "-9223372036854775807", "-9223372036854775808",
 	}
 	cborout, jsonout := make([]byte, 1024), make([]byte, 1024)
-	config := NewConfig(IntNumber, UnicodeSpace)
+	config := NewConfig(IntNumber, UnicodeSpace, true)
 	var ref1, ref2 interface{}
 	for _, tcase := range testcases {
 		t.Logf("testcase - %v", tcase)

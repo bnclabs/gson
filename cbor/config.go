@@ -57,19 +57,22 @@ type Config struct {
 	Nk NumberKind
 	// Ws whitespace type
 	Ws SpaceKind
+	// Stream to use indefinite encoding for arrays and maps
+	Stream bool
 }
 
 // NewDefaultConfig returns a new configuration factory, with default
 // values,
 //      Nk: FloatNumber
 //      Ws: UnicodeSpace
+//      Stream: true
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace)
+	return NewConfig(FloatNumber, UnicodeSpace, true)
 }
 
 // NewConfig returns a new configuration factory
-func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	return &Config{Nk: nk, Ws: ws}
+func NewConfig(nk NumberKind, ws SpaceKind, s bool) *Config {
+	return &Config{Nk: nk, Ws: ws, Stream: s}
 }
 
 // EncodeSmallInt encode tiny integers between -23..+23.
@@ -127,6 +130,11 @@ func (config *Config) Encode(item interface{}, out []byte) int {
 	return encode(item, out)
 }
 
+// EncodeMapItems to encode key,value pairs into cbor
+func (config *Config) EncodeMapItems(items [][2]interface{}, out []byte) int {
+	return encodeMapItems(items, out)
+}
+
 // Decode cbor binary into golang data.
 func (config *Config) Decode(buf []byte) (interface{}, int) {
 	return decode(buf)
@@ -168,6 +176,9 @@ func (config *Config) ToJsonPointer(cborptr, out []byte) int {
 func (config *Config) Get(doc, cborptr, item []byte) int {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
 		panic(ErrorExpectedCborPointer)
+	} else if cborptr[1] == brkstp {
+		copy(item, doc)
+		return len(doc)
 	}
 	return get(doc, cborptr, item)
 }
@@ -177,6 +188,10 @@ func (config *Config) Get(doc, cborptr, item []byte) int {
 func (config *Config) Set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
 		panic(ErrorExpectedCborPointer)
+	} else if cborptr[1] == brkstp { // json-pointer is ""
+		copy(newdoc, item)
+		copy(old, doc)
+		return len(item), len(doc)
 	}
 	return set(doc, cborptr, item, newdoc, old)
 }
@@ -195,6 +210,8 @@ func (config *Config) Prepend(doc, cborptr, item, newdoc []byte) int {
 func (config *Config) Delete(doc, cborptr, newdoc, deleted []byte) (int, int) {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
 		panic(ErrorExpectedCborPointer)
+	} else if cborptr[1] == brkstp { // json-pointer is ""
+		panic(ErrorEmptyPointer)
 	}
 	return del(doc, cborptr, newdoc, deleted)
 }

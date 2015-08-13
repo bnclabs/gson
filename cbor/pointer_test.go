@@ -158,6 +158,7 @@ func TestCborPrepend(t *testing.T) {
 	_, n := config.ParseJson(txt, cbordoc)
 
 	// prepend "/", {"b": 20}
+	t.Logf(`prepend "/", {"b": 20}`)
 	i := config.FromJsonPointer([]byte(""), cborptr)
 	s := `{"b":20}`
 	copy(item, str2bytes(s))
@@ -166,12 +167,14 @@ func TestCborPrepend(t *testing.T) {
 	copy(cbordoc, cbordocnew[:n])
 
 	// prepend "/arr" 3.0
+	t.Logf(`prepend "/arr" 3.0`)
 	config.FromJsonPointer([]byte("/arr"), cborptr)
 	m = config.Encode(float64(3.0), item)
 	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
 	// prepend "/dict/c" 30.0
+	t.Logf(`prepend "/dict/c" 30.0`)
 	config.FromJsonPointer([]byte("/dict"), cborptr)
 	s = `{"c": 30}`
 	_, m = config.ParseJson(s, item)
@@ -186,10 +189,10 @@ func TestCborPrepend(t *testing.T) {
 	}
 
 	// parent doc as an array
+	t.Logf(`prepend "" to [1,2]`)
 	txt = `[1,2]`
 	ftxt = `[1,2,3]`
 	_, n = config.ParseJson(txt, cbordoc)
-
 	config.FromJsonPointer([]byte(""), cborptr)
 	m = config.Encode(float64(3.0), item)
 	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
