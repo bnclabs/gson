@@ -76,6 +76,104 @@ func hdr(major, info byte) byte {
 	return (major & 0xe0) | (info & 0x1f)
 }
 
+func encode(item interface{}, out []byte) int {
+	n := 0
+	switch v := item.(type) {
+	case nil:
+		n += encodeNull(out)
+	case bool:
+		if v {
+			n += encodeTrue(out)
+		} else {
+			n += encodeFalse(out)
+		}
+	case int8:
+		n += encodeInt8(v, out)
+	case uint8:
+		n += encodeUint8(v, out)
+	case int16:
+		n += encodeInt16(v, out)
+	case uint16:
+		n += encodeUint16(v, out)
+	case int32:
+		n += encodeInt32(v, out)
+	case uint32:
+		n += encodeUint32(v, out)
+	case int:
+		n += encodeInt64(int64(v), out)
+	case int64:
+		n += encodeInt64(v, out)
+	case uint:
+		n += encodeUint64(uint64(v), out)
+	case uint64:
+		n += encodeUint64(v, out)
+	case float32:
+		n += encodeFloat32(v, out)
+	case float64:
+		n += encodeFloat64(v, out)
+	case []byte:
+		n += encodeBytes(v, out)
+	case string:
+		n += encodeText(v, out)
+	case []interface{}:
+		n += encodeArray(v, out)
+	case [][2]interface{}:
+		n += encodeMap(v, out)
+	// simple types
+	case Undefined:
+		n += encodeUndefined(out)
+	// tagged encoding
+	case time.Time: // tag-0
+		n += encodeDateTime(v, out)
+	case Epoch: // tag-1
+		n += encodeDateTime(v, out)
+	case EpochMicro: // tag-1
+		n += encodeDateTime(v, out)
+	case *big.Int:
+		n += encodeBigNum(v, out)
+	case DecimalFraction:
+		n += encodeDecimalFraction(v, out)
+	case BigFloat:
+		n += encodeBigFloat(v, out)
+	case Cbor:
+		n += encodeCbor(v, out)
+	case *regexp.Regexp:
+		n += encodeRegexp(v, out)
+	case CborPrefix:
+		n += encodeCborPrefix(v, out)
+	default:
+		panic(ErrorUnknownType)
+	}
+	return n
+}
+
+func decode(buf []byte) (interface{}, int) {
+	item, n := cborDecoders[buf[0]](buf)
+	if _, ok := item.(Indefinite); ok {
+		switch major(buf[0]) {
+		case type4:
+			arr := make([]interface{}, 0, 2)
+			for buf[n] != brkstp {
+				item, n1 := decode(buf[n:])
+				arr = append(arr, item)
+				n += n1
+			}
+			return arr, n + 1
+
+		case type5:
+			pairs := make([][2]interface{}, 0, 2)
+			for buf[n] != brkstp {
+				key, n1 := decode(buf[n:])
+				value, n2 := decode(buf[n+n1:])
+				pairs = append(pairs, [2]interface{}{key, value})
+				n = n + n1 + n2
+			}
+			return pairs, n + 1
+		}
+	}
+	return item, n
+}
+
 //---- encode functions
 //
 //  * all encode functions shall optionally take an input value to encode, and
@@ -322,77 +420,6 @@ func encodeSimpleType(typcode byte, buf []byte) int {
 	return 2
 }
 
-func encode(item interface{}, out []byte) int {
-	n := 0
-	switch v := item.(type) {
-	case nil:
-		n += encodeNull(out)
-	case bool:
-		if v {
-			n += encodeTrue(out)
-		} else {
-			n += encodeFalse(out)
-		}
-	case int8:
-		n += encodeInt8(v, out)
-	case uint8:
-		n += encodeUint8(v, out)
-	case int16:
-		n += encodeInt16(v, out)
-	case uint16:
-		n += encodeUint16(v, out)
-	case int32:
-		n += encodeInt32(v, out)
-	case uint32:
-		n += encodeUint32(v, out)
-	case int:
-		n += encodeInt64(int64(v), out)
-	case int64:
-		n += encodeInt64(v, out)
-	case uint:
-		n += encodeUint64(uint64(v), out)
-	case uint64:
-		n += encodeUint64(v, out)
-	case float32:
-		n += encodeFloat32(v, out)
-	case float64:
-		n += encodeFloat64(v, out)
-	case []byte:
-		n += encodeBytes(v, out)
-	case string:
-		n += encodeText(v, out)
-	case []interface{}:
-		n += encodeArray(v, out)
-	case [][2]interface{}:
-		n += encodeMap(v, out)
-	// simple types
-	case Undefined:
-		n += encodeUndefined(out)
-	// tagged encoding
-	case time.Time: // tag-0
-		n += encodeDateTime(v, out)
-	case Epoch: // tag-1
-		n += encodeDateTime(v, out)
-	case EpochMicro: // tag-1
-		n += encodeDateTime(v, out)
-	case *big.Int:
-		n += encodeBigNum(v, out)
-	case DecimalFraction:
-		n += encodeDecimalFraction(v, out)
-	case BigFloat:
-		n += encodeBigFloat(v, out)
-	case Cbor:
-		n += encodeCbor(v, out)
-	case *regexp.Regexp:
-		n += encodeRegexp(v, out)
-	case CborPrefix:
-		n += encodeCborPrefix(v, out)
-	default:
-		panic(ErrorUnknownType)
-	}
-	return n
-}
-
 //---- decode functions
 
 func decodeNull(buf []byte) (interface{}, int) {
@@ -540,33 +567,6 @@ func decodeBreakCode(buf []byte) (interface{}, int) {
 
 func decodeUndefined(buf []byte) (interface{}, int) {
 	return Undefined(simpleUndefined), 1
-}
-
-func decode(buf []byte) (interface{}, int) {
-	item, n := cborDecoders[buf[0]](buf)
-	if _, ok := item.(Indefinite); ok {
-		switch major(buf[0]) {
-		case type4:
-			arr := make([]interface{}, 0, 2)
-			for buf[n] != brkstp {
-				item, n1 := decode(buf[n:])
-				arr = append(arr, item)
-				n += n1
-			}
-			return arr, n + 1
-
-		case type5:
-			pairs := make([][2]interface{}, 0, 2)
-			for buf[n] != brkstp {
-				key, n1 := decode(buf[n:])
-				value, n2 := decode(buf[n+n1:])
-				pairs = append(pairs, [2]interface{}{key, value})
-				n = n + n1 + n2
-			}
-			return pairs, n + 1
-		}
-	}
-	return item, n
 }
 
 //---- decoders

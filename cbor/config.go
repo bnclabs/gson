@@ -7,10 +7,10 @@ const MaxSmallInt = 23
 // Undefined type as part of simple-type codepoint-23.
 type Undefined byte
 
-// Indefinite code, first-byte of data item.
+// Indefinite code, first-byte of stream encoded data items.
 type Indefinite byte
 
-// BreakStop code, last-byte of the data item.
+// BreakStop code, last-byte of stream encoded the data items.
 type BreakStop byte
 
 // NumberKind to parse JSON numbers.
