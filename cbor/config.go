@@ -31,6 +31,9 @@ const (
 	FloatNumber32
 	// FloatNumber will use 64 bit strconv.ParseFloat to parse JSON numbers.
 	FloatNumber
+	// JsonNumber will store number in JSON encoding, can be used while
+	// convert json->cbor.
+	JsonNumber
 )
 
 // SpaceKind to skip white-spaces in JSON text.
@@ -57,22 +60,19 @@ type Config struct {
 	Nk NumberKind
 	// Ws whitespace type
 	Ws SpaceKind
-	// Stream to use indefinite encoding for arrays and maps
-	Stream bool
 }
 
 // NewDefaultConfig returns a new configuration factory, with default
 // values,
 //      Nk: FloatNumber
 //      Ws: UnicodeSpace
-//      Stream: true
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace, true)
+	return NewConfig(FloatNumber, UnicodeSpace)
 }
 
 // NewConfig returns a new configuration factory
-func NewConfig(nk NumberKind, ws SpaceKind, s bool) *Config {
-	return &Config{Nk: nk, Ws: ws, Stream: s}
+func NewConfig(nk NumberKind, ws SpaceKind) *Config {
+	return &Config{Nk: nk, Ws: ws}
 }
 
 // EncodeSmallInt encode tiny integers between -23..+23.
