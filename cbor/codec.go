@@ -322,6 +322,31 @@ func encodeInt64(item int64, buf []byte) int {
 	return encodeInt32(int32(item), buf)
 }
 
+func encodeLength(item interface{}, buf []byte) int {
+	switch v := item.(type) {
+	case uint8:
+		buf[0] = hdr(type0, info24)
+		buf[1] = v
+		return 2
+	case uint16:
+		buf[0] = hdr(type0, info25)
+		binary.BigEndian.PutUint16(buf[1:], v)
+		return 3
+	case uint32:
+		buf[0] = hdr(type0, info26)
+		binary.BigEndian.PutUint32(buf[1:], v)
+		return 5
+	case uint64:
+		buf[0] = hdr(type0, info27)
+		binary.BigEndian.PutUint64(buf[1:], v)
+		return 9
+	}
+	v := item.(int)
+	buf[0] = hdr(type0, info27)
+	binary.BigEndian.PutUint64(buf[1:], uint64(v))
+	return 9
+}
+
 func encodeFloat32(item float32, buf []byte) int {
 	buf[0] = hdr(type7, flt32)
 	binary.BigEndian.PutUint32(buf[1:], math.Float32bits(item))
