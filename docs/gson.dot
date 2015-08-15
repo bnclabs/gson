@@ -1,0 +1,13 @@
+digraph conversions {
+    size="7.5,7.5";
+    gson[shape=box,style=filled,color="0.1 0.1 1.0"];
+    json[shape=box,style=filled,color="0.2 0.2 1.0"];
+    cbor[shape=box,style=filled,color="0.7 0.7 1.0"];
+
+    gson -> json[label="encode/json.Unmarshal",margin="1,1"];
+    json -> gson[label="gson.Parse",margin="1,1"];
+    gson -> cbor[label="cbor.Encode"];
+    cbor -> gson[label="cbor.Decode"];
+    json -> cbor[label="cbor.ParseJson"];
+    cbor -> json[label="cbor.ToJson"];
+}
