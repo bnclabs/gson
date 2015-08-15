@@ -74,6 +74,12 @@ const ( // pre-defined tag values
 	// readability).
 	tagJsonString
 
+	// tag 38 is un-assigned as per spec and used here to encode
+	// number as json-string, which is more optimized by avoiding
+	// atoi and itoa (or similar operations for float). can be used
+	// while converting json->cbor
+	tagJsonNumber
+
 	// unassigned 38..55798
 	tagCborPrefix = iota + 55783
 	// unassigned 55800..
@@ -188,6 +194,10 @@ func decodeTag(buf []byte) (interface{}, int) {
 		return item, n + m
 
 	case tagJsonString:
+		ln, m := decodeLength(buf[n:])
+		return string(buf[n+m : n+m+ln]), n + m + ln
+
+	case tagJsonNumber:
 		ln, m := decodeLength(buf[n:])
 		return string(buf[n+m : n+m+ln]), n + m + ln
 	}
