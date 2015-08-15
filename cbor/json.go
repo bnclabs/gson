@@ -210,42 +210,58 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 			flt = flt || fltCheck[txt[e]] == 1 // detected as float
 		}
 	}
-	if nk == IntNumber && flt {
-		panic(ErrorExpectedJsonInteger)
+	switch nk {
+	case JsonNumber:
+		n := encodeTag(uint64(tagJsonNumber), out)
+		n += encodeText(txt[s:e], out[n:])
+		return txt[e:], n
 
-	} else if nk == IntNumber {
-		num, err := strconv.Atoi(txt[s:e])
-		if err == nil {
-			n := encodeInt64(int64(num), out)
-			return txt[e:], n
-		}
-
-	} else if nk == FloatNumber32 {
-		num, err := strconv.ParseFloat(string(txt[s:e]), 32)
-		if err == nil {
-			n := encodeFloat32(float32(num), out)
-			return txt[e:], n
-		}
-	} else if nk == FloatNumber {
+	case FloatNumber:
 		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		if err == nil {
-			n := encodeFloat64(num, out)
-			return txt[e:], n
+		if err != nil { // once parsing logic is bullet proof remove this
+			panic(err)
 		}
+		n := encodeFloat64(num, out)
+		return txt[e:], n
+
+	case IntNumber:
+		if flt {
+			panic(ErrorExpectedJsonInteger)
+		}
+		num, err := strconv.Atoi(txt[s:e])
+		if err != nil { // once parsing logic is bullet proof remove this
+			panic(err)
+		}
+		n := encodeInt64(int64(num), out)
+		return txt[e:], n
+
+	case FloatNumber32:
+		num, err := strconv.ParseFloat(string(txt[s:e]), 32)
+		if err != nil { // once parsing logic is bullet proof remove this
+			panic(err)
+		}
+		n := encodeFloat32(float32(num), out)
+		return txt[e:], n
 	}
 	// SmartNumber
 	if flt && nk == SmartNumber32 {
-		f, _ := strconv.ParseFloat(string(txt[s:e]), 32)
+		f, err := strconv.ParseFloat(string(txt[s:e]), 32)
+		if err != nil { // once parsing logic is bullet proof remove this
+			panic(err)
+		}
 		n := encodeFloat32(float32(f), out)
 		return txt[e:], n
 	} else if flt {
-		f, _ := strconv.ParseFloat(string(txt[s:e]), 64)
+		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
+		if err != nil { // once parsing logic is bullet proof remove this
+			panic(err)
+		}
 		n := encodeFloat64(f, out)
 		return txt[e:], n
 	}
 	num, err := strconv.Atoi(txt[s:e])
-	if err != nil {
-		panic(ErrorExpectedJsonInteger)
+	if err != nil { // once parsig logic is bullet proof remove this
+		panic(err)
 	}
 	n := encodeInt64(int64(num), out)
 	return txt[e:], n
@@ -271,30 +287,6 @@ func scanString(txt string, out []byte) (string, int) {
 		}
 	}
 	panic(ErrorExpectedJsonString)
-}
-
-var intCheck = [256]byte{}
-var numCheck = [256]byte{}
-var fltCheck = [256]byte{}
-
-func init() {
-	for i := 48; i <= 57; i++ {
-		intCheck[i] = 1
-		numCheck[i] = 1
-	}
-	intCheck['-'] = 1
-	intCheck['+'] = 1
-	intCheck['.'] = 1
-	intCheck['e'] = 1
-	intCheck['E'] = 1
-
-	numCheck['-'] = 1
-	numCheck['+'] = 1
-	numCheck['.'] = 1
-
-	fltCheck['.'] = 1
-	fltCheck['e'] = 1
-	fltCheck['E'] = 1
 }
 
 //---- CBOR to JSON convertor
@@ -614,4 +606,28 @@ func init() {
 	cborTojson[hdr(type7, 29)] = makePanic(ErrorDecodeSimpleType)
 	cborTojson[hdr(type7, 30)] = makePanic(ErrorDecodeSimpleType)
 	cborTojson[hdr(type7, itemBreak)] = makePanic(ErrorBreakcode)
+}
+
+var intCheck = [256]byte{}
+var numCheck = [256]byte{}
+var fltCheck = [256]byte{}
+
+func init() {
+	for i := 48; i <= 57; i++ {
+		intCheck[i] = 1
+		numCheck[i] = 1
+	}
+	intCheck['-'] = 1
+	intCheck['+'] = 1
+	intCheck['.'] = 1
+	intCheck['e'] = 1
+	intCheck['E'] = 1
+
+	numCheck['-'] = 1
+	numCheck['+'] = 1
+	numCheck['.'] = 1
+
+	fltCheck['.'] = 1
+	fltCheck['e'] = 1
+	fltCheck['E'] = 1
 }
