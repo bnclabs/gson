@@ -93,23 +93,24 @@ func encodeTag(tag uint64, buf []byte) int {
 	return n
 }
 
-func encodeDateTime(dt interface{}, buf []byte) int {
+func encodeDateTime(dt interface{}, buf []byte, config *Config) int {
 	n := 0
 	switch v := dt.(type) {
 	case time.Time: // rfc3339, as refined by section 3.3 rfc4287
 		n += encodeTag(tagDateTime, buf)
-		n += encode(v.Format(time.RFC3339), buf[n:]) // TODO: make this config.
+		// TODO: make rfc3339 as config.
+		n += encode(v.Format(time.RFC3339), buf[n:], config)
 	case Epoch:
 		n += encodeTag(tagEpoch, buf)
-		n += encode(int64(v), buf[n:])
+		n += encode(int64(v), buf[n:], config)
 	case EpochMicro:
 		n += encodeTag(tagEpoch, buf)
-		n += encode(float64(v), buf[n:])
+		n += encode(float64(v), buf[n:], config)
 	}
 	return n
 }
 
-func encodeBigNum(num *big.Int, buf []byte) int {
+func encodeBigNum(num *big.Int, buf []byte, config *Config) int {
 	n := 0
 	bytes := num.Bytes()
 	if num.Sign() < 0 {
@@ -117,7 +118,7 @@ func encodeBigNum(num *big.Int, buf []byte) int {
 	} else {
 		n += encodeTag(tagPosBignum, buf)
 	}
-	n += encode(bytes, buf[n:])
+	n += encode(bytes, buf[n:], config)
 	return n
 }
 

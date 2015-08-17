@@ -303,7 +303,7 @@ func set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 	return (n + ln + len(doc[m:])), m - n
 }
 
-func prepend(doc, cborptr, item, newdoc []byte) int {
+func prepend(doc, cborptr, item, newdoc []byte, config *Config) int {
 	n, _, key := lookup(cborptr, doc)
 	if key { // n points to {key,value} pair
 		ln, j := decodeLength(doc[n+2:])
@@ -320,7 +320,7 @@ func prepend(doc, cborptr, item, newdoc []byte) int {
 	if inf != indefiniteLength { // increment and copy length
 		ln, j := decodeLength(doc[n:])
 		ln, m = ln+1, m+j
-		n += encode(uint64(ln), newdoc)
+		n += encode(uint64(ln), newdoc, config)
 		newdoc[0] = hdr(mjr, info(newdoc[0]))
 	} else {
 		m = n

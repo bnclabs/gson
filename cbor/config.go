@@ -16,14 +16,20 @@ type BreakStop byte
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 
+// SpaceKind to skip white-spaces in JSON text.
+type SpaceKind byte
+
+// ContainerEncoding, encoding method to use for arrays and maps.
+type ContainerEncoding byte
+
 var brkstp byte = hdr(type7, itemBreak)
 
 const (
 	// SmartNumber will either use str.Atoi to parse JSON numbers
-	// or fall back to float32. Default.
+	// or fall back to float32.
 	SmartNumber32 NumberKind = iota + 1
 	// SmartNumber will either use str.Atoi to parse JSON numbers
-	// or fall back to float64. Default.
+	// or fall back to float64.
 	SmartNumber
 	// IntNumber will use str.Atoi to parse JSON numbers.
 	IntNumber
@@ -32,12 +38,9 @@ const (
 	// FloatNumber will use 64 bit strconv.ParseFloat to parse JSON numbers.
 	FloatNumber
 	// JsonNumber will store number in JSON encoding, can be used while
-	// convert json->cbor.
+	// converting json to cbor.
 	JsonNumber
 )
-
-// SpaceKind to skip white-spaces in JSON text.
-type SpaceKind byte
 
 const (
 	// AnsiSpace will skip white space characters defined by ANSI spec.
@@ -45,6 +48,19 @@ const (
 	// UnicodeSpace will skip white space characters defined by Unicode spec.
 	// Default.
 	UnicodeSpace
+)
+
+const (
+	// LengthPrefix encoding for composite types. That is, for arrays and maps
+	// encode the number of contained items as well.
+	LengthPrefix ContainerEncoding = iota + 1
+	// SizePrefix encoding for composite types. That is, for arrays and
+	// maps it is similar to LengthPrefix but the entire composite
+	// data is tagged and prefixed with total length of the data.
+	SizePrefix
+	// Stream encoding for composite types. That is, for arrays and maps
+	// use cbor's indefinite and break-stop to encode member items.
+	Stream
 )
 
 // Config and access cbor functions. All APIs to Cbor is
@@ -60,19 +76,22 @@ type Config struct {
 	Nk NumberKind
 	// Ws whitespace type
 	Ws SpaceKind
+	// Ct ContainerEncoding type
+	Ct ContainerEncoding
 }
 
 // NewDefaultConfig returns a new configuration factory, with default
 // values,
 //      Nk: FloatNumber
 //      Ws: UnicodeSpace
+//      Ct: SizePrefix
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace)
+	return NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
 }
 
 // NewConfig returns a new configuration factory
-func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	return &Config{Nk: nk, Ws: ws}
+func NewConfig(nk NumberKind, ws SpaceKind, ct ContainerEncoding) *Config {
+	return &Config{Nk: nk, Ws: ws, Ct: ct}
 }
 
 // EncodeSmallInt encode tiny integers between -23..+23.
@@ -127,12 +146,12 @@ func (config *Config) IsIndefiniteMap(b Indefinite) bool {
 
 // Encode golang data into cbor binary.
 func (config *Config) Encode(item interface{}, out []byte) int {
-	return encode(item, out)
+	return encode(item, out, config)
 }
 
 // EncodeMapItems to encode key,value pairs into cbor
 func (config *Config) EncodeMapItems(items [][2]interface{}, out []byte) int {
-	return encodeMapItems(items, out)
+	return encodeMapItems(items, out, config)
 }
 
 // Decode cbor binary into golang data.
@@ -202,7 +221,7 @@ func (config *Config) Prepend(doc, cborptr, item, newdoc []byte) int {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
 		panic(ErrorExpectedCborPointer)
 	}
-	return prepend(doc, cborptr, item, newdoc)
+	return prepend(doc, cborptr, item, newdoc, config)
 }
 
 // Delete field or nested field specified by json pointer. Returns

@@ -76,7 +76,7 @@ func hdr(major, info byte) byte {
 	return (major & 0xe0) | (info & 0x1f)
 }
 
-func encode(item interface{}, out []byte) int {
+func encode(item interface{}, out []byte, config *Config) int {
 	n := 0
 	switch v := item.(type) {
 	case nil:
@@ -116,21 +116,21 @@ func encode(item interface{}, out []byte) int {
 	case string:
 		n += encodeText(v, out)
 	case []interface{}:
-		n += encodeArray(v, out)
+		n += encodeArray(v, out, config)
 	case [][2]interface{}:
-		n += encodeMap(v, out)
+		n += encodeMap(v, out, config)
 	// simple types
 	case Undefined:
 		n += encodeUndefined(out)
 	// tagged encoding
 	case time.Time: // tag-0
-		n += encodeDateTime(v, out)
+		n += encodeDateTime(v, out, config)
 	case Epoch: // tag-1
-		n += encodeDateTime(v, out)
+		n += encodeDateTime(v, out, config)
 	case EpochMicro: // tag-1
-		n += encodeDateTime(v, out)
+		n += encodeDateTime(v, out, config)
 	case *big.Int:
-		n += encodeBigNum(v, out)
+		n += encodeBigNum(v, out, config)
 	case DecimalFraction:
 		n += encodeDecimalFraction(v, out)
 	case BigFloat:
@@ -383,17 +383,17 @@ func encodeTextStart(buf []byte) int {
 	return 1
 }
 
-func encodeArray(items []interface{}, buf []byte) int {
+func encodeArray(items []interface{}, buf []byte, config *Config) int {
 	n := encodeUint64(uint64(len(items)), buf)
 	buf[0] = (buf[0] & 0x1f) | type4 // fix the type from type0->type4
-	n += encodeArrayItems(items, buf[n:])
+	n += encodeArrayItems(items, buf[n:], config)
 	return n
 }
 
-func encodeArrayItems(items []interface{}, buf []byte) int {
+func encodeArrayItems(items []interface{}, buf []byte, config *Config) int {
 	n := 0
 	for _, item := range items {
-		n += encode(item, buf[n:])
+		n += encode(item, buf[n:], config)
 	}
 	return n
 }
@@ -403,18 +403,18 @@ func encodeArrayStart(buf []byte) int {
 	return 1
 }
 
-func encodeMap(items [][2]interface{}, buf []byte) int {
+func encodeMap(items [][2]interface{}, buf []byte, config *Config) int {
 	n := encodeUint64(uint64(len(items)), buf)
 	buf[0] = (buf[0] & 0x1f) | type5 // fix the type from type0->type5
-	n += encodeMapItems(items, buf[n:])
+	n += encodeMapItems(items, buf[n:], config)
 	return n
 }
 
-func encodeMapItems(items [][2]interface{}, buf []byte) int {
+func encodeMapItems(items [][2]interface{}, buf []byte, config *Config) int {
 	n := 0
 	for _, item := range items {
-		n += encode(item[0], buf[n:])
-		n += encode(item[1], buf[n:])
+		n += encode(item[0], buf[n:], config)
+		n += encode(item[1], buf[n:], config)
 	}
 	return n
 }

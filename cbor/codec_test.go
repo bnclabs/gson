@@ -19,8 +19,9 @@ func TestCborMajor(t *testing.T) {
 
 func TestCborNil(t *testing.T) {
 	buf := make([]byte, 10)
+	config := NewDefaultConfig()
 
-	if n := encode(nil, buf); n != 1 {
+	if n := encode(nil, buf, config); n != 1 {
 		t.Errorf("fail encode nil: %v want 1", n)
 	} else if item, m := decode(buf); m != 1 {
 		t.Errorf("fail decode on nil len: %v want 1", m)
@@ -31,8 +32,9 @@ func TestCborNil(t *testing.T) {
 
 func TestCborTrue(t *testing.T) {
 	buf := make([]byte, 10)
+	config := NewDefaultConfig()
 
-	if n := encode(true, buf); n != 1 {
+	if n := encode(true, buf, config); n != 1 {
 		t.Errorf("fail encode true: %v want 1", n)
 	} else if item, m := decode(buf); m != 1 {
 		t.Errorf("fail decode on true len: %v want 1", m)
@@ -43,8 +45,9 @@ func TestCborTrue(t *testing.T) {
 
 func TestCborFalse(t *testing.T) {
 	buf := make([]byte, 10)
+	config := NewDefaultConfig()
 
-	if n := encode(false, buf); n != 1 {
+	if n := encode(false, buf, config); n != 1 {
 		t.Errorf("fail encode false: %v want 1", n)
 	} else if item, m := decode(buf); m != 1 {
 		t.Errorf("fail decode on false len: %v want 1", m)
@@ -89,6 +92,7 @@ func TestCborInt8(t *testing.T) {
 
 func TestCborNum(t *testing.T) {
 	buf := make([]byte, 20)
+	config := NewDefaultConfig()
 	tests := [][2]interface{}{
 		[2]interface{}{'a', uint64(97)},
 		[2]interface{}{byte(0), uint64(0)},
@@ -190,7 +194,7 @@ func TestCborNum(t *testing.T) {
 		[2]interface{}{int64(9223372036854775807), uint64(9223372036854775807)},
 	}
 	for _, test := range tests {
-		n := encode(test[0], buf)
+		n := encode(test[0], buf, config)
 		val, m := decode(buf)
 		//t.Logf("executing test case %v", test)
 		if n != m || !reflect.DeepEqual(val, test[1]) {
@@ -206,7 +210,7 @@ func TestCborNum(t *testing.T) {
 				t.Errorf("expected panic decoding int64 > 9223372036854775807")
 			}
 		}()
-		encode(uint64(9223372036854775808), buf)
+		encode(uint64(9223372036854775808), buf, config)
 		buf[0] = (buf[0] & 0x1f) | type1 // fix as negative integer
 		decode(buf)
 	}()
@@ -223,7 +227,8 @@ func TestCborFloat16(t *testing.T) {
 
 func TestCborFloat32(t *testing.T) {
 	buf, ref := make([]byte, 10), float32(10.11)
-	n := encode(ref, buf)
+	config := NewDefaultConfig()
+	n := encode(ref, buf, config)
 	t.Logf("%v", buf)
 	val, m := decode(buf)
 	if n != 5 || n != m || !reflect.DeepEqual(val, ref) {
@@ -233,7 +238,8 @@ func TestCborFloat32(t *testing.T) {
 
 func TestCborFloat64(t *testing.T) {
 	buf, ref := make([]byte, 10), float64(10.11)
-	n := encode(ref, buf)
+	config := NewDefaultConfig()
+	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 9 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code float32: %v %v %T(%v)", n, m, val, val)
@@ -242,10 +248,11 @@ func TestCborFloat64(t *testing.T) {
 
 func TestCborBytes(t *testing.T) {
 	buf, ref := make([]byte, 200), make([]uint8, 100)
+	config := NewDefaultConfig()
 	for i := 0; i < len(ref); i++ {
 		ref[i] = uint8(i)
 	}
-	n := encode(ref, buf)
+	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 102 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code bytes: %v %v %T(%v)", n, m, val, val)
@@ -262,7 +269,8 @@ func TestCborBytes(t *testing.T) {
 
 func TestCborText(t *testing.T) {
 	buf, ref := make([]byte, 200), "hello world"
-	n := encode(ref, buf)
+	config := NewDefaultConfig()
+	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 12 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
@@ -280,15 +288,16 @@ func TestCborText(t *testing.T) {
 
 func TestCborArray(t *testing.T) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	ref := []interface{}{10.2, "hello world"}
-	n := encode(ref, buf)
+	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 22 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// test text-start
 	n = encodeArrayStart(buf)
-	n += encode(uint64(1), buf[n:])
+	n += encode(uint64(1), buf[n:], config)
 	n += encodeBreakStop(buf[n:])
 	if n != 3 {
 		t.Errorf("fail code text-start len: %v wanted 3", n)
@@ -301,19 +310,20 @@ func TestCborArray(t *testing.T) {
 
 func TestCborMap(t *testing.T) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	ref := [][2]interface{}{
 		[2]interface{}{10.2, "hello world"},
 		[2]interface{}{"hello world", 10.2},
 	}
-	n := encode(ref, buf)
+	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 43 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// test text-start
 	n = encodeMapStart(buf)
-	n += encode("a", buf[n:])
-	n += encode(1, buf[n:])
+	n += encode("a", buf[n:], config)
+	n += encode(1, buf[n:], config)
 	n += encodeBreakStop(buf[n:])
 	ref = [][2]interface{}{[2]interface{}{"a", uint64(1)}}
 	if n != 5 {
@@ -432,7 +442,7 @@ func TestCborSmartnum(t *testing.T) {
 }
 
 func TestCborMalformed(t *testing.T) {
-	config := NewConfig(IntNumber, AnsiSpace)
+	config := NewConfig(IntNumber, AnsiSpace, SizePrefix)
 	out := make([]byte, 1024)
 	for _, tcase := range scan_invalid {
 		func() {
@@ -510,14 +520,16 @@ func TestCborTypical(t *testing.T) {
 
 func BenchmarkEncodeNull(b *testing.B) {
 	buf := make([]byte, 10)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(nil, buf)
+		encode(nil, buf, config)
 	}
 }
 
 func BenchmarkDecodeNull(b *testing.B) {
 	buf := make([]byte, 10)
-	n := encode(nil, buf)
+	config := NewDefaultConfig()
+	n := encode(nil, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -525,14 +537,16 @@ func BenchmarkDecodeNull(b *testing.B) {
 
 func BenchmarkEncodeTrue(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(true, buf)
+		encode(true, buf, config)
 	}
 }
 
 func BenchmarkDecodeTrue(b *testing.B) {
 	buf := make([]byte, 10)
-	n := encode(true, buf)
+	config := NewDefaultConfig()
+	n := encode(true, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -540,14 +554,16 @@ func BenchmarkDecodeTrue(b *testing.B) {
 
 func BenchmarkEncodeFalse(b *testing.B) {
 	buf := make([]byte, 10)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(false, buf)
+		encode(false, buf, config)
 	}
 }
 
 func BenchmarkDecodeFalse(b *testing.B) {
 	buf := make([]byte, 10)
-	n := encode(false, buf)
+	config := NewDefaultConfig()
+	n := encode(false, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -555,14 +571,16 @@ func BenchmarkDecodeFalse(b *testing.B) {
 
 func BenchmarkEncodeUint8(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(uint8(255), buf)
+		encode(uint8(255), buf, config)
 	}
 }
 
 func BenchmarkDecodeUint8(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(uint8(255), buf)
+	config := NewDefaultConfig()
+	n := encode(uint8(255), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -570,14 +588,16 @@ func BenchmarkDecodeUint8(b *testing.B) {
 
 func BenchmarkEncodeInt8(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(int8(-128), buf)
+		encode(int8(-128), buf, config)
 	}
 }
 
 func BenchmarkDecodeInt8(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(int8(-128), buf)
+	config := NewDefaultConfig()
+	n := encode(int8(-128), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -585,14 +605,16 @@ func BenchmarkDecodeInt8(b *testing.B) {
 
 func BenchmarkEncodeUint16(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(uint16(65535), buf)
+		encode(uint16(65535), buf, config)
 	}
 }
 
 func BenchmarkDecodeUint16(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(uint16(65535), buf)
+	config := NewDefaultConfig()
+	n := encode(uint16(65535), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -600,14 +622,16 @@ func BenchmarkDecodeUint16(b *testing.B) {
 
 func BenchmarkEncodeInt16(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(int16(-32768), buf)
+		encode(int16(-32768), buf, config)
 	}
 }
 
 func BenchmarkDecodeInt16(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(int16(-32768), buf)
+	config := NewDefaultConfig()
+	n := encode(int16(-32768), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -615,14 +639,16 @@ func BenchmarkDecodeInt16(b *testing.B) {
 
 func BenchmarkEncodeUint32(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(uint32(4294967295), buf)
+		encode(uint32(4294967295), buf, config)
 	}
 }
 
 func BenchmarkDecodeUint32(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(uint32(4294967295), buf)
+	config := NewDefaultConfig()
+	n := encode(uint32(4294967295), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -630,14 +656,16 @@ func BenchmarkDecodeUint32(b *testing.B) {
 
 func BenchmarkEncodeInt32(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(int32(-2147483648), buf)
+		encode(int32(-2147483648), buf, config)
 	}
 }
 
 func BenchmarkDecodeInt32(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(int32(-2147483648), buf)
+	config := NewDefaultConfig()
+	n := encode(int32(-2147483648), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -645,14 +673,16 @@ func BenchmarkDecodeInt32(b *testing.B) {
 
 func BenchmarkEncodeUint64(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(uint64(18446744073709551615), buf)
+		encode(uint64(18446744073709551615), buf, config)
 	}
 }
 
 func BenchmarkDecodeUint64(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(uint64(18446744073709551615), buf)
+	config := NewDefaultConfig()
+	n := encode(uint64(18446744073709551615), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -660,14 +690,16 @@ func BenchmarkDecodeUint64(b *testing.B) {
 
 func BenchmarkEncodeInt64(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(int64(-2147483648), buf)
+		encode(int64(-2147483648), buf, config)
 	}
 }
 
 func BenchmarkDecodeInt64(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(int64(-2147483648), buf)
+	config := NewDefaultConfig()
+	n := encode(int64(-2147483648), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -675,14 +707,16 @@ func BenchmarkDecodeInt64(b *testing.B) {
 
 func BenchmarkEncodeFlt32(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(float32(10.2), buf)
+		encode(float32(10.2), buf, config)
 	}
 }
 
 func BenchmarkDecodeFlt32(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(float32(10.2), buf)
+	config := NewDefaultConfig()
+	n := encode(float32(10.2), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -690,14 +724,16 @@ func BenchmarkDecodeFlt32(b *testing.B) {
 
 func BenchmarkEncodeFlt64(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(float64(10.2), buf)
+		encode(float64(10.2), buf, config)
 	}
 }
 
 func BenchmarkDecodeFlt64(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode(float64(10.2), buf)
+	config := NewDefaultConfig()
+	n := encode(float64(10.2), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -705,15 +741,17 @@ func BenchmarkDecodeFlt64(b *testing.B) {
 
 func BenchmarkEncodeBytes(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	bs := []byte("hello world")
 	for i := 0; i < b.N; i++ {
-		encode(bs, buf)
+		encode(bs, buf, config)
 	}
 }
 
 func BenchmarkDecodeBytes(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode([]byte("hello world"), buf)
+	config := NewDefaultConfig()
+	n := encode([]byte("hello world"), buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -721,15 +759,17 @@ func BenchmarkDecodeBytes(b *testing.B) {
 
 func BenchmarkEncodeText(b *testing.B) {
 	buf := make([]byte, 64)
+	config := NewDefaultConfig()
 	text := "hello world"
 	for i := 0; i < b.N; i++ {
-		encode(text, buf)
+		encode(text, buf, config)
 	}
 }
 
 func BenchmarkDecodeText(b *testing.B) {
 	buf := make([]byte, 64)
-	n := encode("hello world", buf)
+	config := NewDefaultConfig()
+	n := encode("hello world", buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -737,14 +777,16 @@ func BenchmarkDecodeText(b *testing.B) {
 
 func BenchmarkEncodeArr0(b *testing.B) {
 	buf, arr := make([]byte, 1024), make([]interface{}, 0)
+	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		encode(arr, buf)
+		encode(arr, buf, config)
 	}
 }
 
 func BenchmarkDecodeArr0(b *testing.B) {
 	buf, arr := make([]byte, 1024), make([]interface{}, 0)
-	n := encode(arr, buf)
+	config := NewDefaultConfig()
+	n := encode(arr, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -752,16 +794,18 @@ func BenchmarkDecodeArr0(b *testing.B) {
 
 func BenchmarkEncodeArr5(b *testing.B) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	arr := []interface{}{5, 5.0, "hello world", true, nil}
 	for i := 0; i < b.N; i++ {
-		encode(arr, buf)
+		encode(arr, buf, config)
 	}
 }
 
 func BenchmarkDecodeArr5(b *testing.B) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	arr := []interface{}{5, 5.0, "hello world", true, nil}
-	n := encode(arr, buf)
+	n := encode(arr, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -769,16 +813,18 @@ func BenchmarkDecodeArr5(b *testing.B) {
 
 func BenchmarkEncodeMap0(b *testing.B) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	m := make([][2]interface{}, 0)
 	for i := 0; i < b.N; i++ {
-		encode(m, buf)
+		encode(m, buf, config)
 	}
 }
 
 func BenchmarkDecodeMap0(b *testing.B) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	m := make([][2]interface{}, 0)
-	n := encode(m, buf)
+	n := encode(m, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
@@ -786,24 +832,26 @@ func BenchmarkDecodeMap0(b *testing.B) {
 
 func BenchmarkEncodeMap5(b *testing.B) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	m := [][2]interface{}{
 		[2]interface{}{"key0", 5}, [2]interface{}{"key1", 5.0},
 		[2]interface{}{"key2", "hello world"},
 		[2]interface{}{"key3", true}, [2]interface{}{"key4", nil},
 	}
 	for i := 0; i < b.N; i++ {
-		encode(m, buf)
+		encode(m, buf, config)
 	}
 }
 
 func BenchmarkDecodeMap5(b *testing.B) {
 	buf := make([]byte, 1024)
+	config := NewDefaultConfig()
 	m := [][2]interface{}{
 		[2]interface{}{"key0", 5}, [2]interface{}{"key1", 5.0},
 		[2]interface{}{"key2", "hello world"},
 		[2]interface{}{"key3", true}, [2]interface{}{"key4", nil},
 	}
-	n := encode(m, buf)
+	n := encode(m, buf, config)
 	for i := 0; i < b.N; i++ {
 		decode(buf[:n])
 	}
