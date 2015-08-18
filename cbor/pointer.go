@@ -24,6 +24,9 @@ var ErrorInvalidPointer = errors.New("cbor.invalidPointer")
 // ErrorNoKey
 var ErrorNoKey = errors.New("cbor.noKey")
 
+// ErrorExpectedKey
+var ErrorExpectedKey = errors.New("cbor.expectedKey")
+
 // ErrorExpectedCborKey
 var ErrorExpectedCborKey = errors.New("cbor.expectedCborKey")
 
@@ -105,27 +108,33 @@ func toJsonPointer(cborptr, out []byte) int {
 	return n
 }
 
-func containerLen(doc []byte) (byte, int, int) {
-	mjr, inf := major(doc[0]), info(doc[0])
+func containerLen(doc []byte) (mjr byte, length int, size int, n int) {
+	n, size = 0, -1
+	if doc[0] == hdr(type6, info24) && doc[1] == tagSizePrefix {
+		size, _ = decodeLength(doc[2:])
+		n += 7
+	}
+	mjr, inf := major(doc[n]), info(doc[n])
 	if mjr == type4 || mjr == type5 {
 		if inf == indefiniteLength {
-			return mjr, -1, 1
+			return mjr, -1, size, n + 1
 		}
-		x, y := decodeLength(doc)
-		return mjr, x, y
+		ln, m := decodeLength(doc[n:])
+		return mjr, ln, size, n + m
 	}
-	return mjr, -1, 1
+	panic(ErrorMalformedDocument)
 }
 
 func partial(part, doc []byte) (start, end int, key bool) {
 	var err error
 	var index int
-	mjr, length, n := containerLen(doc)
+	mjr, length, _ /*size*/, n := containerLen(doc)
+	//fmt.Println("partial", string(part), len(doc), length, n, doc)
 	if mjr == type4 { // array
 		if index, err = strconv.Atoi(bytes2str(part)); err != nil {
 			panic(ErrorInvalidArrayOffset)
 		}
-		n += arrayIndex(doc[1:], index, length)
+		n += arrayIndex(doc[n:], index, length)
 		m := itemsEnd(doc[n:])
 		//fmt.Println("partial-arr", index, n, n+m, doc[n:n+m], string(part))
 		return n, n + m, false
@@ -138,7 +147,7 @@ func partial(part, doc []byte) (start, end int, key bool) {
 		n += m
 		m = itemsEnd(doc[n:])    // key
 		p := itemsEnd(doc[n+m:]) // value
-		//fmt.Println("partial", n, n+m, n+m+p, doc[n+m:n+m+p], string(part))
+		//fmt.Println("partial-map",n,n+m,n+m+p,doc[n+m:n+m+p],string(part),found)
 		return n, n + m + p, found
 	}
 	panic(ErrorInvalidPointer)
@@ -176,10 +185,10 @@ func lookup(cborptr, doc []byte) (start, end int, key bool) {
 
 func arrayIndex(arr []byte, index, length int) int {
 	count, prev, n := 0, 0, 0
-	for count == length || arr[n] != brkstp {
+	for (length >= 0 && count < length) || arr[n] != brkstp {
 		if count == index {
 			return n
-		} else if index > 0 && (count == length || arr[n] == brkstp) {
+		} else if index >= 0 && (count == length || arr[n] == brkstp) {
 			panic(ErrorInvalidArrayOffset)
 		}
 		prev = n
@@ -206,12 +215,12 @@ func mapIndex(buf []byte, part []byte, length int) (int, bool) {
 			n += 2
 		}
 		if major(buf[n]) != type3 {
-			panic(ErrorExpectedCborKey)
+			panic(ErrorExpectedKey)
 		}
 		ln, j := decodeLength(buf[n:])
 		n += j
 		m := n + ln
-		//fmt.Println("mapIndex", n, m, string(buf[n:m]), buf[start], start)
+		//fmt.Println("mapIndex", n, m, length, string(buf[n:m]), start, part)
 		if bytes.Compare(part, buf[n:m]) == 0 {
 			return start, true
 		}
@@ -235,18 +244,33 @@ func itemsEnd(buf []byte) int {
 		ln, j := decodeLength(buf)
 		return j + ln
 
+	} else if mjr == type6 && inf == info24 && buf[1] == tagSizePrefix {
+		_, _, size, m := containerLen(buf)
+		//fmt.Println("itemIndex-prefix", m, size)
+		return m + size
+
 	} else if mjr == type4 { // array item
-		_, length, n := containerLen(buf)
-		if length == 0 {
+		_, length, size, n := containerLen(buf)
+		//fmt.Println("itemIndex-arr", length, size, n)
+		if size > 0 {
+			return n + size
+		} else if length == 0 {
 			return n
 		} else if buf[n] == brkstp {
 			return n + 1
 		}
 		n += arrayIndex(buf[n:], -1, length)
-		return n + itemsEnd(buf[n:]) + 1 // skip brkstp
+		if length < 0 {
+			return n + itemsEnd(buf[n:]) + 1 // skip brkstp
+		}
+		return n + itemsEnd(buf[n:])
 
 	} else if mjr == type5 { // map item
-		_, length, n := containerLen(buf)
+		_, length, size, n := containerLen(buf)
+		//fmt.Println("itemIndex-map", length, size, n)
+		if size > 0 {
+			return n + size
+		}
 		for n < len(buf) {
 			if length == 0 {
 				return n
@@ -273,17 +297,21 @@ func itemsEnd(buf []byte) int {
 		ln, j := decodeLength(buf[2:])
 		return 2 + j + ln
 	}
+	//fmt.Println(buf)
 	panic(ErrorInvalidDocument)
+}
+
+func skipKey(doc []byte) int {
+	ln, j := decodeLength(doc[2:])
+	return 2 + j + ln
 }
 
 func get(doc, cborptr, item []byte) int {
 	n, m, key := lookup(cborptr, doc)
 	if n == m {
 		panic(ErrorNoKey)
-
 	} else if key { // if lookup in into a map, skip key
-		ln, j := decodeLength(doc[n+2:])
-		n += 2 + j + ln
+		n += skipKey(doc[n:])
 	}
 	copy(item, doc[n:m])
 	return m - n
@@ -292,8 +320,7 @@ func get(doc, cborptr, item []byte) int {
 func set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 	n, m, key := lookup(cborptr, doc)
 	if key {
-		ln, j := decodeLength(doc[n+2:])
-		n += 2 + j + ln
+		n += skipKey(doc[n:])
 	}
 	ln := len(item)
 	copy(newdoc, doc[:n])
@@ -305,43 +332,125 @@ func set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 
 func prepend(doc, cborptr, item, newdoc []byte, config *Config) int {
 	n, _, key := lookup(cborptr, doc)
-	if key { // n points to {key,value} pair
-		ln, j := decodeLength(doc[n+2:])
-		n += 2 + j + ln // skip key
+	if key {
+		n += skipKey(doc[n:])
 	}
 	// n now points to value which can be an array or map.
-	mjr, inf := major(doc[n]), info(doc[n])
+	mjr, length, size, _ := containerLen(doc[n:])
+	//fmt.Println("prepend", mjr, length, size, n)
 	if mjr != type4 && mjr != type5 {
 		panic(ErrorInvalidPointer)
 	}
+	if size >= 0 {
+		size += len(item)
+	}
+	if length >= 0 {
+		length++
+	}
+
 	// copy every thing before value
 	copy(newdoc, doc[:n])
-	m := 0
-	if inf != indefiniteLength { // increment and copy length
-		ln, j := decodeLength(doc[n:])
-		ln, m = ln+1, m+j
-		n += encode(uint64(ln), newdoc, config)
-		newdoc[0] = hdr(mjr, info(newdoc[0]))
-	} else {
-		m = n
-		newdoc[n] = doc[m]
-		m, n = m+1, n+1
+	x, y := n, n
+	if size >= 0 {
+		x += encodeTag(tagSizePrefix, newdoc[x:])
+		x += encodeLength(uint32(size), newdoc[x:])
+		y += 7
+	}
+	if length >= 0 {
+		p := x
+		x += encodeLength(uint64(length), newdoc[p:])
+		newdoc[p] = hdr(mjr, info(doc[y]))
+	} else { // stream encoding
+		newdoc[x] = doc[y]
+		x++
+		y++
 	}
 	ln := len(item)
-	copy(newdoc[n:], item)
-	copy(newdoc[n+ln:], doc[m:])
-	return n + ln + len(doc[m:])
+	copy(newdoc[x:], item)
+	copy(newdoc[x+ln:], doc[y:])
+	return x + ln + len(doc[y:])
+}
+
+func getContainerPtr(cborptr, ccptr []byte) (prev int) {
+	for n := 1; n < len(cborptr); {
+		if cborptr[n] == brkstp {
+			break
+		}
+		ln, m := decodeLength(cborptr[n+2:])
+		prev, n = n, n+2+m+ln
+	}
+	copy(ccptr, cborptr[:prev])
+	ccptr[prev] = brkstp
+	return prev
+}
+
+func getLeafPtr(cborptr []byte, off int, ccptr []byte) int {
+	a := encodeTextStart(ccptr)
+	copy(ccptr[a:], cborptr[off:])
+	return len(cborptr[off:]) + a
 }
 
 func del(doc, cborptr, newdoc, deleted []byte) (int, int) {
-	n, m, key := lookup(cborptr, doc)
-	copy(newdoc, doc[:n])
-	copy(newdoc[n:], doc[m:])
-	p := n
-	if key {
-		ln, j := decodeLength(doc[n+2:])
-		p = n + 2 + j + ln
+	if len(cborptr) < 2 || cborptr[1] == brkstp {
+		panic(ErrorInvalidPointer)
 	}
-	copy(deleted, doc[p:m])
-	return n + len(doc[m:]), m - p
+
+	var ccptr []byte
+	if len(cborptr) < len(newdoc) {
+		ccptr = newdoc
+	} else {
+		ccptr = make([]byte, len(cborptr))
+	}
+
+	// get container pointer
+	off := getContainerPtr(cborptr, ccptr)
+	n, m, key := lookup(ccptr, doc)
+	if key {
+		n += skipKey(doc[n:])
+	}
+
+	// get leaf pointer
+	getLeafPtr(cborptr, off, ccptr)
+	x, y, key := lookup(ccptr, doc[n:m])
+
+	copy(newdoc, doc[:n]) // copy every thing till start of contianer
+
+	// adjust size and length prefix
+	mjr, length, size, v := containerLen(doc[n:m])
+	if size >= 0 {
+		size -= (y - x)
+	}
+	if length >= 0 {
+		length--
+	}
+
+	// fix the size, if present, for the new container.
+	p, q := n, n
+	if size >= 0 {
+		p += encodeTag(tagSizePrefix, newdoc[p:])
+		p += encodeLength(uint32(size), newdoc[p:])
+		q += 7 // p and q are same here.
+	}
+	newdoc[p] = doc[q] // assume stream encoding
+	if length >= 0 {
+		// may be not, but its okay.
+		p += encodeLength(uint64(length), newdoc[p:])
+		newdoc[q] = hdr(mjr, info(doc[q]))
+		q += v - 7
+	}
+
+	copy(newdoc[p:], doc[q:n+x]) // copy siblings uptil deleted item
+	p += len(doc[q : n+x])
+
+	// skip the deleted value and copy the remaining.
+	copy(newdoc[p:], doc[n+y:])
+	docsz := p + len(doc[n+y:])
+
+	// copy the deleted value
+	if key {
+		x += skipKey(doc[n+x:])
+	}
+	copy(deleted, doc[n+x:n+y])
+	valsz := len(doc[n+x : n+y])
+	return docsz, valsz
 }

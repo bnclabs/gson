@@ -56,7 +56,8 @@ const (
 	LengthPrefix ContainerEncoding = iota + 1
 	// SizePrefix encoding for composite types. That is, for arrays and
 	// maps it is similar to LengthPrefix but the entire composite
-	// data is tagged and prefixed with total length of the data.
+	// data is tagged and prefixed with total length of the data, excluding
+	// array header.
 	SizePrefix
 	// Stream encoding for composite types. That is, for arrays and maps
 	// use cbor's indefinite and break-stop to encode member items.
@@ -168,8 +169,7 @@ func (config *Config) ParseJson(txt string, out []byte) (string, int) {
 // ToJson converts CBOR binary data-item into JSON. Returns
 // length of `out`.
 func (config *Config) ToJson(in, out []byte) (int, int) {
-	n, m := cborTojson[in[0]](in, out)
-	return n, m
+	return decodeTojson(in, out)
 }
 
 // FromJsonPointer converts json path in RFC-6901 into cbor format.

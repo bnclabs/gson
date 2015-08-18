@@ -80,6 +80,11 @@ const ( // pre-defined tag values
 	// while converting json->cbor
 	tagJsonNumber
 
+	// tag 39 is un-assigned as per spec and used here to encode
+	// the size in bytes for composite data items, like arrays and
+	// maps
+	tagSizePrefix
+
 	// unassigned 38..55798
 	tagCborPrefix = iota + 55783
 	// unassigned 55800..
@@ -201,9 +206,17 @@ func decodeTag(buf []byte) (interface{}, int) {
 	case tagJsonNumber:
 		ln, m := decodeLength(buf[n:])
 		return string(buf[n+m : n+m+ln]), n + m + ln
+
+	case tagSizePrefix:
+		_, m := decodeLength(buf[n:]) // skip length 4 bytes
+		value, p := decode(buf[n+m:])
+		return value, n + m + p
+	case tagCborPrefix:
+		item, m := decodeCborPrefix(buf[n:])
+		return item, n + m
 	}
-	// tagCborPrefix:
-	item, m := decodeCborPrefix(buf[n:])
+	// skip tags
+	item, m := decode(buf[n:])
 	return item, n + m
 }
 

@@ -70,6 +70,9 @@ var ErrorFloat16 = errors.New("cbor.float16")
 // ErrorUnexpectedText should be prefixed by tagJsonString.
 var ErrorUnexpectedText = errors.New("cbor.unexpectedText")
 
+// ErrorLenthPrefixNotSupported for array and map types from json->cbor.
+var ErrorLenthPrefixNotSupported = errors.New("cbor.lengthPrefixNotSupported")
+
 // ErrorBreakcode simple type not supported with breakcode.
 var ErrorBreakcode = errors.New("cbor.breakcode")
 
@@ -114,7 +117,22 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		return scanString(txt, out)
 
 	case '[':
-		n, m := encodeArrayStart(out), 0
+		n, m := 0, 0
+		switch config.Ct {
+		case LengthPrefix:
+			panic(ErrorLenthPrefixNotSupported)
+		case SizePrefix:
+			n = 7 // first 7 bytes are left for tagging the data item
+		}
+		defer func() {
+			if config.Ct == SizePrefix {
+				encodeTag(tagSizePrefix, out)
+				// exclude size-prefix and map-start
+				encodeLength(uint32(n-8), out[2:])
+			}
+		}()
+
+		n += encodeArrayStart(out[n:])
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
 			panic(ErrorExpectedJsonClosearray)
 		} else if txt[0] == ']' {
@@ -138,7 +156,22 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		return txt[1:], n
 
 	case '{':
-		n := encodeMapStart(out)
+		n, m := 0, 0
+		switch config.Ct {
+		case LengthPrefix:
+			panic(ErrorLenthPrefixNotSupported)
+		case SizePrefix:
+			n = 7 // first 7 bytes are left for tagging the data item.
+		}
+		defer func() {
+			if config.Ct == SizePrefix {
+				encodeTag(tagSizePrefix, out)
+				// exclude size-prefix and map-start
+				encodeLength(uint32(n-8), out[2:])
+			}
+		}()
+
+		n += encodeMapStart(out[n:])
 		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == '}' {
 			n += encodeBreakStop(out[n:])
@@ -146,7 +179,6 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		} else if txt[0] != '"' {
 			panic(ErrorExpectedJsonKey)
 		}
-		var m int
 		for {
 			txt, m = scanString(txt, out[n:])
 			n += m
@@ -294,6 +326,11 @@ func scanString(txt string, out []byte) (string, int) {
 var nullBin = []byte("null")
 var trueBin = []byte("true")
 var falseBin = []byte("false")
+
+func decodeTojson(in, out []byte) (int, int) {
+	n, m := cborTojson[in[0]](in, out)
+	return n, m
+}
 
 func decodeNullTojson(buf, out []byte) (int, int) {
 	copy(out, nullBin)
@@ -478,12 +515,28 @@ func decodeType5IndefiniteTojson(buf, out []byte) (int, int) {
 	return n + 1, m
 }
 
-func decodeTagJsonString(buf, out []byte) (int, int) {
-	ln, n := decodeLength(buf[2:])
-	out[0] = '"'
-	copy(out[1:], buf[2+n:2+n+ln])
-	out[ln+1] = '"'
-	return 2 + n + ln, ln + 2
+func decodeTagTojson(buf, out []byte) (int, int) {
+	byt := (buf[0] & 0x1f) | type0 // fix as positive num
+	item, n := cborDecoders[byt](buf)
+	switch item.(uint64) {
+	case tagJsonString:
+		ln, m := decodeLength(buf[n:])
+		n += m
+		out[0] = '"'
+		copy(out[1:], buf[n:n+ln])
+		out[ln+1] = '"'
+		return n + ln, ln + 2
+	case tagJsonNumber:
+		ln, m := decodeLength(buf[n:])
+		n += m
+		copy(out, buf[n:n+ln])
+		return n + ln, ln
+	}
+	// tagSizePrefix
+	_, m := decodeLength(buf[n:]) // skip length 4 bytes
+	n += m
+	i, j := decodeTojson(buf[n:], out)
+	return n + i, j
 }
 
 // ---- decoders
@@ -573,13 +626,13 @@ func init() {
 	//-- type6
 	// 1st-byte 0..23
 	for i := byte(0); i < info24; i++ {
-		cborTojson[hdr(type6, i)] = makePanic(ErrorTagNotSupported)
+		cborTojson[hdr(type6, i)] = decodeTagTojson
 	}
 	// 1st-byte 24..27
-	cborTojson[hdr(type6, info24)] = decodeTagJsonString
-	cborTojson[hdr(type6, info25)] = makePanic(ErrorTagNotSupported)
-	cborTojson[hdr(type6, info26)] = makePanic(ErrorTagNotSupported)
-	cborTojson[hdr(type6, info27)] = makePanic(ErrorTagNotSupported)
+	cborTojson[hdr(type6, info24)] = decodeTagTojson
+	cborTojson[hdr(type6, info25)] = decodeTagTojson
+	cborTojson[hdr(type6, info26)] = decodeTagTojson
+	cborTojson[hdr(type6, info27)] = decodeTagTojson
 	// 1st-byte 28..31
 	cborTojson[hdr(type6, 28)] = makePanic(ErrorDecodeInfoReserved)
 	cborTojson[hdr(type6, 29)] = makePanic(ErrorDecodeInfoReserved)

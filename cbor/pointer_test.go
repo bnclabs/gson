@@ -70,9 +70,9 @@ func TestCborTypicalPointers(t *testing.T) {
 func TestCborGet(t *testing.T) {
 	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
 	testcases := [][2]interface{}{
-		[2]interface{}{"/a", 10.0},
-		[2]interface{}{"/arr/0", 1.0},
-		[2]interface{}{"/arr/1", 2.0},
+		//[2]interface{}{"/a", 10.0},
+		//[2]interface{}{"/arr/0", 1.0},
+		//[2]interface{}{"/arr/1", 2.0},
 		[2]interface{}{"/dict/a", 10.0},
 		[2]interface{}{"/dict/b", 20.0},
 	}
@@ -160,10 +160,8 @@ func TestCborPrepend(t *testing.T) {
 	// prepend "/", {"b": 20}
 	t.Logf(`prepend "/", {"b": 20}`)
 	i := config.FromJsonPointer([]byte(""), cborptr)
-	s := `{"b":20}`
-	copy(item, str2bytes(s))
-	_, m := config.ParseJson(s, item)
-	n = config.Prepend(cbordoc[:n], cborptr[:i], item[1:m-1], cbordocnew)
+	m := config.EncodeMapItems([][2]interface{}{[2]interface{}{"b", 20}}, item)
+	n = config.Prepend(cbordoc[:n], cborptr[:i], item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
 	// prepend "/arr" 3.0
@@ -176,9 +174,8 @@ func TestCborPrepend(t *testing.T) {
 	// prepend "/dict/c" 30.0
 	t.Logf(`prepend "/dict/c" 30.0`)
 	config.FromJsonPointer([]byte("/dict"), cborptr)
-	s = `{"c": 30}`
-	_, m = config.ParseJson(s, item)
-	n = config.Prepend(cbordoc[:n], cborptr, item[1:m-1], cbordocnew)
+	m = config.EncodeMapItems([][2]interface{}{[2]interface{}{"c", 30}}, item)
+	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
 	val, _ := config.Decode(cbordoc[:n])
@@ -232,8 +229,8 @@ func TestCborDel(t *testing.T) {
 		ptr := tcase[0].(string)
 		t.Logf("%v", ptr)
 
-		config.FromJsonPointer([]byte(ptr), cborptr)
-		n, m := config.Delete(cbordoc, cborptr, cbordocnew, itemold)
+		x := config.FromJsonPointer([]byte(ptr), cborptr)
+		n, m := config.Delete(cbordoc, cborptr[:x], cbordocnew, itemold)
 		copy(cbordoc, cbordocnew[:n])
 		cbordoc = cbordoc[:n]
 
@@ -310,27 +307,31 @@ func BenchmarkPtrCborGet(b *testing.B) {
 	cbordoc := make([]byte, 10*1024)
 	_, n := config.ParseJson(txt, cbordoc)
 	cborptr := make([]byte, 10*1024)
-	config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr)
+	m := config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr)
 	item := make([]byte, 10*1024)
 
+	var p int
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		n = config.Get(cbordoc, cborptr, item)
+		p = config.Get(cbordoc[:n], cborptr[:m], item)
 	}
-	b.SetBytes(int64(n))
+	b.SetBytes(int64(p))
 }
 
 func BenchmarkPtrCborSet(b *testing.B) {
-	config := NewDefaultConfig()
+	//config := NewDefaultConfig()
+	config := NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
 	txt := string(testdataFile("../testdata/typical.json"))
 
 	cbordoc := make([]byte, 10*1024)
-	config.ParseJson(txt, cbordoc)
+	_, n := config.ParseJson(txt, cbordoc)
+
 	cborptr := make([]byte, 10*1024)
-	config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr)
+	m := config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr)
+
 	item := make([]byte, 10*1024)
 	itemref := 10
-	n := config.Encode(itemref, item)
+	p := config.Encode(itemref, item)
 
 	newdoc := make([]byte, 10*1024)
 	old := make([]byte, 10*1024)
@@ -338,7 +339,7 @@ func BenchmarkPtrCborSet(b *testing.B) {
 	var x, y int
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		x, y = config.Set(cbordoc, cborptr, item[:n], newdoc, old)
+		x, y = config.Set(cbordoc[:n], cborptr[:m], item[:p], newdoc, old)
 	}
 	b.SetBytes(int64(x + y))
 }
@@ -348,21 +349,21 @@ func BenchmarkPtrCborPrepend(b *testing.B) {
 	txt := string(testdataFile("../testdata/typical.json"))
 
 	cbordoc := make([]byte, 10*1024)
-	config.ParseJson(txt, cbordoc)
+	_, n := config.ParseJson(txt, cbordoc)
 	cborptr1, cborptr2 := make([]byte, 10*1024), make([]byte, 10*1024)
-	config.FromJsonPointer([]byte("/projects/Sherri/members"), cborptr1)
-	config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr2)
+	p := config.FromJsonPointer([]byte("/projects/Sherri/members"), cborptr1)
+	q := config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr2)
 	item := make([]byte, 10*1024)
 	refitem := 10.0
-	n := config.Encode(refitem, item)
+	m := config.Encode(refitem, item)
 
 	newdoc := make([]byte, 10*1024)
 
 	var x, z int
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		x = config.Prepend(cbordoc, cborptr1, item[:n], newdoc)
-		_, z = config.Delete(newdoc, cborptr2, cbordoc, item)
+		x = config.Prepend(cbordoc[:n], cborptr1[:p], item[:m], newdoc)
+		n, m = config.Delete(newdoc[:x], cborptr2[:q], cbordoc, item)
 	}
 	if val, _ := config.Decode(item); !reflect.DeepEqual(val, refitem) {
 		b.Fatalf("exptected %v, got %v", refitem, val)

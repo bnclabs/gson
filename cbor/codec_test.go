@@ -288,50 +288,57 @@ func TestCborText(t *testing.T) {
 
 func TestCborArray(t *testing.T) {
 	buf := make([]byte, 1024)
-	config := NewDefaultConfig()
 	ref := []interface{}{10.2, "hello world"}
+
+	// encoding use LengthPrefix
+	config := NewConfig(FloatNumber, UnicodeSpace, LengthPrefix)
 	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 22 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
-	// test text-start
-	n = encodeArrayStart(buf)
-	n += encode(uint64(1), buf[n:], config)
-	n += encodeBreakStop(buf[n:])
-	if n != 3 {
-		t.Errorf("fail code text-start len: %v wanted 3", n)
-	} else if val, m := decode(buf[:n]); m != n {
-		t.Errorf("fail code text-start size : %v wanted %v", m, n)
-	} else if ref := []interface{}{uint64(1)}; !reflect.DeepEqual(val, ref) {
-		t.Errorf("fail code text-start: {%T,%v} wanted {%T,%v}", val, val, ref, ref)
+	// encoding use SizePrefix
+	config = NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
+	n = encode(ref, buf, config)
+	val, m = decode(buf)
+	if n != 29 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
+	}
+	// encoding use Stream
+	config = NewConfig(FloatNumber, UnicodeSpace, Stream)
+	n = encode(ref, buf, config)
+	val, m = decode(buf)
+	if n != 23 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 }
 
 func TestCborMap(t *testing.T) {
 	buf := make([]byte, 1024)
-	config := NewDefaultConfig()
 	ref := [][2]interface{}{
 		[2]interface{}{10.2, "hello world"},
 		[2]interface{}{"hello world", 10.2},
 	}
+	// encoding use LengthPrefix
+	config := NewConfig(FloatNumber, UnicodeSpace, LengthPrefix)
 	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 43 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
-	// test text-start
-	n = encodeMapStart(buf)
-	n += encode("a", buf[n:], config)
-	n += encode(1, buf[n:], config)
-	n += encodeBreakStop(buf[n:])
-	ref = [][2]interface{}{[2]interface{}{"a", uint64(1)}}
-	if n != 5 {
-		t.Errorf("fail code text-start len: %v wanted 5", n)
-	} else if val, m := decode(buf[:n]); m != n {
-		t.Errorf("fail code text-start size : %v wanted %v", m, n)
-	} else if !reflect.DeepEqual(val, ref) {
-		t.Errorf("fail code text-start: %v wanted %v", val, ref)
+	// encoding use SizePrefix
+	config = NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
+	n = encode(ref, buf, config)
+	val, m = decode(buf)
+	if n != 50 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
+	}
+	// encoding use Stream
+	config = NewConfig(FloatNumber, UnicodeSpace, Stream)
+	n = encode(ref, buf, config)
+	val, m = decode(buf)
+	if n != 44 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 }
 
