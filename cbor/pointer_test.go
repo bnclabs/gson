@@ -57,10 +57,10 @@ func TestCborTypicalPointers(t *testing.T) {
 		t.Logf("pointer %v", ptr)
 		ref := gsonc.Get(ptr, doc)
 		n := config.FromJsonPointer([]byte(ptr), cborptr)
-		//t.Logf("%v", cbordoc)
+		t.Logf("%v", cbordoc)
 		n = config.Get(cbordoc, cborptr[:n], item)
 		val, _ := config.Decode(item[:n])
-		if !reflect.DeepEqual(cborMap2golangMap(val), ref) {
+		if !reflect.DeepEqual(CborMap2golangMap(val), ref) {
 			fmsg := "expected {%T,%v} for ptr %q, got {%T,%v}"
 			t.Fatalf(fmsg, ref, ref, ptr, val, val)
 		}
@@ -71,8 +71,8 @@ func TestCborGet(t *testing.T) {
 	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
 	testcases := [][2]interface{}{
 		//[2]interface{}{"/a", 10.0},
-		//[2]interface{}{"/arr/0", 1.0},
-		//[2]interface{}{"/arr/1", 2.0},
+		[2]interface{}{"/arr/0", 1.0},
+		[2]interface{}{"/arr/1", 2.0},
 		[2]interface{}{"/dict/a", 10.0},
 		[2]interface{}{"/dict/b", 20.0},
 	}
@@ -89,7 +89,7 @@ func TestCborGet(t *testing.T) {
 		n := config.FromJsonPointer([]byte(ptr), cborptr)
 		n = config.Get(cbordoc, cborptr[:n], item)
 		val, _ := config.Decode(item[:n]) // cbor->json
-		if !reflect.DeepEqual(cborMap2golangMap(val), ref) {
+		if !reflect.DeepEqual(CborMap2golangMap(val), ref) {
 			fmsg := "expected {%T,%v}, for ptr %v, got {%T,%v}"
 			t.Fatalf(fmsg, ref, ref, ptr, val, val)
 		}
@@ -134,13 +134,13 @@ func TestCborSet(t *testing.T) {
 		var vref, iref interface{}
 		if err := json.Unmarshal([]byte(tcase[3].(string)), &vref); err != nil {
 			t.Fatalf("parsing json: %v", err)
-		} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, vref) {
+		} else if v := CborMap2golangMap(val); !reflect.DeepEqual(v, vref) {
 			t.Fatalf("for %v expected %v, got %v", ptr, vref, v)
 		}
 		oval, _ := config.Decode(itemold[:m])
 		if err := json.Unmarshal([]byte(tcase[2].(string)), &iref); err != nil {
 			t.Fatalf("parsing json: %v", err)
-		} else if ov := cborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
+		} else if ov := CborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
 			t.Fatalf("for %v item expected %v, got %v", ptr, iref, ov)
 		}
 	}
@@ -181,7 +181,7 @@ func TestCborPrepend(t *testing.T) {
 	val, _ := config.Decode(cbordoc[:n])
 	if err := json.Unmarshal([]byte(ftxt), &val); err != nil {
 		t.Fatalf("parsing json: %v", err)
-	} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, val) {
+	} else if v := CborMap2golangMap(val); !reflect.DeepEqual(v, val) {
 		t.Fatalf("finally exptected %v, got %v", val, v)
 	}
 
@@ -198,7 +198,7 @@ func TestCborPrepend(t *testing.T) {
 	val, _ = config.Decode(cbordoc[:n])
 	if err := json.Unmarshal([]byte(ftxt), &val); err != nil {
 		t.Fatalf("parsing json: %v", err)
-	} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, val) {
+	} else if v := CborMap2golangMap(val); !reflect.DeepEqual(v, val) {
 		t.Fatalf("finally exptected %v, got %v", val, v)
 	}
 }
@@ -238,13 +238,13 @@ func TestCborDel(t *testing.T) {
 		var vref, iref interface{}
 		if err := json.Unmarshal([]byte(tcase[2].(string)), &vref); err != nil {
 			t.Fatalf("parsing json: %v", err)
-		} else if v := cborMap2golangMap(val); !reflect.DeepEqual(v, vref) {
+		} else if v := CborMap2golangMap(val); !reflect.DeepEqual(v, vref) {
 			t.Fatalf("for %v expected %v, got %v", ptr, vref, v)
 		}
 		oval, _ := config.Decode(itemold[:m])
 		if err := json.Unmarshal([]byte(tcase[1].(string)), &iref); err != nil {
 			t.Fatalf("parsing json: %v", err)
-		} else if ov := cborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
+		} else if ov := CborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
 			t.Fatalf("for %v item expected %v, got %v", ptr, iref, ov)
 		}
 	}
@@ -320,7 +320,7 @@ func BenchmarkPtrCborGet(b *testing.B) {
 
 func BenchmarkPtrCborSet(b *testing.B) {
 	//config := NewDefaultConfig()
-	config := NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
+	config := NewConfig(FloatNumber, UnicodeSpace, Stream)
 	txt := string(testdataFile("../testdata/typical.json"))
 
 	cbordoc := make([]byte, 10*1024)

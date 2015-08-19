@@ -297,13 +297,6 @@ func TestCborArray(t *testing.T) {
 	if n != 22 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
-	// encoding use SizePrefix
-	config = NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
-	n = encode(ref, buf, config)
-	val, m = decode(buf)
-	if n != 29 || n != m || !reflect.DeepEqual(ref, val) {
-		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
-	}
 	// encoding use Stream
 	config = NewConfig(FloatNumber, UnicodeSpace, Stream)
 	n = encode(ref, buf, config)
@@ -324,13 +317,6 @@ func TestCborMap(t *testing.T) {
 	n := encode(ref, buf, config)
 	val, m := decode(buf)
 	if n != 43 || n != m || !reflect.DeepEqual(ref, val) {
-		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
-	}
-	// encoding use SizePrefix
-	config = NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
-	n = encode(ref, buf, config)
-	val, m = decode(buf)
-	if n != 50 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// encoding use Stream
@@ -449,7 +435,7 @@ func TestCborSmartnum(t *testing.T) {
 }
 
 func TestCborMalformed(t *testing.T) {
-	config := NewConfig(IntNumber, AnsiSpace, SizePrefix)
+	config := NewConfig(IntNumber, AnsiSpace, Stream)
 	out := make([]byte, 1024)
 	for _, tcase := range scan_invalid {
 		func() {

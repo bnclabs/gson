@@ -54,11 +54,6 @@ const (
 	// LengthPrefix encoding for composite types. That is, for arrays and maps
 	// encode the number of contained items as well.
 	LengthPrefix ContainerEncoding = iota + 1
-	// SizePrefix encoding for composite types. That is, for arrays and
-	// maps it is similar to LengthPrefix but the entire composite
-	// data is tagged and prefixed with total length of the data, excluding
-	// array header.
-	SizePrefix
 	// Stream encoding for composite types. That is, for arrays and maps
 	// use cbor's indefinite and break-stop to encode member items.
 	Stream
@@ -85,9 +80,9 @@ type Config struct {
 // values,
 //      Nk: FloatNumber
 //      Ws: UnicodeSpace
-//      Ct: SizePrefix
+//      Ct: Stream
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace, SizePrefix)
+	return NewConfig(FloatNumber, UnicodeSpace, Stream)
 }
 
 // NewConfig returns a new configuration factory

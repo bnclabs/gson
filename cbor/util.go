@@ -21,34 +21,38 @@ func str2bytes(str string) []byte {
 	return *(*[]byte)(unsafe.Pointer(sl))
 }
 
-func cborMap2golangMap(value interface{}) interface{} {
+// CborMap2golangMap transforms [][2]interface{} to map[string]interface{}
+// that is required for converting golan->cbor.
+func CborMap2golangMap(value interface{}) interface{} {
 	switch items := value.(type) {
 	case []interface{}:
 		for i, item := range items {
-			items[i] = cborMap2golangMap(item)
+			items[i] = CborMap2golangMap(item)
 		}
 		return items
 	case [][2]interface{}:
 		m := make(map[string]interface{})
 		for _, item := range items {
-			m[item[0].(string)] = cborMap2golangMap(item[1])
+			m[item[0].(string)] = CborMap2golangMap(item[1])
 		}
 		return m
 	}
 	return value
 }
 
-func golangMap2cborMap(value interface{}) interface{} {
+// GolangMap2cborMap transforms map[string]interface{} to [][2]interface{}
+// that is required for converting golan->cbor.
+func GolangMap2cborMap(value interface{}) interface{} {
 	switch items := value.(type) {
 	case []interface{}:
 		for i, item := range items {
-			items[i] = golangMap2cborMap(item)
+			items[i] = GolangMap2cborMap(item)
 		}
 		return items
 	case map[string]interface{}:
 		sl := make([][2]interface{}, 0, len(items))
 		for k, v := range items {
-			sl = append(sl, [2]interface{}{k, golangMap2cborMap(v)})
+			sl = append(sl, [2]interface{}{k, GolangMap2cborMap(v)})
 		}
 		return sl
 	}

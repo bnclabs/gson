@@ -118,20 +118,6 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 
 	case '[':
 		n, m := 0, 0
-		switch config.Ct {
-		case LengthPrefix:
-			panic(ErrorLenthPrefixNotSupported)
-		case SizePrefix:
-			n = 7 // first 7 bytes are left for tagging the data item
-		}
-		defer func() {
-			if config.Ct == SizePrefix {
-				encodeTag(tagSizePrefix, out)
-				// exclude size-prefix and map-start
-				encodeLength(uint32(n-8), out[2:])
-			}
-		}()
-
 		n += encodeArrayStart(out[n:])
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
 			panic(ErrorExpectedJsonClosearray)
@@ -157,20 +143,6 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 
 	case '{':
 		n, m := 0, 0
-		switch config.Ct {
-		case LengthPrefix:
-			panic(ErrorLenthPrefixNotSupported)
-		case SizePrefix:
-			n = 7 // first 7 bytes are left for tagging the data item.
-		}
-		defer func() {
-			if config.Ct == SizePrefix {
-				encodeTag(tagSizePrefix, out)
-				// exclude size-prefix and map-start
-				encodeLength(uint32(n-8), out[2:])
-			}
-		}()
-
 		n += encodeMapStart(out[n:])
 		txt = skipWS(txt[1:], config.Ws)
 		if txt[0] == '}' {
@@ -532,11 +504,7 @@ func decodeTagTojson(buf, out []byte) (int, int) {
 		copy(out, buf[n:n+ln])
 		return n + ln, ln
 	}
-	// tagSizePrefix
-	_, m := decodeLength(buf[n:]) // skip length 4 bytes
-	n += m
-	i, j := decodeTojson(buf[n:], out)
-	return n + i, j
+	return n, 0 // skip this tag
 }
 
 // ---- decoders

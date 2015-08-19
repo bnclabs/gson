@@ -384,22 +384,11 @@ func encodeTextStart(buf []byte) int {
 }
 
 func encodeArray(items []interface{}, buf []byte, config *Config) int {
-	switch config.Ct {
-	case LengthPrefix:
+	if config.Ct == LengthPrefix {
 		n := encodeUint64(uint64(len(items)), buf)
 		buf[0] = (buf[0] & 0x1f) | type4 // fix the type from type0->type4
 		n += encodeArrayItems(items, buf[n:], config)
 		return n
-	case SizePrefix:
-		// first 7 bytes are left for tagging the data item.
-		// Then...
-		m := encodeUint64(uint64(len(items)), buf[7:])
-		buf[7] = (buf[7] & 0x1f) | type4 // fix the type from type0->type4
-		n := encodeArrayItems(items, buf[m+7:], config)
-		// go back and tag the array data item.
-		encodeTag(tagSizePrefix, buf)
-		encodeLength(uint32(n), buf[2:])
-		return 7 + m + n
 	}
 	// Stream encoding
 	n := encodeArrayStart(buf)
@@ -422,22 +411,11 @@ func encodeArrayStart(buf []byte) int {
 }
 
 func encodeMap(items [][2]interface{}, buf []byte, config *Config) int {
-	switch config.Ct {
-	case LengthPrefix:
+	if config.Ct == LengthPrefix {
 		n := encodeUint64(uint64(len(items)), buf)
 		buf[0] = (buf[0] & 0x1f) | type5 // fix the type from type0->type5
 		n += encodeMapItems(items, buf[n:], config)
 		return n
-	case SizePrefix:
-		// first 7 bytes are left for tagging the data item.
-		// Then...
-		m := encodeUint64(uint64(len(items)), buf[7:])
-		buf[7] = (buf[7] & 0x1f) | type5 // fix the type from type0->type5
-		n := encodeMapItems(items, buf[m+7:], config)
-		// go back and tag the array data item.
-		encodeTag(tagSizePrefix, buf)
-		encodeLength(uint32(n), buf[2:])
-		return 7 + m + n
 	}
 	// Stream encoding
 	n := encodeMapStart(buf)
