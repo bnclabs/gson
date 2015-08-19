@@ -112,6 +112,20 @@ func allpaths(doc interface{}) []string {
 			}
 		}
 		pointers = append(pointers, "/-")
+
+	case [][2]interface{}:
+		if len(v) > 0 {
+			for _, pairs := range v {
+				key, val := pairs[0].(string), pairs[1]
+				prefix := "/" + escapeJp(key)
+				pointers = append(pointers, prefix)
+				for _, pointer := range allpaths(val) {
+					pointers = append(pointers, prefix+pointer)
+				}
+			}
+		}
+		pointers = append(pointers, "/-")
+
 	}
 	return pointers
 }
