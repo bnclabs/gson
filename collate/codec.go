@@ -1,8 +1,9 @@
 package collate
 
-import "bytes"
 import "errors"
 import "strconv"
+
+//import "fmt"
 
 // error codes
 var ErrorSuffixDecoding = errors.New("collatejson.suffixDecoding")
@@ -45,50 +46,43 @@ var prefixOpp = map[byte]byte{
 	negPrefix: posPrefix,
 }
 
-// EncodeInt encodes integer such that their natural order is preserved as a
-// lexicographic order of their representation. Additionally it must be
-// possible to get back the natural representation from its lexical
-// representation.
-//
-// Input `text` is also in textual representation, that is, strconv.Atoi(text)
-// is the actual integer that is encoded.
-//
 // Zero is encoded as '0'
-func EncodeInt(text, code []byte) []byte { // text -> code
+func encodeInt(text, code []byte) int {
 	if len(text) == 0 { // empty input
-		return code
+		return 0
 	}
-	if code, ok := isZero(text, code); ok {
-		return code
+	n, ok := isZero(text, code)
+	if ok {
+		return n
 	}
 
 	switch text[0] {
 	case PLUS: // positive int
-		code = encodePosInt(text[1:], code)
+		n = encodePosInt(text[1:], code)
 	case MINUS: // negative int
-		code = encodeNegInt(text[1:], code)
+		n = encodeNegInt(text[1:], code)
 	default:
-		code = encodePosInt(text, code)
+		n = encodePosInt(text, code)
 	}
-	return code
+	return n
 }
 
-// encode positive integer, local function gets called by EncodeInt
+// encode positive integer, local function gets called by encodeInt
 //  encoding 7,          >7
 //  encoding 123,        >>3123
 //  encoding 1234567890, >>>2101234567890
-func encodePosInt(text []byte, code []byte) []byte {
-	code = append(code, posPrefix)
-	if len(text) > 1 {
-		// TODO: replace Itoa with more efficient function.
-		c := encodePosInt([]byte(strconv.Itoa(len(text))), code[1:])
-		code = code[:1+len(c)]
+func encodePosInt(text []byte, code []byte) int {
+	var scratch [32]byte
+	code[0] = posPrefix
+	n, ln := 1, int64(len(text))
+	if ln > 1 {
+		n += encodePosInt(strconv.AppendInt(scratch[:0], ln, 10), code[n:])
 	}
-	code = append(code, text...)
-	return code
+	copy(code[n:], text)
+	return n + int(ln)
 }
 
-// encode positive integer, local function gets called by EncodeInt
+// encode negative integer, local function gets called by encodeInt
 //  encoding -1,         -8
 //  encoding -2,         -7
 //  encoding -9,         -0
@@ -97,99 +91,161 @@ func encodePosInt(text []byte, code []byte) []byte {
 //  encoding -1234567891 ---7898765432108
 //  encoding -1234567890 ---7898765432109
 //  encoding -1234567889 ---7898765432110
-func encodeNegInt(text []byte, code []byte) []byte {
-	code = append(code, negPrefix)
-	if len(text) > 1 {
-		// TODO: replace Itoa with more efficient function.
-		c := encodeNegInt([]byte(strconv.Itoa(len(text))), code[1:])
-		code = code[:1+len(c)]
+func encodeNegInt(text []byte, code []byte) int {
+	var scratch [32]byte
+	code[0] = negPrefix
+	n, ln := 1, int64(len(text))
+	if ln > 1 {
+		n += encodeNegInt(strconv.AppendInt(scratch[:0], ln, 10), code[n:])
 	}
-	for _, x := range text {
-		code = append(code, negIntLookup[x])
+	for i, x := range text {
+		code[n+i] = negIntLookup[x]
 	}
-	return code
+	return n + int(ln)
 }
 
-// Check whether input is a representation of zero, like,
-//    0 +0 -0
-func isZero(text, code []byte) ([]byte, bool) {
-	// Handle different forms of zero.
-	if (len(text) == 1) && (text[0] == ZERO) {
-		code = append(code, ZERO)
-		return code, true
+// handle different forms of zero, like 0 +0 -0.
+func isZero(text, code []byte) (int, bool) {
+	switch len(text) {
+	case 1:
+		if text[0] == ZERO {
+			code[0] = ZERO
+			return 1, true
+		}
 
-	} else if (len(text) == 2) && ((text[0] == PLUS) || (text[0] == MINUS)) &&
-		(text[1] == ZERO) {
-
-		code = append(code, ZERO)
-		return code, true
+	case 2:
+		if (text[0] == PLUS || text[0] == MINUS) && text[1] == ZERO {
+			code[0] = ZERO
+			return 1, true
+		}
 	}
-	return code, false
+	return 0, false
 }
 
-// DecodeInt complements EncodeInt, it returns integer in text that can be
-// converted to integer value using strconv.AtoI(return_value)
-func DecodeInt(code, text []byte) (int, []byte) { // code -> text
+func decodeInt(code, text []byte) (int, int) {
 	if len(code) == 0 { // empty input
-		return 0, text
-	}
-	if code[0] == ZERO {
-		text = append(text, ZERO)
-		return 1, text
-	}
+		return 0, 0
 
-	var skip int
-	var final []byte
+	} else if code[0] == ZERO {
+		text[0] = code[0]
+		return 1, 1
 
+	} else if code[0] == posPrefix {
+		text[0] = PLUS
+		s, e := doDecodeInt(code[1:])
+		copy(text[1:], code[1+s:1+e])
+		return 1 + e, 1 + (e - s)
+	}
+	text[0] = MINUS
+	s, e := doDecodeInt(code[1:])
+	for i, x := range code[1+s : 1+e] {
+		text[1+i] = negIntLookup[x]
+	}
+	return 1 + e, 1 + (e - s)
+}
+
+func doDecodeInt(code []byte) (int, int) {
+	var scratch [32]byte
 	switch code[0] {
 	case posPrefix:
-		text = append(text, PLUS)
-		skip, final = doDecodeInt(code[1:], text[1:])
-		text = append(text, final...)
+		s, e := doDecodeInt(code[1:])
+		l, err := strconv.Atoi(bytes2str(code[1+s : 1+e]))
+		if err != nil {
+			panic(err)
+		}
+		return 1 + e, 1 + e + l
 
 	case negPrefix:
-		text = append(text, MINUS)
-		skip, final = doDecodeInt(code[1:], text[1:])
-		for _, x := range final {
-			text = append(text, negIntLookup[x])
+		s, e := doDecodeInt(code[1:])
+		for i, x := range code[1+s : 1+e] {
+			scratch[i] = negIntLookup[x]
 		}
+		l, err := strconv.Atoi(bytes2str(scratch[:e-s]))
+		if err != nil {
+			panic(err)
+		}
+		return 1 + e, 1 + e + l
 	}
-	return skip + len(text), text
+	return 0, 1 // <-- exit case.
 }
 
-// local function called by DecodeInt
-func doDecodeInt(code, text []byte) (int, []byte) {
-	var skip int
-
-	if code[0] == posPrefix {
-		skip, text = doDecodeInt(code[1:], text)
-		s := skip + len(text) + 1
-		l, _ := strconv.Atoi(string(text))
-		text = append(text[:0], code[s:s+l]...)
-		return s, text
-
-	} else if code[0] == negPrefix {
-		skip, text = doDecodeInt(code[1:], text)
-		for i, x := range text {
-			text[i] = negIntLookup[x]
-		}
-		s := skip + len(text) + 1
-		l, _ := strconv.Atoi(string(text))
-		text = append(text[:0], code[s:s+l]...)
-		return s, text
-
-	} else {
-		text = append(text, code[0])
-		return 0, text
-	}
-}
-
-// EncodeFloat encodes floating point number such that their natural order is
-// preserved as lexicographic order of their representation. Additionally it
-// must be possible to get back the natural representation from its lexical
-// representation.
+// encodeSD encodes small-decimal, values that are greater than
+// -1.0 and less than +1.0.
 //
-// A floating point number f takes a mantissa m ∈ [1/10 , 1) and an integer
+// small decimals is greater than -1.0 and less than 1.0
+//
+// Input `text` is also in textual representation, that is,
+// strconv.ParseFloat(text, 64) is the actual integer that is encoded.
+//
+//  encoding -0.9995    -0004>
+//  encoding -0.999     -000>
+//  encoding -0.0123    -9876>
+//  encoding -0.00123   -99876>
+//  encoding -0.0001233 -9998766>
+//  encoding -0.000123  -999876>
+//  encoding +0.000123  >000123-
+//  encoding +0.0001233 >0001233-
+//  encoding +0.00123   >00123-
+//  encoding +0.0123    >0123-
+//  encoding +0.999     >999-
+//  encoding +0.9995    >9995-
+//
+// Caveats:
+//  -0.0, 0.0 and +0.0 must be filtered out as integer ZERO `0`.
+func encodeSD(text, code []byte) int {
+	if len(text) == 0 { // empty input
+		return 0
+	}
+
+	prefix, n := signPrefix(text)
+	code[0] = prefix
+	m := 1
+
+	// remove decimal point and all zeros before that.
+	for _, x := range text[n:] {
+		n++
+		if x == DOT {
+			break
+		}
+	}
+	if prefix == negPrefix { // do inversion if negative number
+		for _, x := range text[n:] {
+			code[m] = negIntLookup[x]
+			m++
+		}
+	} else { // if positive number just copy the text
+		copy(code[m:], text[n:])
+		m += len(text[n:])
+	}
+	code[m] = prefixOpp[prefix]
+	return m + 1
+}
+
+// decodeSD complements encodeSD
+func decodeSD(code, text []byte) (int, int) {
+	if len(code) == 0 {
+		return 0, 0
+	}
+
+	prefix, sign := code[0], prefixSign(code)
+	text[0], text[1], text[2] = sign, ZERO, DOT
+
+	// if negative number invert the digits.
+	codesz := len(code)
+	if prefix == negPrefix {
+		if codesz > 1 {
+			for i, x := range code[1 : codesz-1] {
+				text[3+i] = negIntLookup[x]
+			}
+		}
+
+	} else if codesz > 1 {
+		copy(text[3:], code[1:codesz-1])
+	}
+	return codesz, 3 + codesz - 2
+}
+
+// a floating point number f takes a mantissa m ∈ [1/10 , 1) and an integer
 // exponent e such that f = (10^e) * ±m.
 //
 //  encoding −0.1 × 10^11    - --7888+
@@ -211,169 +267,99 @@ func doDecodeInt(code, text []byte) (int, []byte) {
 //  encoding +1.4            + +114-
 //  encoding +0.1 × 10^10    + ++2101-
 //  encoding +0.1 × 10^11    + ++2111-
-func EncodeFloat(text, code []byte) []byte {
+func encodeFloat(text, code []byte) int {
 	if len(text) == 0 { // empty input
-		return code
+		return 0
 	}
-	if val, e := strconv.ParseFloat(string(text), 64); e == nil && val == 0 {
-		code = append(code, ZERO)
-		return code
+	val, e := strconv.ParseFloat(bytes2str(text), 64)
+	if e == nil && val == 0 {
+		code[0] = ZERO
+		return 1
 	}
 
-	prefix, text := signPrefix(text)
-	code = append(code, prefix)
+	prefix, n := signPrefix(text)
+	code[0] = prefix
+	m := 1
 
-	var exp, mant []byte
-	for i, x := range text {
+	var exp, mant []byte // gather exponent and mantissa
+	for i, x := range text[n:] {
 		if x == 'e' {
-			mant = text[:i]
-			exp = text[i+1:]
+			mant = text[n : n+i]
+			exp = text[n+i+1:]
 			break
 		}
 	}
 
-	x := [128]byte{}
-	mantissa := append(x[:0], prefix, '0', '.')
+	var mantissa [64]byte // fix mantessa
+	mantissa[0], mantissa[1], mantissa[2] = prefix, '0', '.'
+	p := 0
 	for _, x := range mant {
 		if x == '.' {
 			continue
 		}
-		mantissa = append(mantissa, x)
+		mantissa[3+p] = x
+		p += 1
 	}
+	mant = mantissa[:3+p]
 
-	expi, _ := strconv.Atoi(string(exp))
+	var exponent [64]byte // fix exponent
+	expi, err := strconv.Atoi(bytes2str(exp))
+	if err != nil {
+		panic(err)
+	}
+	expi += 1
 	if prefix == negPrefix {
-		exp = []byte(strconv.Itoa(-(expi + 1)))
-	} else {
-		exp = []byte(strconv.Itoa(expi + 1))
+		expi = -expi
 	}
+	exp = strconv.AppendInt(exponent[:0], int64(expi), 10)
 
-	// Encode integer.
-	code = append(code, EncodeInt(exp, code[1:])...)
-	// Encode and adjust the decimal part.
-	code = append(code, EncodeSD(mantissa, code[len(code):])[1:]...)
-	return code
+	m += encodeInt(exp, code[m:])
+	q := encodeSD(mant, code[m:])
+	copy(code[m:], code[m+1:m+q])
+	return m + q - 1
 }
 
 var flipmap = map[byte]byte{PLUS: MINUS, MINUS: PLUS}
 
-// DecodeFloat complements EncodeFloat, it returns `exponent` and `mantissa`
-// in text format.
-func DecodeFloat(code, text []byte) []byte {
+func decodeFloat(code, text []byte) (int, int) {
 	if len(code) == 0 { // empty input
-		return text
+		return 0, 0
 	} else if len(code) == 1 && code[0] == ZERO {
-		text = append(text, ZERO)
-		return text
+		text[0] = ZERO
+		return 1, 1
 	}
 
-	msign := code[0]
-
-	var skip int
-	var final, exponent []byte
-
-	x := [128]byte{}
-	switch code[1] {
+	var exponent [64]byte
+	var exp []byte
+	n := 1
+	switch code[n] {
 	case negPrefix, posPrefix:
-		skip, exponent = DecodeInt(code[1:], x[:0])
+		x, y := decodeInt(code[n:], exponent[:])
+		n += x
+		exp = exponent[:y]
 
 	default:
-		exponent = append(x[:0], PLUS)
-		skip, final = DecodeInt(code[1:], text)
-		exponent = append(exponent, final...)
+		exponent[0] = PLUS
+		x, y := decodeInt(code[n:], exponent[1:])
+		n += x
+		exp = exponent[:1+y]
 	}
 
-	if msign == negPrefix {
+	if code[0] == negPrefix {
 		exponent[0] = flipmap[exponent[0]]
 	}
 
-	y := [128]byte{}
-	mantissa := append(y[:0], msign)
-	mantissa = append(mantissa, code[1+skip:]...)
-	text = append(text, DecodeSD(mantissa, text)...)
-	text = append(text, 'e')
-	text = append(text, exponent...)
-	return text
+	var mantissa [64]byte
+	mantissa[0] = code[0]
+	copy(mantissa[1:], code[n:])
+	x, y := decodeSD(mantissa[:1+len(code[n:])], text)
+	text[y] = 'e'
+	copy(text[y+1:], exp)
+	return n + x - 1, y + 1 + len(exp)
 }
 
-// EncodeSD encodes small-decimal, values that are greater than -1.0 and less
-// than +1.0,such that their natural order is preserved as lexicographic order
-// of their representation. Additionally it must be possible to get back the
-// natural representation from its lexical representation.
-//
-// Small decimals is greater than -1.0 and less than 1.0
-//
-// Input `text` is also in textual representation, that is,
-// strconv.ParseFloat(text, 64) is the actual integer that is encoded.
-//
-//  encoding -0.9995    -0004>
-//  encoding -0.999     -000>
-//  encoding -0.0123    -9876>
-//  encoding -0.00123   -99876>
-//  encoding -0.0001233 -9998766>
-//  encoding -0.000123  -999876>
-//  encoding +0.000123  >000123-
-//  encoding +0.0001233 >0001233-
-//  encoding +0.00123   >00123-
-//  encoding +0.0123    >0123-
-//  encoding +0.999     >999-
-//  encoding +0.9995    >9995-
-//
-// Caveats:
-//  -0.0, 0.0 and +0.0 must be filtered out as integer ZERO `0`.
-func EncodeSD(text, code []byte) []byte {
-	if len(text) == 0 { // empty input
-		return code
-	}
-
-	var prefix byte
-	prefix, text = signPrefix(text)
-	code = append(code, prefix)
-
-	// Remove decimal point and all zeros before that.
-	for i, x := range text {
-		if x == '.' {
-			text = text[i+1:]
-			break
-		}
-	}
-	if prefix == negPrefix { // Do inversion if negative number
-		for _, x := range text {
-			code = append(code, negIntLookup[x])
-		}
-	} else { // if positive number just copy the text
-		code = append(code, text...)
-	}
-	code = append(code, prefixOpp[prefix])
-	return code
-}
-
-// DecodeSD complements EncodeSD, it returns integer in text that can be
-// converted to integer type using strconv.ParseFloat(return_value, 64).
-func DecodeSD(code, text []byte) []byte {
-	if len(code) == 0 {
-		return text
-	}
-
-	prefix, sign := code[0], prefixSign(code)
-	text = append(text, []byte{sign, ZERO, DOT}...)
-
-	// If negative number invert the digits.
-	if prefix == negPrefix {
-		for _, x := range code[1 : len(code)-1] {
-			text = append(text, negIntLookup[x])
-		}
-	} else {
-		text = append(text, code[1:len(code)-1]...)
-	}
-	return text
-}
-
-// EncodeLD encodes large-decimal, values that are greater than or equal to
-// +1.0 and less than or equal to -1.0, such that their natural order is
-// preserved as a lexicographic order of their representation. Additionally
-// it must be possible to get back the natural representation from its lexical
-// representation.
+// encodeLD encodes large-decimal, values that are greater than or equal to
+// +1.0 and less than or equal to -1.0.
 //
 // Input `text` is also in textual representation, that is,
 // strconv.ParseFloat(text, 64) is the actual integer that is encoded.
@@ -394,90 +380,109 @@ func DecodeSD(code, text []byte) []byte {
 //  encoding +3.145         >3145-
 //  encoding +10.5          >>2105-
 //  encoding +100.5         >>31005-
-func EncodeLD(text, code []byte) []byte {
+func encodeLD(text, code []byte) int {
 	if len(text) == 0 { // empty input
-		return code
+		return 0
 	}
 
 	prefix, _ := signPrefix(text)
+	m := 0
 
-	// Encode integer and decimal part.
-	texts := bytes.Split(text, []byte{DOT})
-	if len(texts[0]) == 1 && texts[0][0] == ZERO {
-		code = append(code, prefix, ZERO)
-	} else if len(texts[0]) == 2 {
-		if s := texts[0][0]; (s == PLUS || s == MINUS) && texts[0][1] == ZERO {
-			code = append(code, prefix, ZERO)
-		} else {
-			l := len(EncodeInt(texts[0], code))
-			code = code[:l]
+	var integer, decimal []byte // split integer and decimal parts
+	integer = text[:]           // optimistically assume that no decimal part
+	for i, x := range text {
+		if x == DOT {
+			integer = text[:i]
+			decimal = text[i+1:]
 		}
-	} else {
-		l := len(EncodeInt(texts[0], code))
-		code = code[:l]
 	}
 
-	var codedec []byte
-	x := [128]byte{}
-	if len(texts) == 2 {
-		text = joinBytes([]byte{text[0], ZERO, DOT}, texts[1])
-		codedec = EncodeSD(text, x[:0])[1:]
+	// encode integer and decimal part.
+	if len(integer) == 1 && integer[0] == ZERO {
+		code[m], code[m+1] = prefix, ZERO
+		m += 2
+
+	} else if len(integer) == 2 {
+		ch := integer[0]
+		if ch == PLUS && integer[1] == ZERO {
+			code[m], code[m+1] = prefix, ZERO
+			m += 2
+		} else if ch == MINUS && integer[1] == ZERO {
+			code[m], code[m+1] = prefix, '9'
+			m += 2
+		} else {
+			m += encodeInt(integer, code[m:])
+		}
+
 	} else {
-		// TODO: This is constant, optimize away.
-		text = []byte{text[0], ZERO, DOT, ZERO}
-		codedec = EncodeSD(text, x[:0])[1:]
+		m += encodeInt(integer, code[m:])
+	}
+
+	var dec, sd [64]byte
+	var n int
+	if ln := len(decimal); ln > 0 {
+		dec[0], dec[1], dec[2] = text[0], ZERO, DOT
+		copy(dec[3:], decimal)
+		n = encodeSD(dec[:3+ln], sd[:])
+	} else {
+		dec[0], dec[1], dec[2], dec[3] = text[0], ZERO, DOT, ZERO
+		n = encodeSD(dec[:4], sd[:])
 	}
 
 	// Adjust the decimal part
-	codedec[len(codedec)-1] = prefixOpp[prefix]
-	if len(codedec) == 2 && codedec[0] == ZERO {
-		codedec = codedec[1:]
+	sd[n-1] = prefixOpp[prefix]
+	if n == 3 {
+		if prefix == negPrefix && sd[1] == '9' {
+			copy(code[m:], sd[2:n])
+			return m + 1
+		} else if prefix == posPrefix && sd[1] == ZERO {
+			copy(code[m:], sd[2:n])
+			return m + 1
+		}
 	}
-	code = append(code, codedec...)
-	return code
+	copy(code[m:], sd[1:n])
+	return m + n - 1
 }
 
-// DecodeLD complements EncodeLD, it returns integer in text that can be
-// converted to integer type using strconv.ParseFloat(return_value, 64).
-func DecodeLD(code, text []byte) []byte {
+// decodeLD complements encodeLD
+func decodeLD(code, text []byte) (int, int) {
 	if len(code) == 0 { // empty input
-		return text
+		return 0, 0
 	}
 
 	prefix, sign := code[0], prefixSign(code)
-	text = append(text, sign)
-	skip, textint := doDecodeInt(code[1:], text[1:])
-	l := len(textint) + 1
-	text = text[:l]
+	text[0] = sign
+	n, m := 1, 1
+	s, e := doDecodeInt(code[n:])
+	copy(text[m:], code[n+s:n+e])
 
-	// If negative number invert the digits.
-	if sign == MINUS {
-		for i, x := range text[1:] {
-			text[i+1] = negIntLookup[x]
+	if sign == MINUS { // negative number invert the digits
+		for i, x := range text[m : m+e-s] {
+			text[m+i] = negIntLookup[x]
 		}
 	}
+	n, m = n+e, m+(e-s)
 
-	code = code[skip+l:]
-	textdec := DecodeSD(joinBytes([]byte{prefix}, code), text[len(text):])[2:]
-	text = append(text, textdec...)
-	return text
+	var sdcode [64]byte
+	sdcode[0] = prefix
+	ln := len(code[n:])
+	copy(sdcode[1:], code[n:])
+	x, y := decodeSD(sdcode[:ln+1], text[m:])
+	copy(text[m:], text[m+2:m+y])
+	return n + x - 1, m + y - 2
 }
 
-// local function that check the sign of the input number and returns the
-// encoding-prefix and remaining input. Used while encoding numbers.
-func signPrefix(text []byte) (byte, []byte) {
+func signPrefix(text []byte) (byte, int) {
 	switch text[0] {
 	case PLUS:
-		return posPrefix, text[1:]
+		return posPrefix, 1
 	case MINUS:
-		return negPrefix, text[1:]
+		return negPrefix, 1
 	default:
-		return posPrefix, text
+		return posPrefix, 0
 	}
 }
 
-// local function that check the encoded sign of the coded number and returns
-// the actual sign of the number. Used while decoding numbers.
 func prefixSign(code []byte) byte {
 	var sign byte
 	switch code[0] {
@@ -489,42 +494,41 @@ func prefixSign(code []byte) byte {
 	return sign
 }
 
-// join byte slices into single byte slice.
-func joinBytes(args ...[]byte) []byte {
-	return bytes.Join(args, []byte{})
-}
-
-func suffixEncodeString(s []byte, code []byte) []byte {
-	text := []byte(s)
-	for _, x := range text {
-		code = append(code, x)
+func suffixEncodeString(s []byte, code []byte) int {
+	n := 0
+	for _, x := range s {
+		code[n] = x
+		n++
 		if x == Terminator {
-			code = append(code, 1)
+			code[n] = 1
+			n++
 		}
 	}
-	code = append(code, Terminator)
-	return code
+	code[n] = Terminator
+	return n + 1
 }
 
-func suffixDecodeString(code []byte, text []byte) ([]byte, []byte, error) {
-	for i := 0; i < len(code); i++ {
+func suffixDecodeString(code []byte, text []byte) (int, int) {
+	for i, j := 0, 0; i < len(code); i++ {
 		x := code[i]
 		if x == Terminator {
 			i++
 			switch x = code[i]; x {
 			case 1:
-				text = append(text, 0)
+				text[j] = 0
+				j++
 			case Terminator:
 				if i == (len(code) - 1) {
-					return text, nil, nil
+					return i + 1, j
 				}
-				return text, code[i+1:], nil
+				return i + 1, j
 			default:
-				return nil, nil, ErrorSuffixDecoding
+				panic(ErrorSuffixDecoding)
 			}
 			continue
 		}
-		text = append(text, x)
+		text[j] = x
+		j++
 	}
-	return nil, nil, ErrorSuffixDecoding
+	panic(ErrorSuffixDecoding)
 }
