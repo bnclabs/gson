@@ -1,5 +1,8 @@
 package collate
 
+import "testing"
+import "bytes"
+
 func TestSuffixCoding(t *testing.T) {
 	testcases := [][]byte{
 		[]byte("hello\x00wo\xffrld\x00"),

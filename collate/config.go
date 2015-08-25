@@ -16,16 +16,9 @@
 //
 // * strings are collated as it is received from the input without
 //   un-quoting the JSON-string and without unicode collation.
-
-// +build ignore
-
 package collate
 
-import "bytes"
-import "encoding/json"
 import "errors"
-import "sort"
-import "strconv"
 
 // ErrorNumberType means configured number type is not supported.
 var ErrorNumberType = errors.New("collatejson.numberType")
@@ -60,14 +53,10 @@ const (
 
 // Config for new collation and de-collation.
 type Config struct {
-	// ArrayLenPrefix if true, first sort arrays based on its length
-	arrayLenPrefix bool
-	// PropertyLenPrefix if true, first sort properties based on length
-	propertyLenPrefix bool
-	// DoMissing if true, handle missing values (for N1QL)
-	doMissing bool
-	// NumberType encode numbers as "float64" or "int64" or "decimal"
-	nt interface{}
+	arrayLenPrefix    bool       // first sort arrays based on its length
+	propertyLenPrefix bool       // first sort properties based on length
+	doMissing         bool       // handle missing values (for N1QL)
+	nt                NumberType // encode numbers as "float64" or "int64" or "decimal"
 	//-- unicode
 	//backwards        bool
 	//hiraganaQ        bool
@@ -87,17 +76,17 @@ func NewDefaultConfig() *Config {
 		arrayLenPrefix:    false,
 		propertyLenPrefix: true,
 		doMissing:         true,
-		numberType:        float64(0.0),
+		nt:                Float64,
 	}
 }
 
 // NewConfig creates a configuration instance to collate
 // and de-collate gson, json and cbor.
-func NewConfig(al, pl bool, nt interface{}) *Config {
+func NewConfig(al, pl bool, nt NumberType) *Config {
 	config := NewDefaultConfig()
 	config.arrayLenPrefix = al
 	config.propertyLenPrefix = pl
-	config.numberType = nt
+	config.nt = nt
 	return config
 }
 
@@ -112,7 +101,7 @@ func (config *Config) SortbyArrayLen(what bool) *Config {
 // SortbyPropertyLen sorts property by length before sorting by
 // property items. Use `false` to sort only by proprety items.
 // Default is `true`.
-func (config *Codec) SortbyPropertyLen(what bool) *Config {
+func (config *Config) SortbyPropertyLen(what bool) *Config {
 	config.propertyLenPrefix = what
 	return config
 }
@@ -120,7 +109,7 @@ func (config *Codec) SortbyPropertyLen(what bool) *Config {
 // UseMissing will interpret special string MissingLiteral and
 // encode them as TypeMissing.
 // Default is `true`.
-func (config *Codec) UseMissing(what bool) *Config {
+func (config *Config) UseMissing(what bool) *Config {
 	config.doMissing = what
 	return config
 }
@@ -128,14 +117,14 @@ func (config *Codec) UseMissing(what bool) *Config {
 // NumberType chooses type of encoding / decoding for JSON
 // numbers. Can be "float64", "int64", "decimal".
 // Default is "float64"
-func (config *Codec) NumberType(what string) *Config {
+func (config *Config) NumberType(what string) *Config {
 	switch what {
 	case "float64":
-		config.numberType = float64(0.0)
+		config.nt = Float64
 	case "int64":
-		config.numberType = int64(0)
+		config.nt = Int64
 	case "decimal":
-		config.numberType = "0"
+		config.nt = Decimal
 	}
 	return config
 }
@@ -143,15 +132,24 @@ func (config *Codec) NumberType(what string) *Config {
 // CollateGson encode input golang object to order preserving
 // binary representation. `code` is the output buffer for
 // encoding and expected to be adequately size.
-func (config *Codec) CollateGson(obj interface{}, code []byte) int {
-	return gson2collate(obj, code)
+func (config *Config) CollateGson(obj interface{}, code []byte) int {
+	return gson2collate(obj, code, config)
 }
 
 // Gson will decode an already collated object back to golang
 // representation of JSON.
-func (codec *Codec) Decode(code []byte) (interface{}, int) {
+func (config *Config) Gson(code []byte) (interface{}, int) {
 	if len(code) == 0 {
 		return nil, 0
 	}
-	return collate2gson(code)
+	return collate2gson(code, config)
+}
+
+// Equal checks wether n is MissingLiteral
+func (m Missing) Equal(n string) bool {
+	s := string(m)
+	if len(n) == len(s) && n[0] == '~' && n[1] == '[' {
+		return s == n
+	}
+	return false
 }

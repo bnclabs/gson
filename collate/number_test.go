@@ -2,7 +2,6 @@ package collate
 
 import "strconv"
 import "testing"
-import "bytes"
 import "fmt"
 
 var _ = fmt.Sprintf("dummy")
