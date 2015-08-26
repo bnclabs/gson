@@ -1,5 +1,9 @@
 package gson
 
+// Number placeholder type when number is represented in str format,
+// used for delayed parsing.
+type Number string
+
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 

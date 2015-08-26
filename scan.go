@@ -8,10 +8,6 @@ import "unicode"
 import "unicode/utf8"
 import "unicode/utf16"
 
-// Number placeholder type when number is represented in str format,
-// used for delayed parsing.
-type Number string
-
 var nullLiteral = "null"
 var trueLiteral = "true"
 var falseLiteral = "false"
