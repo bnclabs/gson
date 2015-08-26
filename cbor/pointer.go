@@ -115,7 +115,7 @@ func containerLen(doc []byte) (mjr byte, n int) {
 		if inf == indefiniteLength {
 			return mjr, 1
 		}
-		panic(ErrorLenthPrefixNotSupported)
+		panic("cbor pointer len-prefix not supported")
 	}
 	panic(ErrorMalformedDocument)
 }

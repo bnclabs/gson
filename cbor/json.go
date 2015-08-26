@@ -11,70 +11,7 @@ package cbor
 import "strconv"
 import "unicode"
 import "math"
-import "errors"
 import "encoding/binary"
-
-// TODO: encode integer as string itself.
-
-// ErrorJsonEmpty to scan
-var ErrorJsonEmpty = errors.New("cbor.jsonEmpty")
-
-// ErrorExpectedJsonInteger expected a `number` while scanning.
-var ErrorExpectedJsonInteger = errors.New("cbor.expectedJsonInteger")
-
-// ErrorExpectedJsonFloat64 expected a `number` while scanning.
-var ErrorExpectedJsonFloat64 = errors.New("cbor.expectedJsonFloat64")
-
-// ErrorExpectedJsonNil expected a `nil` token while scanning.
-var ErrorExpectedJsonNil = errors.New("cbor.exptectedJsonNil")
-
-// ErrorExpectedJsonTrue expected a `true` token while scanning.
-var ErrorExpectedJsonTrue = errors.New("cbor.exptectedJsonTrue")
-
-// ErrorExpectedJsonFalse expected a `false` token while scanning.
-var ErrorExpectedJsonFalse = errors.New("cbor.exptectedJsonFalse")
-
-// ErrorExpectedJsonClosearray expected a `]` token while scanning.
-var ErrorExpectedJsonClosearray = errors.New("cbor.exptectedJsonCloseArray")
-
-// ErrorExpectedJsonKey expected a `key-string` token while scanning.
-var ErrorExpectedJsonKey = errors.New("cbor.exptectedJsonKey")
-
-// ErrorExpectedJsonColon expected a `:` token while scanning.
-var ErrorExpectedJsonColon = errors.New("cbor.exptectedJsonColon")
-
-// ErrorExpectedJsonCloseobject expected a `}` token while scanning.
-var ErrorExpectedJsonCloseobject = errors.New("cbor.exptectedJsonCloseobject")
-
-// ErrorExpectedJsonToken expected a valid json token while scanning.
-var ErrorExpectedJsonToken = errors.New("cbor.exptectedJsonToken")
-
-// ErrorExpectedJsonString expected a `string` token while scanning.
-var ErrorExpectedJsonString = errors.New("cbor.exptectedJsonString")
-
-// ErrorByteString byte string decoding not supported for cbor->json.
-var ErrorByteString = errors.New("cbor.byteString")
-
-// ErrorTagNotSupported for arrays and maps for cbor->json.
-var ErrorTagNotSupported = errors.New("cbor.tagNotSupported")
-
-// ErrorUndefined cannot decode simple-type undefined.
-var ErrorUndefined = errors.New("cbor.undefined")
-
-// ErrorSimpleType unsupported simple-type.
-var ErrorSimpleType = errors.New("cbor.simpleType")
-
-// ErrorFloat16 simple type not supported.
-var ErrorFloat16 = errors.New("cbor.float16")
-
-// ErrorUnexpectedText should be prefixed by tagJsonString.
-var ErrorUnexpectedText = errors.New("cbor.unexpectedText")
-
-// ErrorLenthPrefixNotSupported for array and map types from json->cbor.
-var ErrorLenthPrefixNotSupported = errors.New("cbor.lengthPrefixNotSupported")
-
-// ErrorBreakcode simple type not supported with breakcode.
-var ErrorBreakcode = errors.New("cbor.breakcode")
 
 var nullStr = "null"
 var trueStr = "true"
@@ -84,7 +21,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.Ws)
 
 	if len(txt) < 1 {
-		panic(ErrorJsonEmpty)
+		panic("cbor scanner empty json text")
 	}
 
 	if numCheck[txt[0]] == 1 {
@@ -97,21 +34,21 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			n := encodeNull(out)
 			return txt[4:], n
 		}
-		panic(ErrorExpectedJsonNil)
+		panic("cbor scanner expected null")
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == trueStr {
 			n := encodeTrue(out)
 			return txt[4:], n
 		}
-		panic(ErrorExpectedJsonTrue)
+		panic("cbor scanner expected true")
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == falseStr {
 			n := encodeFalse(out)
 			return txt[5:], n
 		}
-		panic(ErrorExpectedJsonFalse)
+		panic("cbor scanner expected false")
 
 	case '"':
 		return scanString(txt, out)
@@ -120,7 +57,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		n, m := 0, 0
 		n += encodeArrayStart(out[n:])
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
-			panic(ErrorExpectedJsonClosearray)
+			panic("cbor scanner expected ']'")
 		} else if txt[0] == ']' {
 			n += encodeBreakStop(out[n:])
 			return txt[1:], n
@@ -129,13 +66,13 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			txt, m = scanToken(txt, out[n:], config)
 			n += m
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				panic(ErrorExpectedJsonClosearray)
+				panic("cbor scanner expected ']'")
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
-				panic(ErrorExpectedJsonClosearray)
+				panic("cbor scanner expected ']'")
 			}
 		}
 		n += encodeBreakStop(out[n:])
@@ -149,33 +86,33 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			n += encodeBreakStop(out[n:])
 			return txt[1:], n
 		} else if txt[0] != '"' {
-			panic(ErrorExpectedJsonKey)
+			panic("cbor scanner expected property key")
 		}
 		for {
 			txt, m = scanString(txt, out[n:])
 			n += m
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
-				panic(ErrorExpectedJsonColon)
+				panic("cbor scanner expected property colon")
 			}
 			txt, m = scanToken(skipWS(txt[1:], config.Ws), out[n:], config)
 			n += m
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				panic(ErrorExpectedJsonCloseobject)
+				panic("cbor scanner expected '}'")
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == '}' {
 				break
 			} else {
-				panic(ErrorExpectedJsonCloseobject)
+				panic("cbor scanner expected '}'")
 			}
 		}
 		n += encodeBreakStop(out[n:])
 		return txt[1:], n
 
 	default:
-		panic(ErrorExpectedJsonToken)
+		panic("cbor scanner expected token")
 	}
 }
 
@@ -230,7 +167,7 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 
 	case IntNumber:
 		if flt {
-			panic(ErrorExpectedJsonInteger)
+			panic("cbor scanner expected integer")
 		}
 		num, err := strconv.Atoi(txt[s:e])
 		if err != nil { // once parsing logic is bullet proof remove this
@@ -273,7 +210,7 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 
 func scanString(txt string, out []byte) (string, int) {
 	if len(txt) < 2 {
-		panic(ErrorExpectedJsonString)
+		panic("cbor scanner expected string")
 	}
 
 	skipchar := false
@@ -290,7 +227,7 @@ func scanString(txt string, out []byte) (string, int) {
 			return txt[end:], n
 		}
 	}
-	panic(ErrorExpectedJsonString)
+	panic("cbor scanner expected string")
 }
 
 //---- CBOR to JSON convertor
@@ -391,9 +328,9 @@ func decodeType0Info27Tojson(buf, out []byte) (int, int) {
 
 func decodeType1Info27Tojson(buf, out []byte) (int, int) {
 	x := uint64(binary.BigEndian.Uint64(buf[1:]))
-	//if x > 9223372036854775807 {
-	//    panic("number exceeds the limit of int64")
-	//}
+	if x > 9223372036854775807 {
+		panic("cbo->json number exceeds the limit of int64")
+	}
 	val, n := int64(-x)-1, 9
 	out = strconv.AppendInt(out[:0], val, 10)
 	return n, len(out)
@@ -512,7 +449,7 @@ func decodeTagTojson(buf, out []byte) (int, int) {
 var cborTojson = make(map[byte]func([]byte, []byte) (int, int))
 
 func init() {
-	makePanic := func(msg error) func([]byte, []byte) (int, int) {
+	makePanic := func(msg string) func([]byte, []byte) (int, int) {
 		return func(_, _ []byte) (int, int) { panic(msg) }
 	}
 	//-- type0                  (unsigned integer)
@@ -526,10 +463,11 @@ func init() {
 	cborTojson[hdr(type0, info26)] = decodeType0Info26Tojson
 	cborTojson[hdr(type0, info27)] = decodeType0Info27Tojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type0, 28)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type0, 29)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type0, 30)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type0, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
+	msg := "cbor->json decode type0 reserved info"
+	cborTojson[hdr(type0, 28)] = makePanic(msg)
+	cborTojson[hdr(type0, 29)] = makePanic(msg)
+	cborTojson[hdr(type0, 30)] = makePanic(msg)
+	cborTojson[hdr(type0, indefiniteLength)] = makePanic(msg)
 
 	//-- type1                  (signed integer)
 	// 1st-byte 0..23
@@ -542,21 +480,23 @@ func init() {
 	cborTojson[hdr(type1, info26)] = decodeType1Info26Tojson
 	cborTojson[hdr(type1, info27)] = decodeType1Info27Tojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type1, 28)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type1, 29)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type1, 30)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type1, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
+	msg = "cbor->json type1 decode reserved info"
+	cborTojson[hdr(type1, 28)] = makePanic(msg)
+	cborTojson[hdr(type1, 29)] = makePanic(msg)
+	cborTojson[hdr(type1, 30)] = makePanic(msg)
+	cborTojson[hdr(type1, indefiniteLength)] = makePanic(msg)
 
 	//-- type2                  (byte string)
 	// 1st-byte 0..27
+	msg = "cbor->json byte string not supported"
 	for i := 0; i < 28; i++ {
-		cborTojson[hdr(type2, byte(i))] = makePanic(ErrorByteString)
+		cborTojson[hdr(type2, byte(i))] = makePanic(msg)
 	}
 	// 1st-byte 28..31
-	cborTojson[hdr(type2, 28)] = makePanic(ErrorByteString)
-	cborTojson[hdr(type2, 29)] = makePanic(ErrorByteString)
-	cborTojson[hdr(type2, 30)] = makePanic(ErrorByteString)
-	cborTojson[hdr(type2, indefiniteLength)] = makePanic(ErrorByteString)
+	cborTojson[hdr(type2, 28)] = makePanic(msg)
+	cborTojson[hdr(type2, 29)] = makePanic(msg)
+	cborTojson[hdr(type2, 30)] = makePanic(msg)
+	cborTojson[hdr(type2, indefiniteLength)] = makePanic(msg)
 
 	//-- type3                  (string)
 	// 1st-byte 0..27
@@ -567,7 +507,8 @@ func init() {
 	cborTojson[hdr(type3, 28)] = decodeType3Tojson
 	cborTojson[hdr(type3, 29)] = decodeType3Tojson
 	cborTojson[hdr(type3, 30)] = decodeType3Tojson
-	cborTojson[hdr(type3, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
+	msg = "cbor->json indefinite string not supported"
+	cborTojson[hdr(type3, indefiniteLength)] = makePanic(msg)
 
 	//-- type4                  (array)
 	// 1st-byte 0..27
@@ -602,31 +543,41 @@ func init() {
 	cborTojson[hdr(type6, info26)] = decodeTagTojson
 	cborTojson[hdr(type6, info27)] = decodeTagTojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type6, 28)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type6, 29)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type6, 30)] = makePanic(ErrorDecodeInfoReserved)
-	cborTojson[hdr(type6, indefiniteLength)] = makePanic(ErrorDecodeIndefinite)
+	msg = "cbor->json type6 decode reserved info"
+	cborTojson[hdr(type6, 28)] = makePanic(msg)
+	cborTojson[hdr(type6, 29)] = makePanic(msg)
+	cborTojson[hdr(type6, 30)] = makePanic(msg)
+	msg = "cbor->json indefinite type6 not supported"
+	cborTojson[hdr(type6, indefiniteLength)] = makePanic(msg)
 
 	//-- type7                  (simple values / floats / break-stop)
+	msg = "cbor->json simple-type < 20 not supported"
 	// 1st-byte 0..19
 	for i := byte(0); i < 20; i++ {
-		cborTojson[hdr(type7, i)] = makePanic(ErrorDecodeSimpleType)
+		cborTojson[hdr(type7, i)] = makePanic(msg)
 	}
 	// 1st-byte 20..23
 	cborTojson[hdr(type7, simpleTypeFalse)] = decodeFalseTojson
 	cborTojson[hdr(type7, simpleTypeTrue)] = decodeTrueTojson
 	cborTojson[hdr(type7, simpleTypeNil)] = decodeNullTojson
-	cborTojson[hdr(type7, simpleUndefined)] = makePanic(ErrorUndefined)
+	msg = "cbor->json simple-type-undefined not supported"
+	cborTojson[hdr(type7, simpleUndefined)] = makePanic(msg)
 
-	cborTojson[hdr(type7, simpleTypeByte)] = makePanic(ErrorSimpleType)
-	cborTojson[hdr(type7, flt16)] = makePanic(ErrorFloat16)
+	msg = "cbor->json simple-type > 31 not supported"
+	cborTojson[hdr(type7, simpleTypeByte)] = makePanic(msg)
+	msg = "cbor->json float16 not supported"
+	cborTojson[hdr(type7, flt16)] = makePanic(msg)
 	cborTojson[hdr(type7, flt32)] = decodeFloat32Tojson
 	cborTojson[hdr(type7, flt64)] = decodeFloat64Tojson
 	// 1st-byte 28..31
-	cborTojson[hdr(type7, 28)] = makePanic(ErrorDecodeSimpleType)
-	cborTojson[hdr(type7, 29)] = makePanic(ErrorDecodeSimpleType)
-	cborTojson[hdr(type7, 30)] = makePanic(ErrorDecodeSimpleType)
-	cborTojson[hdr(type7, itemBreak)] = makePanic(ErrorBreakcode)
+	msg = "cbor->json simple-type 28 not supported"
+	cborTojson[hdr(type7, 28)] = makePanic(msg)
+	msg = "cbor->json simple-type 29 not supported"
+	cborTojson[hdr(type7, 29)] = makePanic(msg)
+	msg = "cbor->json simple-type 30 not supported"
+	cborTojson[hdr(type7, 30)] = makePanic(msg)
+	msg = "cbor->json simple-type break-code not supported"
+	cborTojson[hdr(type7, itemBreak)] = makePanic(msg)
 }
 
 var intCheck = [256]byte{}

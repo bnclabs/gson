@@ -20,14 +20,7 @@ import "math"
 import "math/big"
 import "regexp"
 import "time"
-import "errors"
 import "encoding/binary"
-
-// ErrorDecodeFloat16 cannot decode float16.
-var ErrorDecodeFloat16 = errors.New("cbor.decodeFloat16")
-
-// ErrorDecodeExceedInt64 cannot decode float16.
-var ErrorDecodeExceedInt64 = errors.New("cbor.decodeExceedInt64")
 
 const ( // major types.
 	type0 byte = iota << 5 // unsigned integer
@@ -478,7 +471,7 @@ func decodeSimpleTypeByte(buf []byte) (interface{}, int) {
 }
 
 func decodeFloat16(buf []byte) (interface{}, int) {
-	panic(ErrorDecodeFloat16)
+	panic("decodeFloat16 not supported")
 }
 
 func decodeFloat32(buf []byte) (interface{}, int) {
@@ -530,7 +523,7 @@ func decodeType0Info27(buf []byte) (interface{}, int) {
 func decodeType1Info27(buf []byte) (interface{}, int) {
 	x := uint64(binary.BigEndian.Uint64(buf[1:]))
 	if x > 9223372036854775807 {
-		panic(ErrorDecodeExceedInt64)
+		panic("cbor decoding integer exceeds int64")
 	}
 	return int64(-x) - 1, 9
 }
