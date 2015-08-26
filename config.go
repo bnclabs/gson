@@ -65,21 +65,23 @@ func (config *Config) ParseMany(txt string) []interface{} {
 	return values
 }
 
-// ParsePointer parse input JSON pointer into segments.
+// ParsePointer follows rfc-6901 allows ~0 and ~1 escapes, property
+// lookup by specifying the key and array lookup by specifying the
+// index. Also allows empty "" pointer and empty key "/".
 func (config *Config) ParsePointer(pointer string, segments []string) []string {
 	return parsePointer(pointer, segments)
 }
 
-// EncodePointer compliments ParsePointer to convert parsed
+// EncodePointer reverse of ParsePointer to convert parsed
 // `segments` back to json-pointer. Converted pointer is available
 // in the `pointer` array and returns the length of pointer.
 func (config *Config) EncodePointer(segments []string, pointer []byte) int {
 	return encodePointer(segments, pointer)
 }
 
-// ListPointers from value.
-func (config *Config) ListPointers(value interface{}) []string {
-	pointers := allpaths(value)
+// ListPointers all possible pointers into object.
+func (config *Config) ListPointers(object interface{}) []string {
+	pointers := allpaths(object)
 	pointers = append(pointers, "")
 	return pointers
 }
@@ -90,22 +92,22 @@ func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
 	return get(segments, doc)
 }
 
-// Set field or nested field specified by json pointer. If input
-// `doc` is of type []interface{}, `newdoc` return the updated slice,
-// along with the old value.
-func (config *Config) Set(
-	ptr string, doc, item interface{}) (newdoc, old interface{}) {
-
+// Set field or nested field specified by json pointer. While
+// `newdoc` is gauranteed to contain the `item`, `doc` _may_ not be.
+// Suggested usage,
+//      doc := []interface{}{"hello"}
+//      doc, _ = config.Set("/-", doc, "world")
+func (config *Config) Set(ptr string, doc, item interface{}) (newdoc, old interface{}) {
 	segments := config.ParsePointer(ptr, []string{})
 	return set(segments, doc, item)
 }
 
-// Delete field or nested field specified by json pointer.
-// If input `doc` is of type []interface{}, `newdoc` return
-// the updated slice, along with the deleted value.
-func (config *Config) Delete(
-	ptr string, doc interface{}) (newdoc, deleted interface{}) {
-
+// Delete field or nested field specified by json pointer. While
+// `newdoc` is gauranteed to be updated, `doc` _may_ not be.
+// Suggested usage,
+//      doc := []interface{}{"hello", "world"}
+//      doc, _ = config.Delete("/1", doc)
+func (config *Config) Delete(ptr string, doc interface{}) (newdoc, deleted interface{}) {
 	segments := config.ParsePointer(ptr, []string{})
 	return del(segments, doc)
 }

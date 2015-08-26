@@ -5,54 +5,53 @@ import "reflect"
 import "strings"
 import "sort"
 import "fmt"
+import "encoding/json"
 
 var _ = fmt.Sprintf("dummy")
 
-var tcasesJSONPointers = []struct {
-	in  string
-	ref []string
-}{
-	{``, []string{}},
-	{`/`, []string{""}},
-	{"/foo", []string{"foo"}},
-	{"/foo/0", []string{"foo", "0"}},
-	{"/a~1b", []string{"a/b"}},
-	{"/c%d", []string{"c%d"}},
-	{"/e^f", []string{"e^f"}},
-	{"/g|h", []string{"g|h"}},
-	{"/i\\j", []string{"i\\j"}},
-	{"/k\"l", []string{"k\"l"}},
-	{"/ ", []string{" "}},
-	{"/m~0n", []string{"m~n"}},
-	{"/g~1n~1r", []string{"g/n/r"}},
-	{"/g/n/r", []string{"g", "n", "r"}},
-}
-
 func TestParsePointer(t *testing.T) {
+	var tcasesJSONPointers = [][2]interface{}{
+		[2]interface{}{``, []string{}},
+		[2]interface{}{`/`, []string{""}},
+		[2]interface{}{"/foo", []string{"foo"}},
+		[2]interface{}{"/foo/0", []string{"foo", "0"}},
+		[2]interface{}{"/a~1b", []string{"a/b"}},
+		[2]interface{}{"/c%d", []string{"c%d"}},
+		[2]interface{}{"/e^f", []string{"e^f"}},
+		[2]interface{}{"/g|h", []string{"g|h"}},
+		[2]interface{}{"/i\\j", []string{"i\\j"}},
+		[2]interface{}{"/k\"l", []string{"k\"l"}},
+		[2]interface{}{"/ ", []string{" "}},
+		[2]interface{}{"/m~0n", []string{"m~n"}},
+		[2]interface{}{"/g~1n~1r", []string{"g/n/r"}},
+		[2]interface{}{"/g/n/r", []string{"g", "n", "r"}},
+	}
+
+	// test ParsePointer
 	config := NewDefaultConfig()
 	for _, tcase := range tcasesJSONPointers {
-		t.Logf("input pointer %q", tcase.in)
-		segments := config.ParsePointer(tcase.in, []string{})
-		if len(segments) != len(tcase.ref) {
-			t.Errorf("expected %v, got %v", len(tcase.ref), len(segments))
+		in, ref := tcase[0].(string), tcase[1].([]string)
+		t.Logf("input pointer %q", in)
+		segments := config.ParsePointer(in, []string{})
+		if len(segments) != len(ref) {
+			t.Errorf("expected %v, got %v", len(ref), len(segments))
 		} else {
-			for i, x := range tcase.ref {
+			for i, x := range ref {
 				if string(segments[i]) != string(x) {
 					t.Errorf("expected %q, got %q", string(x), segments[i])
 				}
 			}
 		}
 	}
-}
 
-func TestEncodePointer(t *testing.T) {
-	config := NewDefaultConfig()
+	// test encode pointers
 	out := make([]byte, 1024)
 	for _, tcase := range tcasesJSONPointers {
-		t.Logf("input %v", tcase.ref)
-		n := config.EncodePointer(tcase.ref, out)
-		if outs := string(out[:n]); outs != tcase.in {
-			t.Errorf("expected %q, %q", tcase.in, outs)
+		in, ref := tcase[0].(string), tcase[1].([]string)
+		t.Logf("input %v", ref)
+		n := config.EncodePointer(ref, out)
+		if outs := string(out[:n]); outs != in {
+			t.Errorf("expected %q, %q", in, outs)
 		}
 	}
 }
@@ -63,6 +62,7 @@ func TestTypicalPointers(t *testing.T) {
 	sort.Strings(refs)
 	config := NewDefaultConfig()
 
+	// test list pointers
 	txt := string(testdataFile("testdata/typical.json"))
 	value, _ := config.Parse(txt)
 	pointers := config.ListPointers(value)
@@ -99,14 +99,32 @@ func TestPointerGet(t *testing.T) {
 	}
 }
 
+func TestPointerSetExample(t *testing.T) {
+	config := NewDefaultConfig()
+	var doc interface{}
+	doc = []interface{}{"hello"}
+	ptr := "/-"
+	doc, old := config.Set(ptr, doc, "world")
+	if !reflect.DeepEqual(old, "world") {
+		t.Errorf("for %v expected %v, got %v", ptr, "world", old)
+	} else if v := doc.([]interface{}); !reflect.DeepEqual(v[0], "hello") {
+		t.Errorf("for %v expected %v, got %v", ptr, "hello", v[0])
+	} else if !reflect.DeepEqual(v[1], "world") {
+		t.Errorf("for %v expected %v, got %v", ptr, "world", v[1])
+	}
+}
+
 func TestPointerSet(t *testing.T) {
-	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
+	txt := `{"a": 10, "arr": [1,2], "-": [[1]], "dict": {"a":10, "b":20}}`
+	ref := `{"b":1,"a":11,"arr":[10,20,30],"-":[[1,30],30],"dict":{"a":1,"b":2}}`
 	testcases := [][3]interface{}{
 		[3]interface{}{"/a", 11.0, 10.0},
-		[3]interface{}{"/b", 12.0, 12.0},
+		[3]interface{}{"/b", 1.0, 1.0},
 		[3]interface{}{"/arr/0", 10.0, 1.0},
 		[3]interface{}{"/arr/1", 20.0, 2.0},
 		[3]interface{}{"/arr/-", 30.0, 30.0},
+		[3]interface{}{"/-/-", 30.0, 30.0},
+		[3]interface{}{"/-/0/-", 30.0, 30.0},
 		[3]interface{}{"/dict/a", 1.0, 10.0},
 		[3]interface{}{"/dict/b", 2.0, 20.0},
 	}
@@ -124,14 +142,36 @@ func TestPointerSet(t *testing.T) {
 			t.Errorf("for %v expected %v, got %v", ptr, tcase[1], val)
 		}
 	}
+	var refval interface{}
+	if err := json.Unmarshal([]byte(ref), &refval); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	} else if !reflect.DeepEqual(refval, doc) {
+		t.Errorf("expected %v, got %v", refval, doc)
+	}
+}
+
+func TestPointerDelExample(t *testing.T) {
+	config := NewDefaultConfig()
+	var doc interface{}
+	doc = []interface{}{"hello", "world"}
+	ptr := "/1"
+	doc, old := config.Delete(ptr, doc)
+	if !reflect.DeepEqual(old, "world") {
+		t.Errorf("for %v expected %v, got %v", ptr, "world", old)
+	} else if v := doc.([]interface{}); len(v) != 1 {
+		t.Errorf("for %v expected length %v, got %v", ptr, 1, len(v))
+	} else if !reflect.DeepEqual(v[0], "hello") {
+		t.Errorf("for %v expected %v, got %v", ptr, "hello", v[0])
+	}
 }
 
 func TestPointerDel(t *testing.T) {
-	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
+	txt := `{"a": 10, "-": [1], "arr": [1,2], "dict": {"a":10, "b":20}}`
 	testcases := [][2]interface{}{
 		[2]interface{}{"/a", 10.0},
 		[2]interface{}{"/arr/1", 2.0},
 		[2]interface{}{"/arr/0", 1.0},
+		[2]interface{}{"/-/0", 1.0},
 		[2]interface{}{"/dict/a", 10.0},
 		[2]interface{}{"/dict/b", 20.0},
 	}
@@ -145,7 +185,7 @@ func TestPointerDel(t *testing.T) {
 			t.Errorf("for %v expected %v, got %v", ptr, tcase[1], val)
 		}
 	}
-	remtxt := `{"arr": [], "dict":{}}"`
+	remtxt := `{"arr": [], "-": [], "dict":{}}"`
 	remdoc, _ := config.Parse(remtxt)
 	if !reflect.DeepEqual(doc, remdoc) {
 		t.Errorf("expected %v, got %v", remdoc, doc)

@@ -131,7 +131,7 @@ func get(segments []string, doc interface{}) interface{} {
 
 	switch val := doc.(type) {
 	case []interface{}:
-		if segments[0] == "-" {
+		if segments[0] == "-" { // not required as per rfc-6901
 			return get(segments[1:], val[len(val)-1])
 		} else if idx, err := strconv.Atoi(segments[0]); err != nil {
 			panic("get() gson pointer-invalidIndex")
@@ -140,25 +140,24 @@ func get(segments []string, doc interface{}) interface{} {
 		} else {
 			return get(segments[1:], val[idx])
 		}
+
 	case map[string]interface{}:
 		if doc, ok := val[segments[0]]; !ok {
 			panic("get() gson pointer-invalidKey")
 		} else {
 			return get(segments[1:], doc)
 		}
-	default:
-		panic("get() gson invalidPointer")
 	}
+	panic("get() gson invalidPointer")
 }
 
 func set(segments []string, doc, item interface{}) (newdoc, old interface{}) {
-	ln := len(segments)
-	container := doc // if ln == 1
+	ln, container := len(segments), doc
 	if ln == 0 {
-		panic("set() gson invalidPointer")
+		panic("set() document is not a container")
 	} else if ln > 1 {
 		container = get(segments[:ln-1], doc)
-	}
+	} // else if ln == 1, container _is_ doc
 
 	key := segments[ln-1]
 
@@ -180,6 +179,7 @@ func set(segments []string, doc, item interface{}) (newdoc, old interface{}) {
 		} else {
 			old, cont[idx] = cont[idx], item
 		}
+
 	case map[string]interface{}:
 		if old, ok = cont[key]; !ok {
 			old = item
@@ -192,13 +192,12 @@ func set(segments []string, doc, item interface{}) (newdoc, old interface{}) {
 }
 
 func del(segments []string, doc interface{}) (newdoc, old interface{}) {
-	ln := len(segments)
-	container := doc // if ln == 1
+	ln, container := len(segments), doc
 	if ln == 0 {
-		panic("del() gson invalidPointer")
+		panic("del() document is not a container")
 	} else if ln > 1 {
 		container = get(segments[:ln-1], doc)
-	}
+	} // else if ln == 1, container _is_ doc
 
 	key := segments[ln-1]
 
@@ -218,9 +217,11 @@ func del(segments []string, doc interface{}) (newdoc, old interface{}) {
 				return cont, old
 			}
 		}
+
 	case map[string]interface{}:
 		old, _ = cont[key]
 		delete(cont, key)
+
 	default:
 		panic("del() gson invalidPointer")
 	}
