@@ -1,12 +1,8 @@
 package collate
 
-import "errors"
 import "strconv"
 
 //import "fmt"
-
-// error codes
-var ErrorSuffixDecoding = errors.New("collatejson.suffixDecoding")
 
 // Constants used in text representation of basic data types.
 const (

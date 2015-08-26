@@ -26,14 +26,14 @@ func suffixDecodeString(code []byte, text []byte) (int, int) {
 			case Terminator:
 				return i + 1, j
 			default:
-				panic(ErrorSuffixDecoding)
+				panic("collate decode invalid escape sequence")
 			}
 			continue
 		}
 		text[j] = x
 		j++
 	}
-	panic(ErrorSuffixDecoding)
+	panic("collate decode invalid string")
 }
 
 func encodedStringSize(code []byte) int {
@@ -45,10 +45,10 @@ func encodedStringSize(code []byte) int {
 			case Terminator:
 				return i
 			default:
-				panic(ErrorSuffixDecoding)
+				panic("collate decode invalid escape sequence")
 			}
 		}
 		i++
 	}
-	panic(ErrorSuffixDecoding)
+	panic("collate decode invalid string")
 }

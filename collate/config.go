@@ -18,14 +18,6 @@
 //   un-quoting the JSON-string and without unicode collation.
 package collate
 
-import "errors"
-
-// ErrorNumberType means configured number type is not supported.
-var ErrorNumberType = errors.New("collatejson.numberType")
-
-// ErrorOutputLen means output buffer has insufficient length.
-var ErrorOutputLen = errors.New("collatejson.outputLen")
-
 // Length is an internal type used for prefixing length
 // of arrays and properties.
 type Length int64

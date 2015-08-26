@@ -1,22 +1,7 @@
 package collate
 
-import "errors"
 import "strconv"
 import "sort"
-
-//import "fmt"
-
-// ErrorInvalidGolangtype invalid golant type to encode.
-var ErrorInvalidGolangtype = errors.New("collate.invalidGolangtype")
-
-// ErrorInvalidInput invalid collated binary input.
-var ErrorInvalidInput = errors.New("collate.invalidInput")
-
-// ErrorTerminatorNotfound collated binary input without terminator.
-var ErrorTerminatorNotfound = errors.New("collate.terminatorNotFound")
-
-// ErrorDecimalConfig collation is configured for decimal but got integer.
-var ErrorDecimalConfig = errors.New("collate.decimalConfig")
 
 // collate golang representation of a json object.
 func gson2collate(obj interface{}, code []byte, config *Config) int {
@@ -57,7 +42,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 			code[n] = Terminator
 			n++
 		default:
-			panic(ErrorDecimalConfig)
+			panic("collate decimal not configured")
 		}
 
 	case Length:
@@ -112,7 +97,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n++
 
 	default:
-		panic("ErrorInvalidGolangtype")
+		panic("collate invalid golang type")
 	}
 	return n
 }
@@ -211,7 +196,7 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 		}
 		return obj, n
 	}
-	panic(ErrorInvalidInput)
+	panic("collate decode invalid binary")
 }
 
 func normalizeFloat(value float64, code []byte, nt NumberType) int {
@@ -229,7 +214,7 @@ func normalizeFloat(value float64, code []byte, nt NumberType) int {
 		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 64)
 		return encodeFloat(bs, code)
 	}
-	panic(ErrorNumberType)
+	panic("collate invalid number configuration")
 }
 
 func denormalizeFloat(code []byte, nt NumberType) (res interface{}) {
@@ -282,5 +267,5 @@ func getDatum(code []byte) int {
 			return i + 1
 		}
 	}
-	panic(ErrorTerminatorNotfound)
+	panic("collate decode terminator not found")
 }
