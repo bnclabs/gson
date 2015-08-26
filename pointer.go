@@ -4,21 +4,8 @@
 package gson
 
 import "strconv"
-import "errors"
 import "strings"
 import "unicode/utf8"
-
-// ErrorInvalidPointer supplied pointer is not valid.
-var ErrorInvalidPointer = errors.New("gson.invalidPointer")
-
-// ErrorInvalidIndex supplied pointer index to array is not valid.
-var ErrorInvalidIndex = errors.New("gson.invalidIndex")
-
-// ErrorOutofRange supplied pointer index to array is out of bounds.
-var ErrorOutofRange = errors.New("gson.outofRange")
-
-// ErrorInvalidKey supplied pointer index to map is not valid.
-var ErrorInvalidKey = errors.New("gson.invalidKey")
 
 func parsePointer(in string, segments []string) []string {
 	if len(in) == 0 {
@@ -147,20 +134,20 @@ func get(segments []string, doc interface{}) interface{} {
 		if segments[0] == "-" {
 			return get(segments[1:], val[len(val)-1])
 		} else if idx, err := strconv.Atoi(segments[0]); err != nil {
-			panic(ErrorInvalidIndex)
+			panic("get() gson pointer-invalidIndex")
 		} else if idx >= len(val) {
-			panic(ErrorOutofRange)
+			panic("get() gson pointer-index-outofRange")
 		} else {
 			return get(segments[1:], val[idx])
 		}
 	case map[string]interface{}:
 		if doc, ok := val[segments[0]]; !ok {
-			panic(ErrorInvalidKey)
+			panic("get() gson pointer-invalidKey")
 		} else {
 			return get(segments[1:], doc)
 		}
 	default:
-		panic(ErrorInvalidPointer)
+		panic("get() gson invalidPointer")
 	}
 }
 
@@ -168,7 +155,7 @@ func set(segments []string, doc, item interface{}) (newdoc, old interface{}) {
 	ln := len(segments)
 	container := doc // if ln == 1
 	if ln == 0 {
-		panic(ErrorInvalidPointer)
+		panic("set() gson invalidPointer")
 	} else if ln > 1 {
 		container = get(segments[:ln-1], doc)
 	}
@@ -187,9 +174,9 @@ func set(segments []string, doc, item interface{}) (newdoc, old interface{}) {
 				return cont, item
 			}
 		} else if idx, err := strconv.Atoi(key); err != nil {
-			panic(ErrorInvalidIndex)
+			panic("set() gson pointer-invalidIndex")
 		} else if idx >= len(cont) {
-			panic(ErrorOutofRange)
+			panic("set() gson pointer-outofRange")
 		} else {
 			old, cont[idx] = cont[idx], item
 		}
@@ -199,7 +186,7 @@ func set(segments []string, doc, item interface{}) (newdoc, old interface{}) {
 		}
 		cont[key] = item
 	default:
-		panic(ErrorInvalidPointer)
+		panic("set() gson invalidPointer")
 	}
 	return doc, old
 }
@@ -208,7 +195,7 @@ func del(segments []string, doc interface{}) (newdoc, old interface{}) {
 	ln := len(segments)
 	container := doc // if ln == 1
 	if ln == 0 {
-		panic(ErrorInvalidPointer)
+		panic("del() gson invalidPointer")
 	} else if ln > 1 {
 		container = get(segments[:ln-1], doc)
 	}
@@ -218,9 +205,9 @@ func del(segments []string, doc interface{}) (newdoc, old interface{}) {
 	switch cont := container.(type) {
 	case []interface{}:
 		if idx, err := strconv.Atoi(key); err != nil {
-			panic(ErrorInvalidIndex)
+			panic("del() gson pointer-invalidIndex")
 		} else if idx >= len(cont) {
-			panic(ErrorOutofRange)
+			panic("del() gson pointer-outofRange")
 		} else {
 			old = cont[idx]
 			copy(cont[idx:], cont[idx+1:])
@@ -235,7 +222,7 @@ func del(segments []string, doc interface{}) (newdoc, old interface{}) {
 		old, _ = cont[key]
 		delete(cont, key)
 	default:
-		panic(ErrorInvalidPointer)
+		panic("del() gson invalidPointer")
 	}
 	return doc, old
 }

@@ -4,43 +4,9 @@
 package gson
 
 import "strconv"
-import "errors"
 import "unicode"
 import "unicode/utf8"
 import "unicode/utf16"
-
-// ErrorJsonEmpty to scan
-var ErrorJsonEmpty = errors.New("gson.jsonEmpty")
-
-// ErrorExpectedNil expected a `nil` token while scanning.
-var ErrorExpectedNil = errors.New("gson.exptectedNil")
-
-// ErrorExpectedTrue expected a `true` token while scanning.
-var ErrorExpectedTrue = errors.New("gson.exptectedTrue")
-
-// ErrorExpectedFalse expected a `false` token while scanning.
-var ErrorExpectedFalse = errors.New("gson.exptectedFalse")
-
-// ErrorExpectedJsonInteger expected a `integer` while scanning.
-var ErrorExpectedJsonInteger = errors.New("gson.expectedJsonInteger")
-
-// ErrorExpectedClosearray expected a `]` token while scanning.
-var ErrorExpectedClosearray = errors.New("gson.exptectedCloseArray")
-
-// ErrorExpectedKey expected a `key-string` token while scanning.
-var ErrorExpectedKey = errors.New("gson.exptectedKey")
-
-// ErrorExpectedColon expected a `:` token while scanning.
-var ErrorExpectedColon = errors.New("gson.exptectedColon")
-
-// ErrorExpectedCloseobject expected a `}` token while scanning.
-var ErrorExpectedCloseobject = errors.New("gson.exptectedCloseobject")
-
-// ErrorExpectedToken expected a valid json token while scanning.
-var ErrorExpectedToken = errors.New("gson.exptectedToken")
-
-// ErrorExpectedString expected a `string` token while scanning.
-var ErrorExpectedString = errors.New("gson.exptectedString")
 
 // Number placeholder type when number is represented in str format,
 // used for delayed parsing.
@@ -59,7 +25,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 	txt = skipWS(txt, config.Ws)
 
 	if len(txt) < 1 {
-		panic(ErrorJsonEmpty)
+		panic("gson scanner jsonEmpty")
 	}
 
 	if digitCheck[txt[0]] == 1 {
@@ -71,19 +37,19 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		if len(txt) >= 4 && txt[:4] == nullLiteral {
 			return nil, txt[4:]
 		}
-		panic(ErrorExpectedNil)
+		panic("gson scanner expectedNil")
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == trueLiteral {
 			return true, txt[4:]
 		}
-		panic(ErrorExpectedTrue)
+		panic("gson scanner expectedTrue")
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == falseLiteral {
 			return false, txt[5:]
 		}
-		panic(ErrorExpectedFalse)
+		panic("gson scanner expectedFalse")
 
 	case '"':
 		s, remtxt := scanString(str2bytes(txt))
@@ -91,7 +57,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 
 	case '[':
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
-			panic(ErrorExpectedClosearray)
+			panic("gson scanner expectedCloseArray")
 		} else if txt[0] == ']' {
 			return []interface{}{}, txt[1:]
 		}
@@ -101,13 +67,13 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 			tok, txt = scanToken(txt, config)
 			arr = append(arr, tok)
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				panic(ErrorExpectedClosearray)
+				panic("gson scanner expectedCloseArray")
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
-				panic(ErrorExpectedClosearray)
+				panic("gson scanner expectedCloseArray")
 			}
 		}
 		return arr, txt[1:]
@@ -117,7 +83,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		if txt[0] == '}' {
 			return map[string]interface{}{}, txt[1:]
 		} else if txt[0] != '"' {
-			panic(ErrorExpectedKey)
+			panic("gson scanner expectedKey")
 		}
 		m := make(map[string]interface{})
 		for {
@@ -127,23 +93,23 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 			txt = bytes2str(remtxt)
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
-				panic(ErrorExpectedColon)
+				panic("gson scanner expectedColon")
 			}
 			tok, txt = scanToken(skipWS(txt[1:], config.Ws), config)
 			m[key] = tok
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
-				panic(ErrorExpectedCloseobject)
+				panic("gson scanner expectedCloseobject")
 			} else if txt[0] == ',' {
 				txt = skipWS(txt[1:], config.Ws)
 			} else if txt[0] == '}' {
 				break
 			} else {
-				panic(ErrorExpectedCloseobject)
+				panic("gson scanner expectedCloseobject")
 			}
 		}
 		return m, txt[1:]
 	}
-	panic(ErrorExpectedToken)
+	panic("gson scanner expectedToken")
 }
 
 var spaceCode = [256]byte{ // TODO: size can be optimized
@@ -190,7 +156,7 @@ func scanNum(txt string, nk NumberKind) (interface{}, string) {
 	case IntNumber:
 		num, err := strconv.Atoi(string(txt[s:e]))
 		if err != nil {
-			panic(ErrorExpectedJsonInteger)
+			panic("gson scanner expectedJsonInteger")
 		}
 		return num, txt[e:]
 	}
@@ -214,7 +180,7 @@ var escapeCode = [256]byte{ // TODO: size can be optimized
 
 func scanString(txt []byte) ([]byte, []byte) {
 	if len(txt) < 2 {
-		panic(ErrorExpectedString)
+		panic("gson scanner expectedString")
 	}
 
 	e := 1
@@ -233,7 +199,7 @@ func scanString(txt []byte) ([]byte, []byte) {
 		}
 		e += size
 		if e == len(txt) {
-			panic(ErrorExpectedString)
+			panic("gson scanner expectedString")
 		}
 	}
 
@@ -256,7 +222,7 @@ loop:
 			if txt[e+1] == 'u' {
 				r := getu4(txt[e:])
 				if r < 0 { // invalid
-					panic(ErrorExpectedString)
+					panic("gson scanner expectedString")
 				}
 				e += 6
 				if utf16.IsSurrogate(r) {
@@ -279,7 +245,7 @@ loop:
 			}
 
 		case c < ' ': // control character is invalid
-			panic(ErrorExpectedString)
+			panic("gson scanner expectedString")
 
 		case c < utf8.RuneSelf: // ASCII
 			out[oute] = c
@@ -296,7 +262,7 @@ loop:
 	if out[oute] == '"' {
 		return out[1:oute], txt[e:]
 	}
-	panic(ErrorExpectedString)
+	panic("gson scanner expectedString")
 }
 
 // getu4 decodes \uXXXX from the beginning of s, returning the hex value,

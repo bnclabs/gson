@@ -31,8 +31,8 @@ type Config struct {
 }
 
 // NewDefaultConfig returns a new configuration with default values.
-//      Nk: FloatNumber
-//      Ws: UnicodeSpace
+// Nk: FloatNumber
+// Ws: UnicodeSpace
 func NewDefaultConfig() *Config {
 	return NewConfig(FloatNumber, UnicodeSpace)
 }
@@ -43,7 +43,7 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 }
 
 // Parse input JSON text to a single go-native value. If text is
-// invalid raises panic. Along with go-native value, remainig
+// invalid raises panic. Along with go-native value, remaining
 // unparsed text is returned.
 func (config *Config) Parse(txt string) (interface{}, string) {
 	return scanToken(txt, config)
