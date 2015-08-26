@@ -2,45 +2,11 @@ package cbor
 
 import "testing"
 import "fmt"
+import "bytes"
 import "reflect"
 import "encoding/json"
 
 var _ = fmt.Sprintf("dummy")
-
-var testcases = []string{
-	// null
-	"null",
-	// boolean
-	"true",
-	"false",
-	// integers
-	"10",
-	"0.1",
-	"-0.1",
-	"10.1",
-	"-10.1",
-	"-10E-1",
-	"-10e+1",
-	"10E-1",
-	"10e+1",
-	// string
-	`"true"`,
-	`"tru\"e"`,
-	`"tru\\e"`,
-	`"tru\be"`,
-	`"tru\fe"`,
-	`"tru\ne"`,
-	`"tru\re"`,
-	`"tru\te"`,
-	`"tru\u0123e"`,
-	`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`,
-	// array
-	`[]`,
-	` [null,true,false,10,"tru\"e"]`,
-	// object
-	`{}`,
-	`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`,
-}
 
 func TestSkipWS(t *testing.T) {
 	ref := "hello  "
@@ -49,7 +15,52 @@ func TestSkipWS(t *testing.T) {
 	}
 }
 
+func TestScanEmpty(t *testing.T) {
+	config := NewDefaultConfig()
+	out := make([]byte, 1024)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("expected panic")
+		}
+	}()
+	scanToken("", out, config)
+}
+
 func TestJson(t *testing.T) {
+	testcases := []string{
+		// null
+		"null",
+		// boolean
+		"true",
+		"false",
+		// integers
+		"10",
+		"0.1",
+		"-0.1",
+		"10.1",
+		"-10.1",
+		"-10E-1",
+		"-10e+1",
+		"10E-1",
+		"10e+1",
+		// string
+		`"true"`,
+		`"tru\"e"`,
+		`"tru\\e"`,
+		`"tru\be"`,
+		`"tru\fe"`,
+		`"tru\ne"`,
+		`"tru\re"`,
+		`"tru\te"`,
+		`"tru\u0123e"`,
+		`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`,
+		// array
+		`[]`,
+		` [null,true,false,10,"tru\"e"]`,
+		// object
+		`{}`,
+		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`,
+	}
 	cborout, jsonout := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	var ref1, ref2 interface{}
@@ -70,6 +81,67 @@ func TestJson(t *testing.T) {
 		if !reflect.DeepEqual(ref1, ref2) {
 			t.Errorf("mismatch %v, got %v", ref1, ref2)
 		}
+	}
+}
+
+func TestScanNumber(t *testing.T) {
+	code, out := make([]byte, 1024), make([]byte, 1024)
+	// test JsonNumber
+	ref := []byte{216, 38, 98, 49, 48}
+	_, n := scanNum("10", JsonNumber, code)
+	if bytes.Compare(code[:n], ref) != 0 {
+		t.Errorf("expected %v, got %v", ref, code[:n])
+	}
+	// test FloatNumber
+	_, n = scanNum("10", FloatNumber, code)
+	_, y := decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10.00000000000000000000" {
+		t.Errorf("expected %q, got %q", "10.00000000000000000000", s)
+	}
+	// test IntNumber
+	_, n = scanNum("10", IntNumber, code)
+	_, y = decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10" {
+		t.Errorf("expected %q, got %q", "10", s)
+	}
+	// malformed IntNumber
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		scanNum("10.2", IntNumber, out)
+	}()
+	// test FloatNumber32
+	_, n = scanNum("10", FloatNumber32, code)
+	_, y = decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10.000000" {
+		t.Errorf("expected %q, got %q", "10.000000", s)
+	}
+	// test SmartNumber32
+	_, n = scanNum("10.2", SmartNumber32, code)
+	_, y = decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10.200000" {
+		t.Errorf("expected %q, got %q", "10.200000", s)
+	}
+	// test SmartNumber32 (integer)
+	_, n = scanNum("10", SmartNumber32, code)
+	_, y = decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10" {
+		t.Errorf("expected %q, got %q", "10", s)
+	}
+	// test SmartNumber
+	_, n = scanNum("10.2", SmartNumber, code)
+	_, y = decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10.19999999999999928946" {
+		t.Errorf("expected %q, got %q", "10.19999999999999928946", s)
+	}
+	// test SmartNumber (integer)
+	_, n = scanNum("10", SmartNumber32, code)
+	_, y = decodeTojson(code[:n], out)
+	if s := string(out[:y]); s != "10" {
+		t.Errorf("expected %q, got %q", "10", s)
 	}
 }
 
@@ -127,21 +199,11 @@ func TestJsonNumber(t *testing.T) {
 	if v := string(out[:m]); v != "-1" {
 		t.Errorf("expected -1, got %v", v)
 	}
-	// malformed numbers
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		scanNum("10.2", IntNumber, out)
-	}()
 }
 
-func TestScanToken(t *testing.T) {
-	config := NewDefaultConfig()
+func TestScanBadToken(t *testing.T) {
 	out := make([]byte, 64)
-	panicfn := func(in string) {
+	panicfn := func(in string, config *Config) {
 		defer func() {
 			if r := recover(); r == nil {
 				t.Errorf("expected panic")
@@ -149,7 +211,7 @@ func TestScanToken(t *testing.T) {
 		}()
 		scanToken(in, out, config)
 	}
-	testcases = []string{
+	testcases := []string{
 		"    ",
 		"nil",
 		"treu",
@@ -165,9 +227,16 @@ func TestScanToken(t *testing.T) {
 		`(`,
 		`"`,
 	}
+	config := NewDefaultConfig()
 	for _, tcase := range testcases {
-		panicfn(tcase)
+		panicfn(tcase, config)
 	}
+	// test ScanLengthPrefix for array
+	config = NewConfig(FloatNumber, UnicodeSpace, LengthPrefix)
+	panicfn("[]", config)
+	// test ScanLengthPrefix for property
+	config = NewConfig(FloatNumber, UnicodeSpace, LengthPrefix)
+	panicfn("{}", config)
 }
 
 func TestFloat32(t *testing.T) {

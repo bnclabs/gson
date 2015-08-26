@@ -54,6 +54,9 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		return scanString(txt, out)
 
 	case '[':
+		if config.Ct == LengthPrefix {
+			panic("cbor scanner LengthPrefix not supported")
+		}
 		n, m := 0, 0
 		n += encodeArrayStart(out[n:])
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
@@ -79,6 +82,9 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		return txt[1:], n
 
 	case '{':
+		if config.Ct == LengthPrefix {
+			panic("cbor scanner LengthPrefix not supported")
+		}
 		n, m := 0, 0
 		n += encodeMapStart(out[n:])
 		txt = skipWS(txt[1:], config.Ws)
