@@ -11,27 +11,14 @@ import "fmt"
 
 var _ = fmt.Sprintf("dummy")
 
-func TestScan(t *testing.T) {
-	var ref interface{}
-
-	testcases := append(scan_valid, []string{
-		string(mapValue),
-		string(allValueIndent),
-		string(allValueCompact),
-		string(pallValueIndent),
-		string(pallValueCompact),
-	}...)
-
+func TestScanEmpty(t *testing.T) {
 	config := NewDefaultConfig()
-	for _, tcase := range testcases {
-		t.Logf("%v", tcase)
-		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
-			t.Errorf("error parsing i/p %q: %v", tcase, err)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("expected panic")
 		}
-		if val, _ := config.Parse(tcase); reflect.DeepEqual(val, ref) == false {
-			t.Errorf("%q should be parsed as: %v, got %v", tcase, ref, val)
-		}
-	}
+	}()
+	scanToken("", config)
 }
 
 func TestScanNull(t *testing.T) {
@@ -41,6 +28,15 @@ func TestScanNull(t *testing.T) {
 	} else if val != nil {
 		t.Errorf("`null` should be parsed to nil")
 	}
+	// test bad input
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config.Parse("nil")
+	}()
 }
 
 func TestScanBool(t *testing.T) {
@@ -58,6 +54,17 @@ func TestScanBool(t *testing.T) {
 			t.Errorf("%q should be parsed to %v", test, refval)
 		}
 	}
+	// test bad input
+	fn := func(input string) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config.Parse(input)
+	}
+	fn("trrr")
+	fn("flse")
 }
 
 func TestScanIntegers(t *testing.T) {
@@ -119,16 +126,6 @@ func TestScanIntegers(t *testing.T) {
 	}
 }
 
-func TestScanEmpty(t *testing.T) {
-	config := NewDefaultConfig()
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("expected panic")
-		}
-	}()
-	scanToken("", config)
-}
-
 func TestScanMalformed(t *testing.T) {
 	config := NewConfig(IntNumber, AnsiSpace)
 	for _, tcase := range scan_invalid {
@@ -141,6 +138,29 @@ func TestScanMalformed(t *testing.T) {
 			t.Logf("%v", tcase)
 			scanToken(tcase, config)
 		}()
+	}
+}
+
+func TestScan(t *testing.T) {
+	var ref interface{}
+
+	testcases := append(scan_valid, []string{
+		string(mapValue),
+		string(allValueIndent),
+		string(allValueCompact),
+		string(pallValueIndent),
+		string(pallValueCompact),
+	}...)
+
+	config := NewDefaultConfig()
+	for _, tcase := range testcases {
+		t.Logf("%v", tcase)
+		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
+			t.Errorf("error parsing i/p %q: %v", tcase, err)
+		}
+		if val, _ := config.Parse(tcase); reflect.DeepEqual(val, ref) == false {
+			t.Errorf("%q should be parsed as: %v, got %v", tcase, ref, val)
+		}
 	}
 }
 

@@ -15,7 +15,6 @@ var falseLiteral = "false"
 // primary interface to scan JSON text and return,
 // a. as go-native value.
 // b. text remaining to be parsed.
-// c. error in the i/p text.
 // calling this function will scan for exactly one JSON value
 func scanToken(txt string, config *Config) (interface{}, string) {
 	txt = skipWS(txt, config.Ws)
@@ -156,6 +155,7 @@ func scanNum(txt string, nk NumberKind) (interface{}, string) {
 		}
 		return num, txt[e:]
 	}
+	// FloatNumber
 	// NOTE: ignore the error because we have only picked
 	// valid text to parse.
 	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
