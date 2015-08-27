@@ -8,10 +8,6 @@ import "unicode"
 import "unicode/utf8"
 import "unicode/utf16"
 
-var nullLiteral = "null"
-var trueLiteral = "true"
-var falseLiteral = "false"
-
 // primary interface to scan JSON text and return,
 // a. as go-native value.
 // b. text remaining to be parsed.
@@ -29,19 +25,19 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 
 	switch txt[0] {
 	case 'n':
-		if len(txt) >= 4 && txt[:4] == nullLiteral {
+		if len(txt) >= 4 && txt[:4] == "null" {
 			return nil, txt[4:]
 		}
 		panic("gson scanner expectedNil")
 
 	case 't':
-		if len(txt) >= 4 && txt[:4] == trueLiteral {
+		if len(txt) >= 4 && txt[:4] == "true" {
 			return true, txt[4:]
 		}
 		panic("gson scanner expectedTrue")
 
 	case 'f':
-		if len(txt) >= 5 && txt[:5] == falseLiteral {
+		if len(txt) >= 5 && txt[:5] == "false" {
 			return false, txt[5:]
 		}
 		panic("gson scanner expectedFalse")
