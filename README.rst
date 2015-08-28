@@ -15,7 +15,16 @@ What is what
 * json-pointers will be unquoted before they are used for
   accessing into json text, and after unquoting segments within
   the pointer will be binary compared with property keys.
-* json-pointers can be used access gson or cbor representation.
+* json-pointers can be used to access gson or cbor representation.
+
+**gson**
+
+* golang object parsed from json, cbor or collate representation.
+* json arrays are represeted in golang as ``[]interface{}``.
+* json objects, aka properties, are presented in golang as
+  ``map[string]interface{}``.
+* gson objects do support operations like, Get(), Set(), and
+  Delete() on individual fields located by the json-pointer.
 
 **cbor**
 
@@ -31,15 +40,6 @@ What is what
 * binary representation preserving the sort order.
 * transform back to original JSON from binary representation.
 
-**gson**
-
-* golang object parsed from json, cbor or collate representation.
-* json arrays are represeted in golang as ``[]interface{}``.
-* json objects, aka properties, are presented in golang as
-  ``map[string]interface{}``.
-* gson objects do support operations like, Get(), Set(), and
-  Delete() on individual fields located by the json-pointer.
-
 Transforms
 ----------
 
@@ -47,7 +47,7 @@ Transforms
 
 * a custom parser is supplied that must be faster than encoding/json.
 * numbers can be interpreted as integer, or float64, or retained as
-  string based on the configuration parameter ``NumberKind``,
+  string based on the configuration parameter ``NumberKind``.
 
   a. ``StringNumber``, to retain string as JSON string type aliased
      to ``Number``, a custom type defined by this package. Can be used
@@ -81,6 +81,7 @@ Transforms
   encoded as cbor array of 2-element item, where the first item is
   key represented as string and second item is any valid json value.
 * following golang data types are encoded using cbor-tags,
+
   a. ``time.Time`` encoded with tag-0.
   b. ``gson/cbor.Epoch``, type supplied by cbor package, encoded
      with tag-1.
@@ -97,6 +98,7 @@ Transforms
   h. ``regexp.Regexp`` encoded with tag-35.
   i. ``gson/cbor.CborPrefix``, type supplied by cbor package, encoded
      with tag-55799.
+
 * all other types will cause a panic.
 
 **cbor to gson**
