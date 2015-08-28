@@ -156,7 +156,7 @@ func (config *Config) ToJson(in, out []byte) (int, int) {
 // Returns length of `out`.
 func (config *Config) FromJsonPointer(jsonptr, out []byte) int {
 	if len(jsonptr) > 0 && jsonptr[0] != '/' {
-		panic(ErrorExpectedJsonPointer)
+		panic("cbor expectedJsonPointer")
 	}
 	return fromJsonPointer(jsonptr, out)
 }
@@ -165,7 +165,7 @@ func (config *Config) FromJsonPointer(jsonptr, out []byte) int {
 // Returns length of `out`.
 func (config *Config) ToJsonPointer(cborptr, out []byte) int {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
-		panic(ErrorExpectedCborPointer)
+		panic("cbor expectedCborPointer")
 	}
 	return toJsonPointer(cborptr, out)
 }
@@ -174,7 +174,7 @@ func (config *Config) ToJsonPointer(cborptr, out []byte) int {
 // length of `item`.
 func (config *Config) Get(doc, cborptr, item []byte) int {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
-		panic(ErrorExpectedCborPointer)
+		panic("cbor expectedCborPointer")
 	} else if cborptr[1] == brkstp {
 		copy(item, doc)
 		return len(doc)
@@ -186,7 +186,7 @@ func (config *Config) Get(doc, cborptr, item []byte) int {
 // length of `newdoc` and `old` item.
 func (config *Config) Set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
-		panic(ErrorExpectedCborPointer)
+		panic("cbor expectedCborPointer")
 	} else if cborptr[1] == brkstp { // json-pointer is ""
 		copy(newdoc, item)
 		copy(old, doc)
@@ -199,7 +199,7 @@ func (config *Config) Set(doc, cborptr, item, newdoc, old []byte) (int, int) {
 // Returns length of `newdoc`.
 func (config *Config) Prepend(doc, cborptr, item, newdoc []byte) int {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
-		panic(ErrorExpectedCborPointer)
+		panic("cbor expectedCborPointer")
 	}
 	return prepend(doc, cborptr, item, newdoc, config)
 }
@@ -208,9 +208,9 @@ func (config *Config) Prepend(doc, cborptr, item, newdoc []byte) int {
 // length of `newdoc` and `deleted` item.
 func (config *Config) Delete(doc, cborptr, newdoc, deleted []byte) (int, int) {
 	if !config.IsIndefiniteText(Indefinite(cborptr[0])) {
-		panic(ErrorExpectedCborPointer)
+		panic("cbor expectedCborPointer")
 	} else if cborptr[1] == brkstp { // json-pointer is ""
-		panic(ErrorEmptyPointer)
+		panic("cbor emptyPointer")
 	}
 	return del(doc, cborptr, newdoc, deleted)
 }

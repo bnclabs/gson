@@ -15,30 +15,6 @@ import "bytes"
 //import "fmt"
 import "errors"
 
-// ErrorInvalidArrayOffset
-var ErrorInvalidArrayOffset = errors.New("cbor.invalidArrayOffset")
-
-// ErrorInvalidPointer
-var ErrorInvalidPointer = errors.New("cbor.invalidPointer")
-
-// ErrorNoKey
-var ErrorNoKey = errors.New("cbor.noKey")
-
-// ErrorExpectedKey
-var ErrorExpectedKey = errors.New("cbor.expectedKey")
-
-// ErrorExpectedCborKey
-var ErrorExpectedCborKey = errors.New("cbor.expectedCborKey")
-
-// ErrorMalformedDocument
-var ErrorMalformedDocument = errors.New("cbor.malformedDocument")
-
-// ErrorInvalidDocument
-var ErrorInvalidDocument = errors.New("cbor.invalidDocument")
-
-// ErrorUnknownType to encode
-var ErrorUnknownType = errors.New("cbor.unknownType")
-
 const maxPartSize int = 1024
 
 func fromJsonPointer(jsonptr, out []byte) int {
@@ -117,7 +93,7 @@ func containerLen(doc []byte) (mjr byte, n int) {
 		}
 		panic("cbor pointer len-prefix not supported")
 	}
-	panic(ErrorMalformedDocument)
+	panic("cbor pointer lookup malformedDocument")
 }
 
 func partial(part, doc []byte) (start, end int, key bool) {
@@ -127,7 +103,7 @@ func partial(part, doc []byte) (start, end int, key bool) {
 	//fmt.Println("partial", string(part), len(doc), n, doc)
 	if mjr == type4 { // array
 		if index, err = strconv.Atoi(bytes2str(part)); err != nil {
-			panic(ErrorInvalidArrayOffset)
+			panic("cbor pointer segment lookup invalidArrayOffset")
 		}
 		n += arrayIndex(doc[n:], index)
 		m := itemsEnd(doc[n:])
@@ -145,7 +121,7 @@ func partial(part, doc []byte) (start, end int, key bool) {
 		//fmt.Println("partial-map",n,n+m,n+m+p,doc[n+m:n+m+p],string(part),found)
 		return n, n + m + p, found
 	}
-	panic(ErrorInvalidPointer)
+	panic("cbor pointer segment lookup invalidPointer")
 }
 
 func lookup(cborptr, doc []byte) (start, end int, key bool) {
@@ -158,7 +134,7 @@ func lookup(cborptr, doc []byte) (start, end int, key bool) {
 	for {
 		doc = doc[n:m]
 		if cborptr[i] != hdr(type6, info24) && cborptr[i+1] != tagJsonString {
-			panic(ErrorInvalidPointer)
+			panic("cbor pointer lookup invalidPointer")
 		}
 		i += 2
 		ln, j := decodeLength(cborptr[i:])
@@ -186,7 +162,7 @@ func arrayIndex(arr []byte, index int) int {
 		if count == index {
 			return n
 		} else if index >= 0 && arr[n] == brkstp {
-			panic(ErrorInvalidArrayOffset)
+			panic("cbor pointer array index invalidArrayOffset")
 		}
 		prev = n
 		n += itemsEnd(arr[n:])
@@ -195,7 +171,7 @@ func arrayIndex(arr []byte, index int) int {
 	if index == -1 && arr[n] == brkstp {
 		return prev
 	}
-	panic(ErrorInvalidArrayOffset)
+	panic("cbor pointer array index ivalidArrayOffset")
 }
 
 func mapIndex(buf []byte, part []byte) (int, bool) {
@@ -210,7 +186,7 @@ func mapIndex(buf []byte, part []byte) (int, bool) {
 			n += 2
 		}
 		if major(buf[n]) != type3 {
-			panic(ErrorExpectedKey)
+			panic("cbor pointer map index expectedKey")
 		}
 		ln, j := decodeLength(buf[n:])
 		n += j
@@ -223,7 +199,7 @@ func mapIndex(buf []byte, part []byte) (int, bool) {
 		//fmt.Println("mapIndex", n, m, p, string(buf[n:m]), start)
 		n = m + p
 	}
-	panic(ErrorMalformedDocument)
+	panic("cbor pointer map index malformedDocument")
 }
 
 func itemsEnd(buf []byte) int {
@@ -267,14 +243,14 @@ func itemsEnd(buf []byte) int {
 		} else if inf == flt64 { // item float64
 			return 1 + 8
 		}
-		panic(ErrorInvalidDocument)
+		panic("cbor pointer lookup invalidDocument")
 
 	} else if mjr == type6 && buf[1] == tagJsonString && major(buf[2]) == type3 {
 		ln, j := decodeLength(buf[2:])
 		return 2 + j + ln
 	}
 	//fmt.Println(buf)
-	panic(ErrorInvalidDocument)
+	panic("cbor pointer lookup invalidDocument")
 }
 
 func skipKey(doc []byte) int {
@@ -289,7 +265,7 @@ func skipKey(doc []byte) int {
 func get(doc, cborptr, item []byte) int {
 	n, m, key := lookup(cborptr, doc)
 	if n == m {
-		panic(ErrorNoKey)
+		panic("cbor pointer get noKey")
 	} else if key { // if lookup in into a map, skip key
 		n += skipKey(doc[n:])
 	}
@@ -318,7 +294,7 @@ func prepend(doc, cborptr, item, newdoc []byte, config *Config) int {
 	// n now points to value which can be an array or map.
 	mjr := major(doc[n])
 	if mjr != type4 && mjr != type5 {
-		panic(ErrorInvalidPointer)
+		panic("cbor pointer prepend invalidPointer")
 	}
 	// copy every thing before value
 	n++ // including mjr+indefiniteLength
