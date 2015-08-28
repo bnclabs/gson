@@ -1,7 +1,6 @@
 package collate
 
 import "strconv"
-import "sort"
 
 // collate golang representation of a json object.
 func gson2collate(obj interface{}, code []byte, config *Config) int {
@@ -135,7 +134,7 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 
 	case TypeNumber:
 		m := getDatum(code[n:])
-		f := denormalizeFloat(code[n:m-1], config.nt) // -1 to skip terminator
+		f := denormalizeFloat(code[n:n+m-1], config.nt) // -1 to skip terminator
 		return f, n + m
 
 	case TypeString:
@@ -211,50 +210,40 @@ func normalizeFloat(value float64, code []byte, nt NumberType) int {
 		return encodeInt(bs, code)
 
 	case Decimal:
-		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 64)
-		return encodeFloat(bs, code)
+		bs := strconv.AppendFloat(num[:0], value, 'f', -1, 64)
+		return encodeSD(bs, code)
 	}
 	panic("collate invalid number configuration")
 }
 
-func denormalizeFloat(code []byte, nt NumberType) (res interface{}) {
+func denormalizeFloat(code []byte, nt NumberType) interface{} {
 	var scratch [64]byte
-	var err error
-
-	defer func() {
-		if err != nil {
-			panic(err)
-		}
-	}()
-
 	switch nt {
 	case Float64:
 		_, y := decodeFloat(code, scratch[:])
-		res, err = strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+		if err != nil {
+			panic(err)
+		}
+		return res
 
 	case Int64:
 		_, y := decodeInt(code, scratch[:])
 		i, err := strconv.Atoi(bytes2str(scratch[:y]))
-		if err == nil {
-			res = float64(i)
+		if err != nil {
+			panic(err)
 		}
+		return float64(i)
 
 	case Decimal:
 		_, y := decodeSD(code, scratch[:])
-		res, err = strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+		if err != nil {
+			panic(err)
+		}
+		return res
 	}
-	return
-}
-
-// sort JSON property objects based on property names.
-func sortProps(props map[string]interface{}) []string {
-	keys := make([]string, 0, len(props))
-	for k := range props {
-		keys = append(keys, k)
-	}
-	ss := sort.StringSlice(keys)
-	ss.Sort()
-	return keys
+	panic("collate gson denormalizeFloat bad configuration")
 }
 
 // get the collated datum based on Terminator and return the length
