@@ -1,6 +1,3 @@
-// custom scanner for parsing json text. should be faster
-// than encoding/json's Unmarshal API.
-
 package gson
 
 import "strconv"
@@ -13,14 +10,14 @@ import "unicode/utf16"
 // b. text remaining to be parsed.
 // calling this function will scan for exactly one JSON value
 func scanToken(txt string, config *Config) (interface{}, string) {
-	txt = skipWS(txt, config.Ws)
+	txt = skipWS(txt, config.ws)
 
 	if len(txt) < 1 {
 		panic("gson scanner jsonEmpty")
 	}
 
 	if digitCheck[txt[0]] == 1 {
-		return scanNum(txt, config.Nk)
+		return scanNum(txt, config.nk)
 	}
 
 	switch txt[0] {
@@ -47,7 +44,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		return s, bytes2str(remtxt)
 
 	case '[':
-		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
+		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("gson scanner expectedCloseArray")
 		} else if txt[0] == ']' {
 			return []interface{}{}, txt[1:]
@@ -57,10 +54,10 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 			var tok interface{}
 			tok, txt = scanToken(txt, config)
 			arr = append(arr, tok)
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("gson scanner expectedCloseArray")
 			} else if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.Ws)
+				txt = skipWS(txt[1:], config.ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
@@ -70,7 +67,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		return arr, txt[1:]
 
 	case '{':
-		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
+		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("gson scanner expectedCloseobject")
 		} else if txt[0] == '}' {
 			return map[string]interface{}{}, txt[1:]
@@ -84,15 +81,15 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 			key, remtxt := scanString(str2bytes(txt))
 			txt = bytes2str(remtxt)
 
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
+			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 				panic("gson scanner expectedColon")
 			}
-			tok, txt = scanToken(skipWS(txt[1:], config.Ws), config)
+			tok, txt = scanToken(skipWS(txt[1:], config.ws), config)
 			m[key] = tok
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("gson scanner expectedCloseobject")
 			} else if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.Ws)
+				txt = skipWS(txt[1:], config.ws)
 			} else if txt[0] == '}' {
 				break
 			} else {

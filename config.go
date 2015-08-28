@@ -1,6 +1,6 @@
 package gson
 
-// Number placeholder type when number is represented in str format,
+// Number alias type, when number is represented in str format,
 // used for delayed parsing.
 type Number string
 
@@ -30,20 +30,20 @@ const (
 // config. To quickly get started, use NewDefaultConfig() that will
 // create a configuration with default values.
 type Config struct {
-	Nk NumberKind
-	Ws SpaceKind
+	nk NumberKind
+	ws SpaceKind
 }
 
 // NewDefaultConfig returns a new configuration with default values.
-// Nk: FloatNumber
-// Ws: UnicodeSpace
+// NumberKind: FloatNumber
+// SpaceKind: UnicodeSpace
 func NewDefaultConfig() *Config {
 	return NewConfig(FloatNumber, UnicodeSpace)
 }
 
 // NewConfig returns a new configuration.
 func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	return &Config{Nk: nk, Ws: ws}
+	return &Config{nk: nk, ws: ws}
 }
 
 // Parse input JSON text to a single go-native value. If text is
@@ -74,7 +74,7 @@ func (config *Config) ParsePointer(pointer string, segments []string) []string {
 
 // EncodePointer reverse of ParsePointer to convert parsed
 // `segments` back to json-pointer. Converted pointer is available
-// in the `pointer` array and returns the length of pointer.
+// in the `pointer` array and returns the length of pointer-array.
 func (config *Config) EncodePointer(segments []string, pointer []byte) int {
 	return encodePointer(segments, pointer)
 }
