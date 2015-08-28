@@ -73,17 +73,17 @@ func encode(item interface{}, out []byte, config *Config) int {
 		n += encodeDateTime(v, out, config)
 	case EpochMicro: // tag-1
 		n += encodeDateTime(v, out, config)
-	case *big.Int:
+	case *big.Int: // tag-2 (positive) or tag-3 (negative)
 		n += encodeBigNum(v, out, config)
-	case DecimalFraction:
+	case DecimalFraction: // tag-4
 		n += encodeDecimalFraction(v, out)
-	case BigFloat:
+	case BigFloat: // tag-5
 		n += encodeBigFloat(v, out)
-	case Cbor:
+	case Cbor: // tag-24
 		n += encodeCbor(v, out)
-	case *regexp.Regexp:
+	case *regexp.Regexp: // tag-35
 		n += encodeRegexp(v, out)
-	case CborPrefix:
+	case CborPrefix: // tag-55799
 		n += encodeCborPrefix(v, out)
 	default:
 		panic("cbor encode unknownType")

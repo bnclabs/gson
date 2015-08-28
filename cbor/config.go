@@ -125,6 +125,36 @@ func (config *Config) IsIndefiniteMap(b Indefinite) bool {
 	return b == Indefinite(hdr(type5, indefiniteLength))
 }
 
+// IsBreakcodeBytes can be used to check whether chunks of
+// byte-strings are ending with the current byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeBytes(b byte) bool {
+	return b == hdr(type2, itemBreak)
+}
+
+// IsBreakcodeText can be used to check whether chunks of
+// text are ending with the current byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeText(b byte) bool {
+	return b == hdr(type3, itemBreak)
+}
+
+// IsBreakcodeArray can be used to check whether array items
+// of indefinite length are coming to an end with the current
+// byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeArray(b byte) bool {
+	return b == hdr(type4, itemBreak)
+}
+
+// IsBreakcodeMap can be used to check whether map items
+// of indefinite length are coming to an end with the current
+// byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeMap(b byte) bool {
+	return b == hdr(type5, itemBreak)
+}
+
 // Encode golang data into cbor binary.
 func (config *Config) Encode(item interface{}, out []byte) int {
 	return encode(item, out, config)
