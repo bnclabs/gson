@@ -28,6 +28,12 @@ schema/
 patch/
     - TODO
 
+- keep a track of scanString() that converts JSON string format to utf8
+  format.
+- there are three or more forms of scanString() document them clearly
+  along with its configuration.
+- Get() Set() Del() json-pointer operation on collated binary.
+
 Action items on gson/collate:
 
 * codec.Encode() converts the input JSON to golang native before
