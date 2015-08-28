@@ -18,14 +18,14 @@ var trueStr = "true"
 var falseStr = "false"
 
 func scanToken(txt string, out []byte, config *Config) (string, int) {
-	txt = skipWS(txt, config.Ws)
+	txt = skipWS(txt, config.ws)
 
 	if len(txt) < 1 {
 		panic("cbor scanner empty json text")
 	}
 
 	if numCheck[txt[0]] == 1 {
-		return scanNum(txt, config.Nk, out)
+		return scanNum(txt, config.nk, out)
 	}
 
 	switch txt[0] {
@@ -54,12 +54,12 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		return scanString(txt, out)
 
 	case '[':
-		if config.Ct == LengthPrefix {
+		if config.ct == LengthPrefix {
 			panic("cbor scanner LengthPrefix not supported")
 		}
 		n, m := 0, 0
 		n += encodeArrayStart(out[n:])
-		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
+		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("cbor scanner expected ']'")
 		} else if txt[0] == ']' {
 			n += encodeBreakStop(out[n:])
@@ -68,10 +68,10 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		for {
 			txt, m = scanToken(txt, out[n:], config)
 			n += m
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("cbor scanner expected ']'")
 			} else if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.Ws)
+				txt = skipWS(txt[1:], config.ws)
 			} else if txt[0] == ']' {
 				break
 			} else {
@@ -82,12 +82,12 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		return txt[1:], n
 
 	case '{':
-		if config.Ct == LengthPrefix {
+		if config.ct == LengthPrefix {
 			panic("cbor scanner LengthPrefix not supported")
 		}
 		n, m := 0, 0
 		n += encodeMapStart(out[n:])
-		txt = skipWS(txt[1:], config.Ws)
+		txt = skipWS(txt[1:], config.ws)
 		if txt[0] == '}' {
 			n += encodeBreakStop(out[n:])
 			return txt[1:], n
@@ -98,16 +98,16 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			txt, m = scanString(txt, out[n:])
 			n += m
 
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
+			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 				panic("cbor scanner expected property colon")
 			}
-			txt, m = scanToken(skipWS(txt[1:], config.Ws), out[n:], config)
+			txt, m = scanToken(skipWS(txt[1:], config.ws), out[n:], config)
 			n += m
 
-			if txt = skipWS(txt, config.Ws); len(txt) == 0 {
+			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("cbor scanner expected '}'")
 			} else if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.Ws)
+				txt = skipWS(txt[1:], config.ws)
 			} else if txt[0] == '}' {
 				break
 			} else {

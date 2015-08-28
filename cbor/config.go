@@ -53,26 +53,23 @@ const (
 //   * out []byte, if present, saves o/p. must be sufficiently large.
 //   * buf []byte, if present, provides i/p.
 type Config struct {
-	// Nk number kind
-	Nk NumberKind
-	// Ws whitespace type
-	Ws SpaceKind
-	// Ct ContainerEncoding type
-	Ct ContainerEncoding
+	nk NumberKind
+	ws SpaceKind
+	ct ContainerEncoding
 }
 
 // NewDefaultConfig returns a new configuration factory, with default
 // values,
-//      Nk: FloatNumber
-//      Ws: UnicodeSpace
-//      Ct: Stream
+// NumberKind: FloatNumber
+// SpaceKind: UnicodeSpace
+// ContainerEncoding: Stream
 func NewDefaultConfig() *Config {
 	return NewConfig(FloatNumber, UnicodeSpace, Stream)
 }
 
 // NewConfig returns a new configuration factory
 func NewConfig(nk NumberKind, ws SpaceKind, ct ContainerEncoding) *Config {
-	return &Config{Nk: nk, Ws: ws, Ct: ct}
+	return &Config{nk: nk, ws: ws, ct: ct}
 }
 
 // EncodeSmallInt encode tiny integers between -23..+23.
