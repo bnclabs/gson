@@ -1,19 +1,3 @@
-// Package cbor implements RFC-7049 to encode golang data into
-// binary format and vice-versa.
-//
-// Following golang native types are supported,
-//
-//   * nil, true, false.
-//   * native integer types, and its alias, of all width.
-//   * float32, float64.
-//   * slice of bytes.
-//   * native string.
-//   * slice of interface - []interface{}.
-//   * map of string to interface{} - map[string]interface{}.
-//
-// Custom types defined by this package can also be encoded using cbor.
-//
-//   * Undefined - to encode a data-item as undefined.
 package cbor
 
 import "math"
@@ -21,53 +5,20 @@ import "math/big"
 import "regexp"
 import "time"
 import "encoding/binary"
+import "fmt"
 
-const ( // major types.
-	type0 byte = iota << 5 // unsigned integer
-	type1                  // negative integer
-	type2                  // byte string
-	type3                  // text string
-	type4                  // array
-	type5                  // map
-	type6                  // tagged data-item
-	type7                  // floating-point, simple-types and break-stop
-)
-
-const ( // associated information for type0 and type1.
-	// 0..23 actual value
-	info24 byte = iota + 24 // followed by 1-byte data-item
-	info25                  // followed by 2-byte data-item
-	info26                  // followed by 4-byte data-item
-	info27                  // followed by 8-byte data-item
-	// 28..30 reserved
-	indefiniteLength = 31 // for byte-string, string, arr, map
-)
-
-const ( // simple types for type7
-	// 0..19 unassigned
-	simpleTypeFalse byte = iota + 20 // encodes nil type
-	simpleTypeTrue
-	simpleTypeNil
-	simpleUndefined
-	simpleTypeByte // the actual type in next byte 32..255
-	flt16          // IEEE 754 Half-Precision Float
-	flt32          // IEEE 754 Single-Precision Float
-	flt64          // IEEE 754 Double-Precision Float
-	// 28..30 reserved
-	itemBreak = 31 // stop-code for indefinite-length items
-)
-
-func major(b byte) byte {
-	return b & 0xe0
-}
-
-func info(b byte) byte {
-	return b & 0x1f
-}
-
-func hdr(major, info byte) byte {
-	return (major & 0xe0) | (info & 0x1f)
-}
+// Notes:
+//
+// 1. tagBase64URL, tagBase64, tagBase16 are used to reduce the
+//   message size.
+//   a. if following data-item is other than []byte then it applies
+//     to all []byte contained in the data-time.
+//
+// 2. tagBase64URL/tagBase64 carry item in raw-byte string while
+//   tagBase64URLEnc/tagBase64Enc carry item in base64 encoded
+//   text-string.
+//
+// 3. TODO, yet to encode/decode tagBase* data-items and tagURI item.
 
 func encode(item interface{}, out []byte, config *Config) int {
 	n := 0
@@ -140,6 +91,12 @@ func encode(item interface{}, out []byte, config *Config) int {
 	return n
 }
 
+func encodeTag(tag uint64, buf []byte) int {
+	n := encodeUint64(tag, buf)
+	buf[0] = (buf[0] & 0x1f) | type6 // fix the type as tag.
+	return n
+}
+
 func decode(buf []byte) (interface{}, int) {
 	item, n := cborDecoders[buf[0]](buf)
 	if _, ok := item.(Indefinite); ok {
@@ -167,12 +124,60 @@ func decode(buf []byte) (interface{}, int) {
 	return item, n
 }
 
-//---- encode functions
-//
-//  * all encode functions shall optionally take an input value to encode, and
-//   o/p byte-slice to save the o/p.
-//  * all encode functions shall return the number of bytes encoded into the
-//   o/p byte-slice.
+func decodeTag(buf []byte) (interface{}, int) {
+	byt := (buf[0] & 0x1f) | type0 // fix as positive num
+	item, n := cborDecoders[byt](buf)
+	switch item.(uint64) {
+	case tagDateTime:
+		item, m := decodeDateTime(buf[n:])
+		return item, n + m
+
+	case tagEpoch:
+		item, m := decodeEpoch(buf[n:])
+		return item, n + m
+
+	case tagPosBignum:
+		item, m := decodeBigNum(buf[n:])
+		return item, n + m
+
+	case tagNegBignum:
+		item, m := decodeBigNum(buf[n:])
+		return big.NewInt(0).Mul(item.(*big.Int), big.NewInt(-1)), n + m
+
+	case tagDecimalFraction:
+		item, m := decodeDecimalFraction(buf[n:])
+		return item, n + m
+
+	case tagBigFloat:
+		item, m := decodeBigFloat(buf[n:])
+		return item, n + m
+
+	case tagCborEnc:
+		item, m := decodeCborEnc(buf[n:])
+		return item, n + m
+
+	case tagRegexp:
+		item, m := decodeRegexp(buf[n:])
+		return item, n + m
+
+	case tagJsonString:
+		ln, m := decodeLength(buf[n:])
+		return string(buf[n+m : n+m+ln]), n + m + ln
+
+	case tagJsonNumber:
+		ln, m := decodeLength(buf[n:])
+		return string(buf[n+m : n+m+ln]), n + m + ln
+
+	case tagCborPrefix:
+		item, m := decodeCborPrefix(buf[n:])
+		return item, n + m
+	}
+	// skip tags
+	item, m := decode(buf[n:])
+	return item, n + m
+}
+
+//---- encode basic data types
 
 func encodeNull(buf []byte) int {
 	buf[0] = hdr(type7, simpleTypeNil)
@@ -452,7 +457,74 @@ func encodeSimpleType(typcode byte, buf []byte) int {
 	return 2
 }
 
-//---- decode functions
+//---- encode tags
+
+func encodeDateTime(dt interface{}, buf []byte, config *Config) int {
+	n := 0
+	switch v := dt.(type) {
+	case time.Time: // rfc3339, as refined by section 3.3 rfc4287
+		n += encodeTag(tagDateTime, buf)
+		// TODO: make rfc3339 as config.
+		n += encode(v.Format(time.RFC3339), buf[n:], config)
+	case Epoch:
+		n += encodeTag(tagEpoch, buf)
+		n += encode(int64(v), buf[n:], config)
+	case EpochMicro:
+		n += encodeTag(tagEpoch, buf)
+		n += encode(float64(v), buf[n:], config)
+	}
+	return n
+}
+
+func encodeBigNum(num *big.Int, buf []byte, config *Config) int {
+	n := 0
+	bytes := num.Bytes()
+	if num.Sign() < 0 {
+		n += encodeTag(tagNegBignum, buf)
+	} else {
+		n += encodeTag(tagPosBignum, buf)
+	}
+	n += encode(bytes, buf[n:], config)
+	return n
+}
+
+func encodeDecimalFraction(item interface{}, buf []byte) int {
+	n := encodeTag(tagDecimalFraction, buf)
+	x := item.(DecimalFraction)
+	n += encodeInt64(x[0].(int64), buf[n:])
+	n += encodeInt64(x[1].(int64), buf[n:])
+	return n
+}
+
+func encodeBigFloat(item interface{}, buf []byte) int {
+	n := encodeTag(tagBigFloat, buf)
+	x := item.(BigFloat)
+	n += encodeInt64(x[0].(int64), buf[n:])
+	n += encodeInt64(x[1].(int64), buf[n:])
+	return n
+}
+
+func encodeCbor(item, buf []byte) int {
+	n := encodeTag(tagCborEnc, buf)
+	n += encodeBytes(item, buf[n:])
+	return n
+}
+
+func encodeRegexp(item *regexp.Regexp, buf []byte) int {
+	n := encodeTag(tagRegexp, buf)
+	n += encodeText(item.String(), buf[n:])
+	return n
+}
+
+func encodeCborPrefix(item, buf []byte) int {
+	n := encodeTag(tagCborPrefix, buf)
+	n += encodeBytes(item, buf[n:])
+	return n
+}
+
+//---- decode basic data types
+
+var cborDecoders = make(map[byte]func([]byte) (interface{}, int))
 
 func decodeNull(buf []byte) (interface{}, int) {
 	return nil, 1
@@ -601,10 +673,85 @@ func decodeUndefined(buf []byte) (interface{}, int) {
 	return Undefined(simpleUndefined), 1
 }
 
-//---- decoders
+//---- decode tags
 
-var cborDecoders = make(map[byte]func([]byte) (interface{}, int))
+func decodeDateTime(buf []byte) (interface{}, int) {
+	item, n := decode(buf)
+	item, err := time.Parse(time.RFC3339, item.(string))
+	if err != nil {
+		panic("decodeDateTime(): malformed time.RFC3339")
+	}
+	return item, n
+}
 
+func decodeEpoch(buf []byte) (interface{}, int) {
+	item, n := decode(buf)
+	switch v := item.(type) {
+	case int64:
+		return Epoch(v), n
+	case uint64:
+		return Epoch(v), n
+	case float64:
+		return EpochMicro(v), n
+	}
+	panic(fmt.Errorf("decodeEpoch(): neither int64 nor float64: %T", item))
+}
+
+func decodeBigNum(buf []byte) (interface{}, int) {
+	item, n := decode(buf)
+	num := big.NewInt(0).SetBytes(item.([]byte))
+	return num, n
+}
+
+func decodeDecimalFraction(buf []byte) (interface{}, int) {
+	e, x := decode(buf)
+	m, y := decode(buf[x:])
+	if a, ok := e.(uint64); ok {
+		if b, ok := m.(uint64); ok {
+			return DecimalFraction([2]interface{}{int64(a), int64(b)}), x + y
+		}
+		return DecimalFraction([2]interface{}{int64(a), m.(int64)}), x + y
+
+	} else if b, ok := m.(uint64); ok {
+		return DecimalFraction([2]interface{}{e.(int64), int64(b)}), x + y
+	}
+	return DecimalFraction([2]interface{}{e.(int64), m.(int64)}), x + y
+}
+
+func decodeBigFloat(buf []byte) (interface{}, int) {
+	e, x := decode(buf)
+	m, y := decode(buf[x:])
+	if a, ok := e.(uint64); ok {
+		if b, ok := m.(uint64); ok {
+			return BigFloat([2]interface{}{int64(a), int64(b)}), x + y
+		}
+		return BigFloat([2]interface{}{int64(a), m.(int64)}), x + y
+
+	} else if b, ok := m.(uint64); ok {
+		return BigFloat([2]interface{}{e.(int64), int64(b)}), x + y
+	}
+	return BigFloat([2]interface{}{e.(int64), m.(int64)}), x + y
+}
+
+func decodeCborEnc(buf []byte) (interface{}, int) {
+	item, n := decode(buf)
+	return Cbor(item.([]uint8)), n
+}
+
+func decodeRegexp(buf []byte) (interface{}, int) {
+	item, n := decode(buf)
+	s := item.(string)
+	re, err := regexp.Compile(s)
+	if err != nil {
+		panic(fmt.Errorf("compiling regexp %q: %v", s, err))
+	}
+	return re, n
+}
+
+func decodeCborPrefix(buf []byte) (interface{}, int) {
+	item, n := decode(buf)
+	return CborPrefix(item.([]byte)), n
+}
 func init() {
 	makePanic := func(msg error) func([]byte) (interface{}, int) {
 		return func(_ []byte) (interface{}, int) { panic(msg) }

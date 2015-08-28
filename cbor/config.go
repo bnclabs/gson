@@ -1,18 +1,5 @@
 package cbor
 
-// MaxSmallInt is the maximum integer value that can be stored
-// as associative value.
-const MaxSmallInt = 23
-
-// Undefined type as part of simple-type codepoint-23.
-type Undefined byte
-
-// Indefinite code, first-byte of stream encoded data items.
-type Indefinite byte
-
-// BreakStop code, last-byte of stream encoded the data items.
-type BreakStop byte
-
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 
@@ -21,8 +8,6 @@ type SpaceKind byte
 
 // ContainerEncoding, encoding method to use for arrays and maps.
 type ContainerEncoding byte
-
-var brkstp byte = hdr(type7, itemBreak)
 
 const (
 	// SmartNumber will either use str.Atoi to parse JSON numbers
