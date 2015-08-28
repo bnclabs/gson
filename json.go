@@ -44,7 +44,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 
 	case '"':
 		s, remtxt := scanString(str2bytes(txt))
-		return string(s), bytes2str(remtxt)
+		return s, bytes2str(remtxt)
 
 	case '[':
 		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
@@ -70,8 +70,9 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		return arr, txt[1:]
 
 	case '{':
-		txt = skipWS(txt[1:], config.Ws)
-		if txt[0] == '}' {
+		if txt = skipWS(txt[1:], config.Ws); len(txt) == 0 {
+			panic("gson scanner expectedCloseobject")
+		} else if txt[0] == '}' {
 			return map[string]interface{}{}, txt[1:]
 		} else if txt[0] != '"' {
 			panic("gson scanner expectedKey")
@@ -79,8 +80,8 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 		m := make(map[string]interface{})
 		for {
 			var tok interface{}
-			s, remtxt := scanString(str2bytes(txt))
-			key := string(s) // NOTE: empty string is also a valid key
+			// NOTE: empty string is also a valid key
+			key, remtxt := scanString(str2bytes(txt))
 			txt = bytes2str(remtxt)
 
 			if txt = skipWS(txt, config.Ws); len(txt) == 0 || txt[0] != ':' {
@@ -170,7 +171,7 @@ var escapeCode = [256]byte{ // TODO: size can be optimized
 	't':  '\t',
 }
 
-func scanString(txt []byte) ([]byte, []byte) {
+func scanString(txt []byte) (string, []byte) {
 	if len(txt) < 2 {
 		panic("gson scanner expectedString")
 	}
@@ -196,7 +197,7 @@ func scanString(txt []byte) ([]byte, []byte) {
 	}
 
 	if txt[e] == '"' { // done we have nothing to unquote
-		return txt[1:e], txt[e+1:]
+		return string(txt[1:e]), txt[e+1:]
 	}
 
 	out := make([]byte, (len(txt)+2)*utf8.UTFMax)
@@ -252,7 +253,7 @@ loop:
 	}
 
 	if out[oute] == '"' {
-		return out[1:oute], txt[e:]
+		return bytes2str(out[1:oute]), txt[e:]
 	}
 	panic("gson scanner expectedString")
 }
