@@ -13,7 +13,6 @@ import "strconv"
 import "bytes"
 
 //import "fmt"
-import "errors"
 
 const maxPartSize int = 1024
 

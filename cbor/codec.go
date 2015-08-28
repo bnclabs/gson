@@ -772,7 +772,7 @@ func init() {
 	cborDecoders[hdr(type0, 28)] = makePanic(msg)
 	cborDecoders[hdr(type0, 29)] = makePanic(msg)
 	cborDecoders[hdr(type0, 30)] = makePanic(msg)
-	msg := "cbor decode type0 indefnite"
+	msg = "cbor decode type0 indefnite"
 	cborDecoders[hdr(type0, indefiniteLength)] = makePanic(msg)
 
 	//-- type1                  (signed integer)
@@ -786,11 +786,11 @@ func init() {
 	cborDecoders[hdr(type1, info26)] = decodeType1Info26
 	cborDecoders[hdr(type1, info27)] = decodeType1Info27
 	// 1st-byte 28..31
-	msg := "cbor decode type1 reserved info"
+	msg = "cbor decode type1 reserved info"
 	cborDecoders[hdr(type1, 28)] = makePanic(msg)
 	cborDecoders[hdr(type1, 29)] = makePanic(msg)
 	cborDecoders[hdr(type1, 30)] = makePanic(msg)
-	msg := "cbor decode type1 indefnite"
+	msg = "cbor decode type1 indefnite"
 	cborDecoders[hdr(type1, indefiniteLength)] = makePanic(msg)
 
 	//-- type2                  (byte string)
@@ -799,11 +799,11 @@ func init() {
 		cborDecoders[hdr(type2, byte(i))] = decodeType2
 	}
 	// 1st-byte 28..31
-	msg := "cbor decode type2 reserved info"
+	msg = "cbor decode type2 reserved info"
 	cborDecoders[hdr(type2, 28)] = makePanic(msg)
 	cborDecoders[hdr(type2, 29)] = makePanic(msg)
 	cborDecoders[hdr(type2, 30)] = makePanic(msg)
-	msg := "cbor decode type2 indefnite"
+	msg = "cbor decode type2 indefnite"
 	cborDecoders[hdr(type2, indefiniteLength)] = decodeType2Indefinite
 
 	//-- type3                  (string)
@@ -812,7 +812,7 @@ func init() {
 		cborDecoders[hdr(type3, byte(i))] = decodeType3
 	}
 	// 1st-byte 28..31
-	msg := "cbor decode type3 reserved info"
+	msg = "cbor decode type3 reserved info"
 	cborDecoders[hdr(type3, 28)] = makePanic(msg)
 	cborDecoders[hdr(type3, 29)] = makePanic(msg)
 	cborDecoders[hdr(type3, 30)] = makePanic(msg)
@@ -824,7 +824,7 @@ func init() {
 		cborDecoders[hdr(type4, byte(i))] = decodeType4
 	}
 	// 1st-byte 28..31
-	msg := "cbor decode type4 reserved info"
+	msg = "cbor decode type4 reserved info"
 	cborDecoders[hdr(type4, 28)] = makePanic(msg)
 	cborDecoders[hdr(type4, 29)] = makePanic(msg)
 	cborDecoders[hdr(type4, 30)] = makePanic(msg)
@@ -836,7 +836,7 @@ func init() {
 		cborDecoders[hdr(type5, byte(i))] = decodeType5
 	}
 	// 1st-byte 28..31
-	msg := "cbor decode type5 reserved info"
+	msg = "cbor decode type5 reserved info"
 	cborDecoders[hdr(type5, 28)] = makePanic(msg)
 	cborDecoders[hdr(type5, 29)] = makePanic(msg)
 	cborDecoders[hdr(type5, 30)] = makePanic(msg)
@@ -853,11 +853,11 @@ func init() {
 	cborDecoders[hdr(type6, info26)] = decodeTag
 	cborDecoders[hdr(type6, info27)] = decodeTag
 	// 1st-byte 28..31
-	msg := "cbor decode type6 reserved info"
+	msg = "cbor decode type6 reserved info"
 	cborDecoders[hdr(type6, 28)] = makePanic(msg)
 	cborDecoders[hdr(type6, 29)] = makePanic(msg)
 	cborDecoders[hdr(type6, 30)] = makePanic(msg)
-	msg := "cbor decode type6 indefnite"
+	msg = "cbor decode type6 indefnite"
 	cborDecoders[hdr(type6, indefiniteLength)] = makePanic(msg)
 
 	//-- type7                  (simple types / floats / break-stop)
@@ -879,7 +879,7 @@ func init() {
 	cborDecoders[hdr(type7, flt32)] = decodeFloat32
 	cborDecoders[hdr(type7, flt64)] = decodeFloat64
 	// 1st-byte 28..31
-	msg := "cbor decode type7 simple type"
+	msg = "cbor decode type7 simple type"
 	cborDecoders[hdr(type7, 28)] = makePanic(msg)
 	cborDecoders[hdr(type7, 29)] = makePanic(msg)
 	cborDecoders[hdr(type7, 30)] = makePanic(msg)
