@@ -198,18 +198,30 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 	panic("collate decode invalid binary")
 }
 
-func normalizeFloat(value float64, code []byte, nt NumberType) int {
+func normalizeFloat(value interface{}, code []byte, nt NumberType) int {
 	var num [64]byte
 	switch nt {
 	case Float64:
-		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 64)
+		v, ok := value.(float64)
+		if !ok {
+			v = float64(value.(int64))
+		}
+		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
 		return encodeFloat(bs, code)
 
 	case Int64:
-		bs := strconv.AppendInt(num[:0], int64(value), 10)
+		v, ok := value.(int64)
+		if !ok {
+			v = int64(value.(float64))
+		}
+		bs := strconv.AppendInt(num[:0], v, 10)
 		return encodeInt(bs, code)
 
 	case Decimal:
+		v, ok := value.(float64)
+		if !ok {
+			v = float64(value.(int64))
+		}
 		bs := strconv.AppendFloat(num[:0], value, 'f', -1, 64)
 		return encodeSD(bs, code)
 	}
