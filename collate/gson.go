@@ -2,75 +2,74 @@ package collate
 
 import "strconv"
 
-// collate golang representation of a json object.
 func gson2collate(obj interface{}, code []byte, config *Config) int {
 	if obj == nil {
 		code[0], code[1] = TypeNull, Terminator
 		return 2
 	}
 
-	var num [64]byte
-	n := 0
+	var scratch [64]byte
 
 	switch value := obj.(type) {
 	case bool:
 		if value {
-			code[n] = TypeTrue
+			code[0] = TypeTrue
 		} else {
-			code[n] = TypeFalse
+			code[0] = TypeFalse
 		}
-		code[n+1] = Terminator
-		n += 2
+		code[1] = Terminator
+		return 2
 
 	case float64:
+		n := 0
 		code[n] = TypeNumber
 		n++
 		n += normalizeFloat(value, code[n:], config.nt)
 		code[n] = Terminator
 		n++
+		return n
 
 	case int:
-		switch config.nt {
-		case Float64:
-			n += gson2collate(float64(value), code[n:], config)
-		case Int64:
-			bs := strconv.AppendInt(num[:0], int64(value), 10)
-			code[n] = TypeNumber
-			n++
-			n += encodeInt(bs, code[n:])
-			code[n] = Terminator
-			n++
-		default:
-			panic("collate decimal not configured")
-		}
+		n := 0
+		code[n] = TypeNumber
+		n++
+		n += normalizeFloat(int64(value), code[n:], config.nt)
+		code[n] = Terminator
+		n++
+		return n
 
 	case Length:
-		bs := strconv.AppendInt(num[:0], int64(value), 10)
+		n := 0
 		code[n] = TypeLength
 		n++
+		bs := strconv.AppendInt(scratch[:0], int64(value), 10)
 		n += encodeInt(bs, code[n:])
 		code[n] = Terminator
 		n++
+		return n
 
 	case Missing:
 		if config.doMissing && MissingLiteral.Equal(string(value)) {
-			code[n], code[n+1] = TypeMissing, Terminator
-			n += 2
+			code[0], code[1] = TypeMissing, Terminator
+			return 2
 		}
+		panic("collate missing not configured")
 
 	case string:
 		if config.doMissing && MissingLiteral.Equal(value) {
-			code[n], code[n+1] = TypeMissing, Terminator
-			n += 2
-		} else {
-			code[n] = TypeString
-			n++
-			n += suffixEncodeString(str2bytes(value), code[n:])
-			code[n] = Terminator
-			n++
+			code[0], code[1] = TypeMissing, Terminator
+			return 2
 		}
+		n := 0
+		code[n] = TypeString
+		n++
+		n += suffixEncodeString(str2bytes(value), code[n:])
+		code[n] = Terminator
+		n++
+		return n
 
 	case []interface{}:
+		n := 0
 		code[n] = TypeArray
 		n++
 		if config.arrayLenPrefix {
@@ -81,8 +80,10 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		}
 		code[n] = Terminator
 		n++
+		return n
 
 	case map[string]interface{}:
+		n := 0
 		code[n] = TypeObj
 		n++
 		if config.propertyLenPrefix {
@@ -94,15 +95,11 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		}
 		code[n] = Terminator
 		n++
-
-	default:
-		panic("collate invalid golang type")
+		return n
 	}
-	return n
+	panic("collate invalid golang type")
 }
 
-// transform collated binary back to golang representation
-// of a json object.
 func collate2gson(code []byte, config *Config) (interface{}, int) {
 	if len(code) == 0 {
 		return nil, 0
@@ -143,6 +140,7 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 		return bytes2str(s[:y]), n + x
 
 	case TypeArray:
+		var arr []interface{}
 		if config.arrayLenPrefix {
 			m := getDatum(code[n:])
 			_, y := decodeInt(code[n:], scratch[:])
@@ -150,41 +148,28 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 			if err != nil {
 				panic(err)
 			}
-			arr := make([]interface{}, ln)
+			arr = make([]interface{}, ln)
 			n += m
-			for ; ln > 0; ln-- {
-				item, y := collate2gson(code[n:], config)
-				arr = append(arr, item)
-				n += y
-			}
-			return arr, n
+		} else {
+			arr = make([]interface{}, 8)
 		}
-		arr := make([]interface{}, 8)
 		for code[n] != Terminator {
 			item, y := collate2gson(code[n:], config)
 			arr = append(arr, item)
 			n += y
 		}
-		return arr, n
+		return arr, n + 1 // +1 to skip terminator
 
 	case TypeObj:
 		obj := make(map[string]interface{})
 		if config.propertyLenPrefix {
 			m := getDatum(code[n:])
 			_, y := decodeInt(code[n:], scratch[:])
-			ln, err := strconv.Atoi(bytes2str(scratch[:y]))
+			_, err := strconv.Atoi(bytes2str(scratch[:y])) // just skip
 			if err != nil {
 				panic(err)
 			}
 			n += m
-			for ; ln > 0; ln-- {
-				key, m := collate2gson(code[n:], config)
-				n += m
-				value, m := collate2gson(code[n:], config)
-				obj[key.(string)] = value
-				n += m
-			}
-			return obj, n
 		}
 		for code[n] != Terminator {
 			key, m := collate2gson(code[n:], config)
@@ -193,69 +178,9 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 			obj[key.(string)] = value
 			n += m
 		}
-		return obj, n
+		return obj, n + 1 // +1 to skip terminator
 	}
 	panic("collate decode invalid binary")
-}
-
-func normalizeFloat(value interface{}, code []byte, nt NumberType) int {
-	var num [64]byte
-	switch nt {
-	case Float64:
-		v, ok := value.(float64)
-		if !ok {
-			v = float64(value.(int64))
-		}
-		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
-		return encodeFloat(bs, code)
-
-	case Int64:
-		v, ok := value.(int64)
-		if !ok {
-			v = int64(value.(float64))
-		}
-		bs := strconv.AppendInt(num[:0], v, 10)
-		return encodeInt(bs, code)
-
-	case Decimal:
-		v, ok := value.(float64)
-		if !ok {
-			v = float64(value.(int64))
-		}
-		bs := strconv.AppendFloat(num[:0], value, 'f', -1, 64)
-		return encodeSD(bs, code)
-	}
-	panic("collate invalid number configuration")
-}
-
-func denormalizeFloat(code []byte, nt NumberType) interface{} {
-	var scratch [64]byte
-	switch nt {
-	case Float64:
-		_, y := decodeFloat(code, scratch[:])
-		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-		if err != nil {
-			panic(err)
-		}
-		return res
-
-	case Int64:
-		_, y := decodeInt(code, scratch[:])
-		i, err := strconv.Atoi(bytes2str(scratch[:y]))
-		if err != nil {
-			panic(err)
-		}
-		return float64(i)
-
-	case Decimal:
-		_, y := decodeSD(code, scratch[:])
-		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-		if err != nil {
-			panic(err)
-		}
-		return res
-	}
-	panic("collate gson denormalizeFloat bad configuration")
 }
 
 // get the collated datum based on Terminator and return the length

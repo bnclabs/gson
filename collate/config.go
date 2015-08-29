@@ -8,14 +8,6 @@
 //   should follow a desired sort order.
 // * it must be possible to get back the original document, in
 //   semantically correct form, from its binary representation.
-//
-// Notes:
-//
-// * items in a property object are sorted by its property name
-//   before they are compared with property's value.
-//
-// * strings are collated as it is received from the input without
-//   un-quoting the JSON-string and without unicode collation.
 package collate
 
 // Length is an internal type used for prefixing length

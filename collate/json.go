@@ -97,9 +97,9 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 		var x int
 		code[n] = TypeObj
 		n++
-		off, m, ln := n, n, 0
+		n_, n__, ln := n, n, 0
 		if config.propertyLenPrefix {
-			off, m = (off + 32), (m + 32) // preallocate space for length encoding
+			n_, n__ = (n + 32), (n + 32) // preallocate space for length encoding
 		}
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
@@ -134,17 +134,17 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 			}
 			sort.Sort(refs[:i])
 			for _, kv := range refs {
-				m += gson2collate(kv.key, code[m:], config) // encode key
-				copy(code[m:], kv.code)
-				m += len(kv.code)
+				n__ += gson2collate(kv.key, code[n__:], config) // encode key
+				copy(code[n__:], kv.code)
+				n__ += len(kv.code)
 			}
 		}
 		if config.propertyLenPrefix {
 			n += gson2collate(Length(ln), code[n:], config)
-			copy(code[n:], code[off:m])
-			n += (m - off)
+			copy(code[n:], code[n_:n__])
+			n += (n__ - n_)
 		} else {
-			n = m
+			n = n__
 		}
 		code[n] = Terminator
 		n++
