@@ -24,6 +24,15 @@
 //   * BigFloat: m*(2**e)
 //   * Cbor: a cbor encoded binary data item.
 //   * CborPrefix: to self indentify a binary blog as cbor.
+//
+// Package also provides encoding algorithm from json to cbor
+// and vice-versa.
+//
+//   * number can be encoded as integer or float.
+//   * string is wrapped as `tagJsonString` data-item, to avoid
+//     marshalling and unmarshalling json-string to utf8.
+//   * arrays and maps are encoded using indefinite encoding.
+//   * byte-string encoding is not used.
 package cbor
 
 // Undefined type as part of simple-type codepoint-23.
