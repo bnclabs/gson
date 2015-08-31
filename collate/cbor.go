@@ -230,7 +230,7 @@ package collate
 //        if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 //            panic("collate scanner expectedColon")
 //        }
-//        x, txt = scanToken(skipWS(txt[1:], config.ws), altcode[p:], config)
+//        txt, x = scanToken(skipWS(txt[1:], config.ws), altcode[p:], config)
 //        refs[i] = kvref{bytes2str(key), altcode[p : p+x]}
 //        p += x
 //        i++

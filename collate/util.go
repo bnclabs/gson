@@ -88,3 +88,20 @@ func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 	}
 	panic("collate gson denormalizeFloat bad configuration")
 }
+
+func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
+	switch nt {
+	case Float64:
+		_, y := decodeFloat(code, text[:])
+		return y
+
+	case Int64:
+		_, y := decodeInt(code, text[:])
+		return y
+
+	case Decimal:
+		_, y := decodeSD(code, text[:])
+		return y
+	}
+	panic("collate gson denormalizeFloat bad configuration")
+}

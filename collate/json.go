@@ -6,7 +6,7 @@ import "unicode"
 import "unicode/utf8"
 import "unicode/utf16"
 
-func scanToken(txt string, code []byte, config *Config) (int, string) {
+func scanToken(txt string, code []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.ws)
 	if len(txt) < 1 {
 		panic("collate scanner jsonEmpty")
@@ -15,28 +15,34 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 	n := 0
 
 	if digitCheck[txt[0]] == 1 {
-		return scanNum(txt, code[n:], config.nt)
+		code[n] = TypeNumber
+		n++
+		m, remtxt := scanNum(txt, code[n:], config.nt)
+		n += m
+		code[n] = Terminator
+		n++
+		return remtxt, n
 	}
 
 	switch txt[0] {
 	case 'n':
 		if len(txt) >= 4 && txt[:4] == "null" {
 			code[n], code[n+1] = TypeNull, Terminator
-			return n + 2, txt[4:]
+			return txt[4:], n + 2
 		}
 		panic("collate scanner expectedNil")
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == "true" {
 			code[n], code[n+1] = TypeTrue, Terminator
-			return n + 2, txt[4:]
+			return txt[4:], n + 2
 		}
 		panic("collate scanner expectedTrue")
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == "false" {
 			code[n], code[n+1] = TypeFalse, Terminator
-			return n + 2, txt[5:]
+			return txt[5:], n + 2
 		}
 		panic("collate scanner expectedFalse")
 
@@ -44,23 +50,23 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 		s, remtxt := scanString(str2bytes(txt))
 		if config.doMissing && MissingLiteral.Equal(bytes2str(s)) {
 			code[n], code[n+1] = TypeMissing, Terminator
-			return n + 2, bytes2str(remtxt)
+			return bytes2str(remtxt), n + 2
 		}
 		code[n] = TypeString
 		n++
 		n += suffixEncodeString(s, code[n:])
 		code[n] = Terminator
 		n++
-		return n, bytes2str(remtxt)
+		return bytes2str(remtxt), n
 
 	case '[':
 		var x int
 
 		code[n] = TypeArray
 		n++
-		off, m, ln := n, n, 0
+		n_, n__, ln := n, n, 0
 		if config.arrayLenPrefix {
-			off, m = (off + 32), (m + 32) // preallocate space for Length encoding
+			n_, n__ = (n_ + 32), (n__ + 32) // prealloc space for Len encoding
 		}
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
@@ -68,8 +74,9 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 
 		} else if txt[0] != ']' {
 			for {
-				x, txt = scanToken(txt, code[m:], config)
-				m += x
+				txt, x = scanToken(txt, code[n__:], config)
+				n__ += x
+				ln++
 				if txt = skipWS(txt, config.ws); len(txt) == 0 {
 					panic("gson scanner expectedCloseArray")
 				} else if txt[0] == ',' {
@@ -79,36 +86,32 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 				} else {
 					panic("collate scanner expectedCloseArray")
 				}
-				ln++
 			}
 		}
 		if config.arrayLenPrefix {
 			n += gson2collate(Length(ln), code[n:], config)
-			copy(code[n:], code[off:m])
-			n += (m - off)
+			copy(code[n:], code[n_:n__])
+			n += (n__ - n_)
 		} else {
-			n = m
+			n = n__
 		}
 		code[n] = Terminator
 		n++
-		return n, txt[1:]
+		return txt[1:], n
 
 	case '{':
 		var x int
 		code[n] = TypeObj
 		n++
-		n_, n__, ln := n, n, 0
-		if config.propertyLenPrefix {
-			n_, n__ = (n + 32), (n + 32) // preallocate space for length encoding
-		}
+
+		altcode, p := make([]byte, 10*1024), 0
+		refs, ln := make(kvrefs, 10*256), 0
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("collate scanner expectedCloseobject")
 		} else if txt[0] != '}' && txt[0] != '"' {
 			panic("collate scanner expectedKey")
 		} else if txt[0] != '}' {
-			altcode, p := make([]byte, 10*1024), 0
-			refs, i := make(kvrefs, 10*256), 0
 			for {
 				// NOTE: empty string is also a valid key
 				key, remtxt := scanString(str2bytes(txt))
@@ -116,10 +119,10 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 				if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 					panic("collate scanner expectedColon")
 				}
-				x, txt = scanToken(skipWS(txt[1:], config.ws), altcode[p:], config)
-				refs[i] = kvref{bytes2str(key), altcode[p : p+x]}
+				txt, x = scanToken(skipWS(txt[1:], config.ws), altcode[p:], config)
+				refs[ln] = kvref{bytes2str(key), altcode[p : p+x]}
 				p += x
-				i++
+				ln++
 
 				if txt = skipWS(txt, config.ws); len(txt) == 0 {
 					panic("collate scanner expectedCloseobject")
@@ -130,25 +133,21 @@ func scanToken(txt string, code []byte, config *Config) (int, string) {
 				} else {
 					panic("collate scanner expectedCloseobject")
 				}
-				ln++
 			}
-			sort.Sort(refs[:i])
-			for _, kv := range refs {
-				n__ += gson2collate(kv.key, code[n__:], config) // encode key
-				copy(code[n__:], kv.code)
-				n__ += len(kv.code)
-			}
+			sort.Sort(refs[:ln])
 		}
 		if config.propertyLenPrefix {
 			n += gson2collate(Length(ln), code[n:], config)
-			copy(code[n:], code[n_:n__])
-			n += (n__ - n_)
-		} else {
-			n = n__
+		}
+		for j := 0; j < ln; j++ {
+			kv := refs[j]
+			n += gson2collate(kv.key, code[n:], config) // encode key
+			copy(code[n:], kv.code)
+			n += len(kv.code)
 		}
 		code[n] = Terminator
 		n++
-		return n, txt[1:]
+		return txt[1:], n
 	}
 	panic("collate scanner expectedToken")
 }
@@ -320,6 +319,10 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		copy(text, MissingLiteral)
 		return n + 1, m + len(MissingLiteral)
 
+	case TypeNull:
+		copy(text, "null")
+		return n + 1, m + 4
+
 	case TypeTrue:
 		copy(text, "true")
 		return n + 1, m + 4
@@ -330,7 +333,7 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 
 	case TypeNumber:
 		x := getDatum(code[n:])
-		y := denormalizeFloatTojson(code[n:n+m-1], text, config.nt)
+		y := denormalizeFloatTojson(code[n:n+x-1], text, config.nt)
 		return n + x, m + y
 
 	case TypeString:
@@ -357,6 +360,7 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 			text[m] = ','
 			m++
 		}
+		n++ // skip terminator
 		if text[m-1] == ',' {
 			text[m-1] = ']'
 		} else {
@@ -375,40 +379,24 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		m++
 		for code[n] != Terminator {
 			x, y := collate2json(code[n:], text[m:], config)
-			n += x
-			m += y
+			n, m = n+x, m+y
 			text[m] = ':'
 			m++
 			x, y = collate2json(code[n:], text[m:], config)
+			n, m = n+x, m+y
 			text[m] = ','
 			m++
 		}
+		n++ // skip terminator
 		if text[m-1] == ',' {
-			text[m-1] = ']'
+			text[m-1] = '}'
 		} else {
-			text[m] = ']'
+			text[m] = '}'
 			m++
 		}
 		return n, m
 	}
 	panic("collate decode to json invalid binary")
-}
-
-func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
-	switch nt {
-	case Float64:
-		_, y := decodeFloat(code, text[:])
-		return y
-
-	case Int64:
-		_, y := decodeInt(code, text[:])
-		return y
-
-	case Decimal:
-		_, y := decodeSD(code, text[:])
-		return y
-	}
-	panic("collate gson denormalizeFloat bad configuration")
 }
 
 var intCheck = [256]byte{}
