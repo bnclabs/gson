@@ -6,10 +6,10 @@ import "unicode/utf8"
 import "unicode/utf16"
 
 // primary interface to scan JSON text and return,
-// a. as go-native value.
-// b. text remaining to be parsed.
+// a. text remaining to be parsed.
+// b. as go-native value.
 // calling this function will scan for exactly one JSON value
-func scanToken(txt string, config *Config) (interface{}, string) {
+func scanToken(txt string, config *Config) (string, interface{}) {
 	txt = skipWS(txt, config.ws)
 
 	if len(txt) < 1 {
@@ -23,36 +23,36 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 	switch txt[0] {
 	case 'n':
 		if len(txt) >= 4 && txt[:4] == "null" {
-			return nil, txt[4:]
+			return txt[4:], nil
 		}
 		panic("gson scanner expectedNil")
 
 	case 't':
 		if len(txt) >= 4 && txt[:4] == "true" {
-			return true, txt[4:]
+			return txt[4:], true
 		}
 		panic("gson scanner expectedTrue")
 
 	case 'f':
 		if len(txt) >= 5 && txt[:5] == "false" {
-			return false, txt[5:]
+			return txt[5:], false
 		}
 		panic("gson scanner expectedFalse")
 
 	case '"':
 		s, remtxt := scanString(str2bytes(txt))
-		return s, bytes2str(remtxt)
+		return bytes2str(remtxt), s
 
 	case '[':
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("gson scanner expectedCloseArray")
 		} else if txt[0] == ']' {
-			return []interface{}{}, txt[1:]
+			return txt[1:], []interface{}{}
 		}
 		arr := make([]interface{}, 0, len(txt)/10)
 		for {
 			var tok interface{}
-			tok, txt = scanToken(txt, config)
+			txt, tok = scanToken(txt, config)
 			arr = append(arr, tok)
 			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("gson scanner expectedCloseArray")
@@ -64,13 +64,13 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 				panic("gson scanner expectedCloseArray")
 			}
 		}
-		return arr, txt[1:]
+		return txt[1:], arr
 
 	case '{':
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("gson scanner expectedCloseobject")
 		} else if txt[0] == '}' {
-			return map[string]interface{}{}, txt[1:]
+			return txt[1:], map[string]interface{}{}
 		} else if txt[0] != '"' {
 			panic("gson scanner expectedKey")
 		}
@@ -84,7 +84,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 				panic("gson scanner expectedColon")
 			}
-			tok, txt = scanToken(skipWS(txt[1:], config.ws), config)
+			txt, tok = scanToken(skipWS(txt[1:], config.ws), config)
 			m[key] = tok
 			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("gson scanner expectedCloseobject")
@@ -96,7 +96,7 @@ func scanToken(txt string, config *Config) (interface{}, string) {
 				panic("gson scanner expectedCloseobject")
 			}
 		}
-		return m, txt[1:]
+		return txt[1:], m
 	}
 	panic("gson scanner expectedToken")
 }
@@ -131,7 +131,7 @@ func skipWS(txt string, ws SpaceKind) string {
 	return txt
 }
 
-func scanNum(txt string, nk NumberKind) (interface{}, string) {
+func scanNum(txt string, nk NumberKind) (string, interface{}) {
 	s, e, l := 0, 1, len(txt)
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
@@ -140,20 +140,20 @@ func scanNum(txt string, nk NumberKind) (interface{}, string) {
 
 	switch nk {
 	case StringNumber:
-		return Number(txt[s:e]), txt[e:]
+		return txt[e:], Number(txt[s:e])
 
 	case IntNumber:
 		num, err := strconv.Atoi(string(txt[s:e]))
 		if err != nil {
 			panic("gson scanner expectedJsonInteger")
 		}
-		return num, txt[e:]
+		return txt[e:], num
 	}
 	// FloatNumber
 	// NOTE: ignore the error because we have only picked
 	// valid text to parse.
 	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
-	return num, txt[e:]
+	return txt[e:], num
 }
 
 var escapeCode = [256]byte{ // TODO: size can be optimized

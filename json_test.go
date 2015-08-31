@@ -23,7 +23,7 @@ func TestScanEmpty(t *testing.T) {
 
 func TestScanNull(t *testing.T) {
 	config := NewDefaultConfig()
-	if val, remtxt := config.Parse("null"); remtxt != "" {
+	if remtxt, val := config.Parse("null"); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if val != nil {
 		t.Errorf("`null` should be parsed to nil")
@@ -48,7 +48,7 @@ func TestScanBool(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &refval); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if val, remtxt := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(bool); !ok || v != refval.(bool) {
 			t.Errorf("%q should be parsed to %v", test, refval)
@@ -76,14 +76,14 @@ func TestScanIntegers(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if val, remtxt := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(int); !ok || v != int(ref.(float64)) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
 		config = NewConfig(StringNumber, AnsiSpace)
-		if val, remtxt := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(Number); !ok || string(v) != test {
 			t.Errorf("expected {%T,%v}, got {%T,%v} %v", v, v, test, test, ok)
@@ -97,7 +97,7 @@ func TestScanIntegers(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		val, _ := config.Parse(test)
+		_, val := config.Parse(test)
 		if v, ok := val.(float64); !ok || v != ref.(float64) {
 			t.Errorf("%q int should be parsed to %v", test, ref)
 		}
@@ -112,13 +112,13 @@ func TestScanIntegers(t *testing.T) {
 			if err := json.Unmarshal([]byte(test), &ref); err != nil {
 				t.Fatalf("error parsing i/p %q: %v", test, err)
 			}
-			if _, remtxt := config.Parse(test); remtxt == test {
+			if remtxt, val := config.Parse(test); remtxt == test {
 				t.Errorf("expected %v got %v", test, remtxt)
 			}
 		}()
 
 		config = NewConfig(StringNumber, AnsiSpace)
-		if val, remtxt := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(Number); !ok || string(v) != test {
 			t.Errorf("%q should be parsed as String-number")
@@ -158,7 +158,7 @@ func TestScan(t *testing.T) {
 		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
 			t.Errorf("error parsing i/p %q: %v", tcase, err)
 		}
-		if val, _ := config.Parse(tcase); reflect.DeepEqual(val, ref) == false {
+		if _, val := config.Parse(tcase); reflect.DeepEqual(val, ref) == false {
 			t.Errorf("%q should be parsed as: %v, got %v", tcase, ref, val)
 		}
 	}
@@ -172,7 +172,7 @@ func TestCodeJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &ref); err != nil {
 		t.Errorf("error parsing codeJSON: %v", err)
 	}
-	if val, remtxt := config.Parse(string(data)); remtxt != "" {
+	if remtxt, val := config.Parse(string(data)); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if reflect.DeepEqual(val, ref) == false {
 		t.Error("codeJSON parsing failed with reference: %v", ref)

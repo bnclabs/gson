@@ -46,7 +46,7 @@ func TestCborTypicalPointers(t *testing.T) {
 
 	gsonc := gson.NewDefaultConfig()
 	txt := string(testdataFile("../testdata/typical.json"))
-	doc, _ := gsonc.Parse(txt)
+	_, doc := gsonc.Parse(txt)
 	pointers := gsonc.ListPointers(doc)
 	_, n := config.ParseJson(txt, cbordoc)
 	cbordoc = cbordoc[:n]

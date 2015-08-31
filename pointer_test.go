@@ -64,7 +64,7 @@ func TestTypicalPointers(t *testing.T) {
 
 	// test list pointers
 	txt := string(testdataFile("testdata/typical.json"))
-	value, _ := config.Parse(txt)
+	_, value := config.Parse(txt)
 	pointers := config.ListPointers(value)
 	sort.Strings(pointers)
 
@@ -88,7 +88,7 @@ func TestPointerGet(t *testing.T) {
 		[2]interface{}{"/dict/b", 20.0},
 	}
 	config := NewDefaultConfig()
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	t.Logf("%v", doc)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
@@ -129,7 +129,7 @@ func TestPointerSet(t *testing.T) {
 		[3]interface{}{"/dict/b", 2.0, 20.0},
 	}
 	config := NewDefaultConfig()
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		t.Logf("%v", ptr)
@@ -177,7 +177,7 @@ func TestPointerDel(t *testing.T) {
 	}
 	var val interface{}
 	config := NewDefaultConfig()
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		doc, val = config.Delete(ptr, doc)
@@ -186,7 +186,7 @@ func TestPointerDel(t *testing.T) {
 		}
 	}
 	remtxt := `{"arr": [], "-": [], "dict":{}}"`
-	remdoc, _ := config.Parse(remtxt)
+	_, remdoc := config.Parse(remtxt)
 	if !reflect.DeepEqual(doc, remdoc) {
 		t.Errorf("expected %v, got %v", remdoc, doc)
 	}
@@ -237,7 +237,7 @@ func BenchmarkEncPtrLarge(b *testing.B) {
 func BenchmarkListPointers(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	b.SetBytes(int64(len(txt)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -248,7 +248,7 @@ func BenchmarkListPointers(b *testing.B) {
 func BenchmarkPtrGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.Get("/projects/Sherri/members/0", doc)
@@ -258,7 +258,7 @@ func BenchmarkPtrGet(b *testing.B) {
 func BenchmarkPtrSet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.Set("/projects/Sherri/members/0", doc, 10)
@@ -268,7 +268,7 @@ func BenchmarkPtrSet(b *testing.B) {
 func BenchmarkPtrDelete(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	doc, _ := config.Parse(txt)
+	_, doc := config.Parse(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.Delete("/projects/Sherri/members/0", doc)
