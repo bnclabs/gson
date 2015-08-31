@@ -183,7 +183,7 @@ func skipWS(txt string, ws SpaceKind) string {
 	return txt
 }
 
-func scanNum(txt string, code []byte, nk NumberType) (int, string) {
+func scanNum(txt string, code []byte, nk NumberKind) (int, string) {
 	s, e, l := 0, 1, len(txt)
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
@@ -394,7 +394,7 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 	panic("collate decode to json invalid binary")
 }
 
-func denormalizeFloatTojson(code []byte, text []byte, nt NumberType) int {
+func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
 	switch nt {
 	case Float64:
 		_, y := decodeFloat(code, text[:])

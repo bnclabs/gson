@@ -23,15 +23,15 @@ type Missing string
 // occur in the keyspace.
 const MissingLiteral = Missing("~[]{}falsenilNA~")
 
-// NumberType to choose for number collation
-type NumberType byte
+// NumberKind to choose for number collation
+type NumberKind byte
 
 // SpaceKind to skip white-spaces in JSON text.
 type SpaceKind byte
 
 const (
 	// Float64 to collate input numbers as 64-bit floating point.
-	Float64 NumberType = iota + 1
+	Float64 NumberKind = iota + 1
 	// Int64 to collate input numbers as 64-bit signed-integer.
 	Int64
 	// Decimal to collate input numbers as N, where -1 < N < 1
@@ -50,7 +50,7 @@ type Config struct {
 	arrayLenPrefix    bool       // first sort arrays based on its length
 	propertyLenPrefix bool       // first sort properties based on length
 	doMissing         bool       // handle missing values (for N1QL)
-	nt                NumberType // encode numbers as "float64" or "int64" or "decimal"
+	nt                NumberKind // encode numbers as "float64" or "int64" or "decimal"
 	ws                SpaceKind
 	//-- unicode
 	//backwards        bool
@@ -78,7 +78,7 @@ func NewDefaultConfig() *Config {
 
 // NewConfig creates a configuration instance to collate
 // and de-collate gson, json and cbor.
-func NewConfig(al, pl bool, nt NumberType, ws SpaceKind) *Config {
+func NewConfig(al, pl bool, nt NumberKind, ws SpaceKind) *Config {
 	config := NewDefaultConfig()
 	config.arrayLenPrefix = al
 	config.propertyLenPrefix = pl
@@ -111,16 +111,16 @@ func (config *Config) UseMissing(what bool) *Config {
 	return config
 }
 
-// NumberType chooses type of encoding / decoding for JSON
+// NumberKind chooses type of encoding / decoding for JSON
 // numbers. Can be "float64", "int64", "decimal".
 // Default is "float64"
-func (config *Config) NumberType(what string) *Config {
+func (config *Config) NumberKind(what NumberKind) *Config {
 	switch what {
-	case "float64":
+	case Float64:
 		config.nt = Float64
-	case "int64":
+	case Int64:
 		config.nt = Int64
-	case "decimal":
+	case Decimal:
 		config.nt = Decimal
 	}
 	return config

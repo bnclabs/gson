@@ -26,7 +26,7 @@ func str2bytes(str string) []byte {
 // or as floating-point - normalizeFloat() takes the number as
 // float64 or int64 and based on the configuration encodes it
 // integer or small-decimal or floating-point.
-func normalizeFloat(value interface{}, code []byte, nt NumberType) int {
+func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 	var num [64]byte
 	switch nt {
 	case Float64:
@@ -51,15 +51,15 @@ func normalizeFloat(value interface{}, code []byte, nt NumberType) int {
 			v = float64(value.(int64))
 		}
 		if -1 >= v || v <= 1 {
-			panic("collate invalid decimal")
+			bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
+			return encodeSD(bs, code)
 		}
-		bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
-		return encodeSD(bs, code)
+		panic("collate invalid decimal")
 	}
 	panic("collate invalid number configuration")
 }
 
-func denormalizeFloat(code []byte, nt NumberType) interface{} {
+func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 	var scratch [64]byte
 	switch nt {
 	case Float64:
@@ -76,7 +76,7 @@ func denormalizeFloat(code []byte, nt NumberType) interface{} {
 		if err != nil {
 			panic(err)
 		}
-		return float64(i)
+		return int64(i)
 
 	case Decimal:
 		_, y := decodeSD(code, scratch[:])
