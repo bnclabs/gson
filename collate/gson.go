@@ -24,7 +24,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(value, code[n:], config.nt)
+		n += normalizeFloat(obj, code[n:], config.nt)
 		code[n] = Terminator
 		n++
 		return n
@@ -33,16 +33,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(int64(value), code[n:], config.nt)
-		code[n] = Terminator
-		n++
-		return n
-
-	case int:
-		n := 0
-		code[n] = TypeNumber
-		n++
-		n += normalizeFloat(int64(value), code[n:], config.nt)
+		n += normalizeFloat(obj, code[n:], config.nt)
 		code[n] = Terminator
 		n++
 		return n
@@ -118,7 +109,7 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 	n := 1
 	switch code[0] {
 	case TypeMissing:
-		return string(MissingLiteral), 2
+		return MissingLiteral, 2
 
 	case TypeNull:
 		return nil, 2
@@ -151,16 +142,20 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 	case TypeArray:
 		var arr []interface{}
 		if config.arrayLenPrefix {
+			if code[n] != TypeLength {
+				panic("collate decode expected array length prefix")
+			}
+			n++
 			m := getDatum(code[n:])
-			_, y := decodeInt(code[n:], scratch[:])
+			_, y := decodeInt(code[n:n+m], scratch[:])
 			ln, err := strconv.Atoi(bytes2str(scratch[:y]))
 			if err != nil {
 				panic(err)
 			}
-			arr = make([]interface{}, ln)
+			arr = make([]interface{}, 0, ln)
 			n += m
 		} else {
-			arr = make([]interface{}, 8)
+			arr = make([]interface{}, 0, 8)
 		}
 		for code[n] != Terminator {
 			item, y := collate2gson(code[n:], config)
@@ -172,8 +167,12 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 	case TypeObj:
 		obj := make(map[string]interface{})
 		if config.propertyLenPrefix {
+			if code[n] != TypeLength {
+				panic("collate decode expected object length prefix")
+			}
+			n++
 			m := getDatum(code[n:])
-			_, y := decodeInt(code[n:], scratch[:])
+			_, y := decodeInt(code[n:n+m], scratch[:])
 			_, err := strconv.Atoi(bytes2str(scratch[:y])) // just skip
 			if err != nil {
 				panic(err)

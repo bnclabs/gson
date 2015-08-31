@@ -147,39 +147,23 @@ func TestLargeDecimal(t *testing.T) {
 	}
 }
 
-func BenchmarkEncodeInt0(b *testing.B) {
-	bEncodeInt(b, []byte("0"))
-}
-
-func BenchmarkEncodeInt7(b *testing.B) {
-	bEncodeInt(b, []byte("+7"))
-}
-
-func BenchmarkEncodeInt1234567890(b *testing.B) {
+func BenchmarkEncodeInt(b *testing.B) {
 	bEncodeInt(b, []byte("+1234567890"))
 }
 
-func BenchmarkEncodeInt1234567890Neg(b *testing.B) {
+func BenchmarkEncIntNeg(b *testing.B) {
 	bEncodeInt(b, []byte("-1234567890"))
 }
 
-func BenchmarkDecodeInt0(b *testing.B) {
-	bDecodeInt(b, []byte("0"))
-}
-
-func BenchmarkDecodeInt7(b *testing.B) {
-	bDecodeInt(b, []byte(">7"))
-}
-
-func BenchmarkDecodeInt1234567890(b *testing.B) {
+func BenchmarkDecodeInt(b *testing.B) {
 	bDecodeInt(b, []byte(">>>2101234567890"))
 }
 
-func BenchmarkDecodeInt1234567891Neg(b *testing.B) {
+func BenchmarkDecIntNeg(b *testing.B) {
 	bDecodeInt(b, []byte("---7898765432108"))
 }
 
-func BenchmarkEncodeInt(b *testing.B) {
+func BenchmarkEncIntTypical(b *testing.B) {
 	var samples = [][]byte{
 		[]byte("+7"),
 		[]byte("+123"),
@@ -198,7 +182,7 @@ func BenchmarkEncodeInt(b *testing.B) {
 	}
 }
 
-func BenchmarkDecodeInt(b *testing.B) {
+func BenchmarkDecIntTypical(b *testing.B) {
 	var samples = [][]byte{
 		[]byte(">7"),
 		[]byte(">>3123"),
@@ -216,47 +200,23 @@ func BenchmarkDecodeInt(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeFloat10000000000(b *testing.B) {
-	bEncodeFloat(b, "+10000000000")
-}
-
-func BenchmarkEncodeFloat001233(b *testing.B) {
+func BenchmarkEncodeFloat(b *testing.B) {
 	bEncodeFloat(b, "+0.001233")
 }
 
-func BenchmarkEncodeFloat001233Neg(b *testing.B) {
-	bEncodeFloat(b, "-0.001233")
-}
-
-func BenchmarkEncodeFloat1Neg(b *testing.B) {
-	bEncodeFloat(b, "-1")
-}
-
-func BenchmarkEncodeFloat10000000000Neg(b *testing.B) {
+func BenchmarkEncFloatNeg(b *testing.B) {
 	bEncodeFloat(b, "-10000000000")
 }
 
-func BenchmarkDecodeFloat10000000000(b *testing.B) {
-	bDecodeFloat(b, ">>>2111-")
-}
-
-func BenchmarkDecodeFloat001233(b *testing.B) {
+func BenchmarkDecodeFloat(b *testing.B) {
 	bDecodeFloat(b, "->28766>")
 }
 
-func BenchmarkDecodeFloat001233Neg(b *testing.B) {
-	bDecodeFloat(b, "->28766>")
-}
-
-func BenchmarkDecodeFloat1Neg(b *testing.B) {
-	bDecodeFloat(b, "--88>")
-}
-
-func BenchmarkDecodeFloat10000000000Neg(b *testing.B) {
+func BenchmarkDecFloatNeg(b *testing.B) {
 	bDecodeFloat(b, "---7888>")
 }
 
-func BenchmarkEncodeFloat(b *testing.B) {
+func BenchmarkEncFltTypical(b *testing.B) {
 	var samples = [][]byte{
 		[]byte("-10000000000.0"),
 		[]byte("-1000000000.0"),
@@ -290,7 +250,7 @@ func BenchmarkEncodeFloat(b *testing.B) {
 	}
 }
 
-func BenchmarkDecodeFloat(b *testing.B) {
+func BenchmarkDecFltTypical(b *testing.B) {
 	var samples = [][]byte{
 		[]byte("-10000000000.0"),
 		[]byte("-1000000000.0"),
