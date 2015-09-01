@@ -280,7 +280,8 @@ func TestJson2CollateMap(t *testing.T) {
 			t.Errorf("expected %v, got %v", reftxt, s)
 		}
 	}
-	// without length prefix
+	// without length prefix, and different length for keys
+	config = NewDefaultConfig().SetMaxkeys(10)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
@@ -431,7 +432,7 @@ func BenchmarkCollJsonArr(b *testing.B) {
 }
 
 func BenchmarkJsonCollMap(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
+	code, config := make([]byte, 1024), NewDefaultConfig().SetMaxkeys(10)
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
 	for i := 0; i < b.N; i++ {
