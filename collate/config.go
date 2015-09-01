@@ -45,6 +45,9 @@ const (
 	UnicodeSpace
 )
 
+// maximum number of keys, by default, allowed in a property item.
+const defaultMaxKeys = 1000
+
 // Config for new collation and de-collation.
 type Config struct {
 	arrayLenPrefix    bool       // first sort arrays based on its length
@@ -52,6 +55,7 @@ type Config struct {
 	doMissing         bool       // handle missing values (for N1QL)
 	nt                NumberKind // encode numbers as "float64" or "int64" or "decimal"
 	ws                SpaceKind
+	maxKeys           int
 	//-- unicode
 	//backwards        bool
 	//hiraganaQ        bool
@@ -73,6 +77,7 @@ func NewDefaultConfig() *Config {
 		doMissing:         true,
 		nt:                Float64,
 		ws:                UnicodeSpace,
+		maxKeys:           defaultMaxKeys,
 	}
 }
 
@@ -108,6 +113,13 @@ func (config *Config) SortbyPropertyLen(what bool) *Config {
 // Default is `true`.
 func (config *Config) UseMissing(what bool) *Config {
 	config.doMissing = what
+	return config
+}
+
+// SetMaxkeys will set the maximum number of keys allowed in a property
+// item.
+func (config *Config) SetMaxkeys(n int) *Config {
+	config.maxKeys = n
 	return config
 }
 

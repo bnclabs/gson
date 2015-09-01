@@ -298,155 +298,154 @@ func TestJson2CollateMap(t *testing.T) {
 	}
 }
 
-//func BenchmarkGsonCollNil(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(nil, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonNil(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(nil, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollTrue(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(true)
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonTrue(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(interface{}(true), code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollFalse(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(false)
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonFalse(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(interface{}(false), code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollF64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(float64(10.121312213123123))
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonF64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(float64(10.121312213123123), code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollI64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(int64(123456789))
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonI64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(int64(123456789), code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollMiss(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(MissingLiteral)
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonMiss(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(MissingLiteral, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollStr(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}("hello world")
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonStr(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate("hello world", code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollArr(b *testing.B) {
-//    arr := []interface{}{nil, true, false, "hello world", 10.23122312}
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(arr)
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonArr(b *testing.B) {
-//    arr := []interface{}{nil, true, false, "hello world", 10.23122312}
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(arr, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
-//
-//func BenchmarkGsonCollMap(b *testing.B) {
-//    obj := map[string]interface{}{
-//        "key1": nil, "key2": true, "key3": false, "key4": "hello world",
-//        "key5": 10.23122312,
-//    }
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    val := interface{}(obj)
-//    for i := 0; i < b.N; i++ {
-//        gson2collate(val, code, config)
-//    }
-//}
-//
-//func BenchmarkCollGsonMap(b *testing.B) {
-//    obj := map[string]interface{}{
-//        "key1": nil, "key2": true, "key3": false, "key4": "hello world",
-//        "key5": 10.23122312,
-//    }
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    n := gson2collate(obj, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2gson(code[:n], config)
-//    }
-//}
+func BenchmarkJsonCollNil(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		scanToken("null", code, config)
+	}
+}
+
+func BenchmarkCollJsonNil(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	_, n := scanToken("null", code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollTrue(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		scanToken("true", code, config)
+	}
+}
+
+func BenchmarkCollJsonTrue(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	_, n := scanToken("true", code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollFalse(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		scanToken("false", code, config)
+	}
+}
+
+func BenchmarkCollJsonFalse(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	_, n := scanToken("false", code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollF64(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		scanToken("10.121312213123123", code, config)
+	}
+}
+
+func BenchmarkCollJsonF64(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	_, n := scanToken("10.121312213123123", code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollI64(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		scanToken("123456789", code, config)
+	}
+}
+
+func BenchmarkCollJsonI64(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	_, n := scanToken("123456789", code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollMiss(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
+	for i := 0; i < b.N; i++ {
+		scanToken(inp, code, config)
+	}
+}
+
+func BenchmarkCollJsonMiss(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
+	_, n := scanToken(inp, code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollStr(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	for i := 0; i < b.N; i++ {
+		scanToken(`"hello world"`, code, config)
+	}
+}
+
+func BenchmarkCollJsonStr(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	_, n := scanToken(`"hello world"`, code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollArr(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	inp := `[null,true,false,"hello world",10.23122312]`
+	for i := 0; i < b.N; i++ {
+		scanToken(inp, code, config)
+	}
+}
+
+func BenchmarkCollJsonArr(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	inp := `[null,true,false,"hello world",10.23122312]`
+	_, n := scanToken(inp, code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}
+
+func BenchmarkJsonCollMap(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
+		`"key5":10.23122312}`
+	for i := 0; i < b.N; i++ {
+		scanToken(inp, code, config)
+	}
+}
+
+func BenchmarkCollJsonMap(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	txt := make([]byte, 1024)
+	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
+		`"key5":10.23122312}`
+	_, n := scanToken(inp, code, config)
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], txt, config)
+	}
+}

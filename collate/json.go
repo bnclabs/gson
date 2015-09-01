@@ -104,8 +104,11 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 		code[n] = TypeObj
 		n++
 
-		altcode, p := make([]byte, 10*1024), 0
-		refs, ln := make(kvrefs, 10*256), 0
+		pool := getJsonKeyPool(config.maxKeys)
+		altcode, p := pool.codepool.Get().([]byte), 0
+		defer pool.codepool.Put(altcode)
+		refs, ln := pool.keypool.Get().(kvrefs), 0
+		defer pool.keypool.Put(refs)
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("collate scanner expectedCloseobject")
@@ -119,7 +122,8 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 				if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 					panic("collate scanner expectedColon")
 				}
-				txt, x = scanToken(skipWS(txt[1:], config.ws), altcode[p:], config)
+				txt = skipWS(txt[1:], config.ws)
+				txt, x = scanToken(txt, altcode[p:], config)
 				refs[ln] = kvref{bytes2str(key), altcode[p : p+x]}
 				p += x
 				ln++
