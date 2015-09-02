@@ -13,4 +13,5 @@ const (
 	TypeLength
 	TypeArray
 	TypeObj
+	TypeBinary
 )
