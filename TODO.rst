@@ -1,3 +1,6 @@
+json/
+    - json pointer SET/DEL/GET (TODO)
+
 gson/
     - json -> golang (DONE)
     - golang -> json (TODO: use encoding/json:Marshal)
@@ -33,6 +36,7 @@ patch/
 - there are three or more forms of scanString() document them clearly
   along with its configuration.
 - Get() Set() Del() json-pointer operation on collated binary.
+- memory profile using tools/gson program for gson, cbor and collate.
 
 Action items on gson/collate:
 
