@@ -2,6 +2,7 @@ package gson
 
 import "strconv"
 import "unicode"
+import "encoding/json"
 import "unicode/utf8"
 import "unicode/utf16"
 
@@ -140,7 +141,7 @@ func scanNum(txt string, nk NumberKind) (string, interface{}) {
 
 	switch nk {
 	case StringNumber:
-		return txt[e:], Number(txt[s:e])
+		return txt[e:], json.Number(txt[s:e])
 
 	case IntNumber:
 		num, err := strconv.Atoi(string(txt[s:e]))

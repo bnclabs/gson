@@ -85,7 +85,7 @@ func TestScanIntegers(t *testing.T) {
 		config = NewConfig(StringNumber, AnsiSpace)
 		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
-		} else if v, ok := val.(Number); !ok || string(v) != test {
+		} else if v, ok := val.(json.Number); !ok || string(v) != test {
 			t.Errorf("expected {%T,%v}, got {%T,%v} %v", v, v, test, test, ok)
 		}
 	}
@@ -112,7 +112,7 @@ func TestScanIntegers(t *testing.T) {
 			if err := json.Unmarshal([]byte(test), &ref); err != nil {
 				t.Fatalf("error parsing i/p %q: %v", test, err)
 			}
-			if remtxt, val := config.Parse(test); remtxt == test {
+			if remtxt, _ := config.Parse(test); remtxt == test {
 				t.Errorf("expected %v got %v", test, remtxt)
 			}
 		}()
@@ -120,7 +120,7 @@ func TestScanIntegers(t *testing.T) {
 		config = NewConfig(StringNumber, AnsiSpace)
 		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
-		} else if v, ok := val.(Number); !ok || string(v) != test {
+		} else if v, ok := val.(json.Number); !ok || string(v) != test {
 			t.Errorf("%q should be parsed as String-number")
 		}
 	}
