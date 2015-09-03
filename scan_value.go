@@ -10,7 +10,7 @@ import "unicode/utf16"
 // a. text remaining to be parsed.
 // b. as go-native value.
 // calling this function will scan for exactly one JSON value
-func scanToken(txt string, config *Config) (string, interface{}) {
+func scanValue(txt string, config *Config) (string, interface{}) {
 	txt = skipWS(txt, config.ws)
 
 	if len(txt) < 1 {
@@ -53,7 +53,7 @@ func scanToken(txt string, config *Config) (string, interface{}) {
 		arr := make([]interface{}, 0, len(txt)/10)
 		for {
 			var tok interface{}
-			txt, tok = scanToken(txt, config)
+			txt, tok = scanValue(txt, config)
 			arr = append(arr, tok)
 			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("gson scanner expectedCloseArray")
@@ -85,7 +85,7 @@ func scanToken(txt string, config *Config) (string, interface{}) {
 			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 				panic("gson scanner expectedColon")
 			}
-			txt, tok = scanToken(skipWS(txt[1:], config.ws), config)
+			txt, tok = scanValue(skipWS(txt[1:], config.ws), config)
 			m[key] = tok
 			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("gson scanner expectedCloseobject")

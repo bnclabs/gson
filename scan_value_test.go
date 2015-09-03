@@ -18,7 +18,7 @@ func TestScanEmpty(t *testing.T) {
 			t.Errorf("expected panic")
 		}
 	}()
-	scanToken("", config)
+	scanValue("", config)
 }
 
 func TestScanNull(t *testing.T) {
@@ -136,7 +136,7 @@ func TestScanMalformed(t *testing.T) {
 				}
 			}()
 			t.Logf("%v", tcase)
-			scanToken(tcase, config)
+			scanValue(tcase, config)
 		}()
 	}
 }

@@ -46,7 +46,7 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 // invalid raises panic. Remaining unparsed text is returned,
 // along with go-native value.
 func (config *Config) Parse(txt string) (string, interface{}) {
-	return scanToken(txt, config)
+	return scanValue(txt, config)
 }
 
 // ParseMany will parse input JSON text to one or more go native
@@ -55,7 +55,7 @@ func (config *Config) ParseMany(txt string) []interface{} {
 	var values []interface{}
 	var tok interface{}
 	for len(txt) > 0 {
-		txt, tok = scanToken(txt, config)
+		txt, tok = scanValue(txt, config)
 		values = append(values, tok)
 	}
 	return values
