@@ -82,7 +82,7 @@ func TestScanIntegers(t *testing.T) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
-		config = NewConfig(StringNumber, AnsiSpace)
+		config = NewConfig(JsonNumber, AnsiSpace)
 		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
@@ -117,7 +117,7 @@ func TestScanIntegers(t *testing.T) {
 			}
 		}()
 
-		config = NewConfig(StringNumber, AnsiSpace)
+		config = NewConfig(JsonNumber, AnsiSpace)
 		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
@@ -141,7 +141,7 @@ func TestScanMalformed(t *testing.T) {
 	}
 }
 
-func TestScan(t *testing.T) {
+func TestScanValues(t *testing.T) {
 	var ref interface{}
 
 	testcases := append(scan_valid, []string{
@@ -200,7 +200,7 @@ func BenchmarkScanNumS(b *testing.B) {
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		scanNum(in, StringNumber)
+		scanNum(in, JsonNumber)
 	}
 }
 
@@ -214,10 +214,11 @@ func BenchmarkJsonNumS(b *testing.B) {
 }
 
 func BenchmarkScanString(b *testing.B) {
-	in := []byte(`"汉语 / 漢語; Hàn\b \tyǔ "`)
+	in := `"汉语 / 漢語; Hàn\b \tyǔ "`
+	scratch := make([]byte, 1024)
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		scanString(in)
+		scanString(in, scratch)
 	}
 }
 

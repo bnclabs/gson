@@ -1,15 +1,25 @@
 package gson
 
+var defaultStringLength = 1 * 1024 * 1024 // 1MB
+
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 
 const (
-	// StringNumber will keep the number text as is.
-	StringNumber NumberKind = iota + 1
+	// SmartNumber will either use str.Atoi to parse JSON numbers
+	// or fall back to float32.
+	SmartNumber32 NumberKind = iota + 1
+	// SmartNumber will either use str.Atoi to parse JSON numbers
+	// or fall back to float64.
+	SmartNumber
 	// IntNumber will use str.Atoi to parse JSON numbers.
 	IntNumber
-	// FloatNumber will use strconv.ParseFloat to parse JSON numbers.
+	// FloatNumber will use 32 bit strconv.ParseFloat to parse JSON numbers.
+	FloatNumber32
+	// FloatNumber will use 64 bit strconv.ParseFloat to parse JSON numbers.
 	FloatNumber
+	// JsonNumber will store number in JSON encoding.
+	JsonNumber
 )
 
 // SpaceKind to skip white-spaces in JSON text.
@@ -26,20 +36,29 @@ const (
 // config. To quickly get started, use NewDefaultConfig() that will
 // create a configuration with default values.
 type Config struct {
-	nk NumberKind
-	ws SpaceKind
+	nk        NumberKind
+	ws        SpaceKind
+	maxString int
 }
 
 // NewDefaultConfig returns a new configuration with default values.
 // NumberKind: FloatNumber
 // SpaceKind: UnicodeSpace
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace)
+	config := NewConfig(FloatNumber, UnicodeSpace)
+	return config.SetMaxStringLength(defaultStringLength)
 }
 
 // NewConfig returns a new configuration.
 func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	return &Config{nk: nk, ws: ws}
+	config := &Config{nk: nk, ws: ws}
+	return config.SetMaxStringLength(defaultStringLength)
+}
+
+// SetMaxStringLength allowed for a string value in a JSON document.
+func (config *Config) SetMaxStringLength(length int) *Config {
+	config.maxString = length
+	return config
 }
 
 // Parse input JSON text to a single go-native value. If text is

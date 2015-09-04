@@ -1,10 +1,7 @@
 package gson
 
 import "strconv"
-import "unicode"
 import "encoding/json"
-import "unicode/utf8"
-import "unicode/utf16"
 
 // primary interface to scan JSON text and return,
 // a. text remaining to be parsed.
@@ -41,8 +38,10 @@ func scanValue(txt string, config *Config) (string, interface{}) {
 		panic("gson scanner expectedFalse")
 
 	case '"':
-		s, remtxt := scanString(str2bytes(txt))
-		return bytes2str(remtxt), s
+		scratch := make([]byte, config.maxString)
+		remtxt, n := scanString(txt, scratch)
+		value := string(scratch[:n]) // this will copy the content.
+		return remtxt, value
 
 	case '[':
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
@@ -75,12 +74,15 @@ func scanValue(txt string, config *Config) (string, interface{}) {
 		} else if txt[0] != '"' {
 			panic("gson scanner expectedKey")
 		}
+
+		var tok interface{}
+		var n int
+
 		m := make(map[string]interface{})
+		scratch := make([]byte, config.maxString)
 		for {
-			var tok interface{}
-			// NOTE: empty string is also a valid key
-			key, remtxt := scanString(str2bytes(txt))
-			txt = bytes2str(remtxt)
+			txt, n = scanString(txt, scratch) // empty string is also valid key
+			key := string(scratch[:n])
 
 			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 				panic("gson scanner expectedColon")
@@ -110,7 +112,7 @@ func scanNum(txt string, nk NumberKind) (string, interface{}) {
 	}
 
 	switch nk {
-	case StringNumber:
+	case JsonNumber:
 		return txt[e:], json.Number(txt[s:e])
 
 	case IntNumber:
@@ -120,123 +122,11 @@ func scanNum(txt string, nk NumberKind) (string, interface{}) {
 		}
 		return txt[e:], num
 	}
-	// FloatNumber
+	// FloatNumber, or FloatNumber32, or SmartNumber, or SmartNumber32
 	// NOTE: ignore the error because we have only picked
 	// valid text to parse.
 	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
 	return txt[e:], num
-}
-
-var escapeCode = [256]byte{ // TODO: size can be optimized
-	'"':  '"',
-	'\\': '\\',
-	'/':  '/',
-	'\'': '\'',
-	'b':  '\b',
-	'f':  '\f',
-	'n':  '\n',
-	'r':  '\r',
-	't':  '\t',
-}
-
-func scanString(txt []byte) (string, []byte) {
-	if len(txt) < 2 {
-		panic("gson scanner expectedString")
-	}
-
-	e := 1
-	for txt[e] != '"' {
-		c := txt[e]
-		if c == '\\' || c == '"' || c < ' ' {
-			break
-		}
-		if c < utf8.RuneSelf {
-			e++
-			continue
-		}
-		r, size := utf8.DecodeRune(txt[e:])
-		if r == utf8.RuneError && size == 1 {
-			break
-		}
-		e += size
-		if e == len(txt) {
-			panic("gson scanner expectedString")
-		}
-	}
-
-	if txt[e] == '"' { // done we have nothing to unquote
-		return string(txt[1:e]), txt[e+1:]
-	}
-
-	out := make([]byte, (len(txt)+2)*utf8.UTFMax)
-	oute := copy(out, txt[:e]) // copy so far
-
-loop:
-	for e < len(txt) {
-		switch c := txt[e]; {
-		case c == '"':
-			out[oute] = c
-			e++
-			break loop
-
-		case c == '\\':
-			if txt[e+1] == 'u' {
-				r := getu4(txt[e:])
-				if r < 0 { // invalid
-					panic("gson scanner expectedString")
-				}
-				e += 6
-				if utf16.IsSurrogate(r) {
-					nextr := getu4(txt[e:])
-					dec := utf16.DecodeRune(r, nextr)
-					if dec != unicode.ReplacementChar { // A valid pair consume
-						oute += utf8.EncodeRune(out[oute:], dec)
-						e += 6
-						break loop
-					}
-					// Invalid surrogate; fall back to replacement rune.
-					r = unicode.ReplacementChar
-				}
-				oute += utf8.EncodeRune(out[oute:], r)
-
-			} else { // escaped with " \ / ' b f n r t
-				out[oute] = escapeCode[txt[e+1]]
-				e += 2
-				oute++
-			}
-
-		case c < ' ': // control character is invalid
-			panic("gson scanner expectedString")
-
-		case c < utf8.RuneSelf: // ASCII
-			out[oute] = c
-			oute++
-			e++
-
-		default: // coerce to well-formed UTF-8
-			r, size := utf8.DecodeRune(txt[e:])
-			e += size
-			oute += utf8.EncodeRune(out[oute:], r)
-		}
-	}
-
-	if out[oute] == '"' {
-		return bytes2str(out[1:oute]), txt[e:]
-	}
-	panic("gson scanner expectedString")
-}
-
-// getu4 decodes \uXXXX from the beginning of s, returning the hex value,
-// or it returns -1.
-func getu4(s []byte) rune {
-	if len(s) < 6 || s[0] != '\\' || s[1] != 'u' {
-		return -1
-	}
-	r, err := strconv.ParseUint(string(s[2:6]), 16, 64)
-	if err != nil {
-		return -1
-	}
-	return rune(r)
 }
 
 var intCheck = [256]byte{}
