@@ -14,12 +14,12 @@ func TestPointerGet(t *testing.T) {
 		[2]interface{}{"/dict/b", 20.0},
 	}
 	config := NewDefaultConfig()
-	_, doc := config.Parse(txt)
+	_, doc := config.ParseToValue(txt)
 	t.Logf("%v", doc)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		t.Logf("%v", ptr)
-		if val := config.Get(ptr, doc); !reflect.DeepEqual(val, tcase[1]) {
+		if val := config.DocGet(ptr, doc); !reflect.DeepEqual(val, tcase[1]) {
 			t.Errorf("for %v expected %v, got %v", ptr, tcase[1], val)
 		}
 	}
@@ -30,7 +30,7 @@ func TestPointerSetExample(t *testing.T) {
 	var doc interface{}
 	doc = []interface{}{"hello"}
 	ptr := "/-"
-	doc, old := config.Set(ptr, doc, "world")
+	doc, old := config.DocSet(ptr, doc, "world")
 	if !reflect.DeepEqual(old, "world") {
 		t.Errorf("for %v expected %v, got %v", ptr, "world", old)
 	} else if v := doc.([]interface{}); !reflect.DeepEqual(v[0], "hello") {
@@ -55,15 +55,15 @@ func TestPointerSet(t *testing.T) {
 		[3]interface{}{"/dict/b", 2.0, 20.0},
 	}
 	config := NewDefaultConfig()
-	_, doc := config.Parse(txt)
+	_, doc := config.ParseToValue(txt)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		t.Logf("%v", ptr)
-		doc, old := config.Set(ptr, doc, tcase[1])
+		doc, old := config.DocSet(ptr, doc, tcase[1])
 		if !reflect.DeepEqual(old, tcase[2]) {
 			t.Errorf("for %v expected %v, got %v", ptr, tcase[2], old)
 		}
-		val := config.Get(ptr, doc)
+		val := config.DocGet(ptr, doc)
 		if !reflect.DeepEqual(val, tcase[1]) {
 			t.Errorf("for %v expected %v, got %v", ptr, tcase[1], val)
 		}
@@ -81,7 +81,7 @@ func TestPointerDelExample(t *testing.T) {
 	var doc interface{}
 	doc = []interface{}{"hello", "world"}
 	ptr := "/1"
-	doc, old := config.Delete(ptr, doc)
+	doc, old := config.DocDelete(ptr, doc)
 	if !reflect.DeepEqual(old, "world") {
 		t.Errorf("for %v expected %v, got %v", ptr, "world", old)
 	} else if v := doc.([]interface{}); len(v) != 1 {
@@ -103,16 +103,16 @@ func TestPointerDel(t *testing.T) {
 	}
 	var val interface{}
 	config := NewDefaultConfig()
-	_, doc := config.Parse(txt)
+	_, doc := config.ParseToValue(txt)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
-		doc, val = config.Delete(ptr, doc)
+		doc, val = config.DocDelete(ptr, doc)
 		if !reflect.DeepEqual(val, tcase[1]) {
 			t.Errorf("for %v expected %v, got %v", ptr, tcase[1], val)
 		}
 	}
 	remtxt := `{"arr": [], "-": [], "dict":{}}"`
-	_, remdoc := config.Parse(remtxt)
+	_, remdoc := config.ParseToValue(remtxt)
 	if !reflect.DeepEqual(doc, remdoc) {
 		t.Errorf("expected %v, got %v", remdoc, doc)
 	}
@@ -121,30 +121,30 @@ func TestPointerDel(t *testing.T) {
 func BenchmarkPointerGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.Parse(txt)
+	_, doc := config.ParseToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.Get("/projects/Sherri/members/0", doc)
+		config.DocGet("/projects/Sherri/members/0", doc)
 	}
 }
 
 func BenchmarkPointerSet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.Parse(txt)
+	_, doc := config.ParseToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.Set("/projects/Sherri/members/0", doc, 10)
+		config.DocSet("/projects/Sherri/members/0", doc, 10)
 	}
 }
 
 func BenchmarkPointerDelete(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.Parse(txt)
+	_, doc := config.ParseToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.Delete("/projects/Sherri/members/0", doc)
-		config.Set("/projects/Sherri/members/-", doc, 10)
+		config.DocDelete("/projects/Sherri/members/0", doc)
+		config.DocSet("/projects/Sherri/members/-", doc, 10)
 	}
 }

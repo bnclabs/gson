@@ -23,7 +23,7 @@ func TestScanEmpty(t *testing.T) {
 
 func TestScanNull(t *testing.T) {
 	config := NewDefaultConfig()
-	if remtxt, val := config.Parse("null"); remtxt != "" {
+	if remtxt, val := config.ParseToValue("null"); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if val != nil {
 		t.Errorf("`null` should be parsed to nil")
@@ -35,7 +35,7 @@ func TestScanNull(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config.Parse("nil")
+		config.ParseToValue("nil")
 	}()
 }
 
@@ -48,7 +48,7 @@ func TestScanBool(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &refval); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if remtxt, val := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.ParseToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(bool); !ok || v != refval.(bool) {
 			t.Errorf("%q should be parsed to %v", test, refval)
@@ -61,7 +61,7 @@ func TestScanBool(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config.Parse(input)
+		config.ParseToValue(input)
 	}
 	fn("trrr")
 	fn("flse")
@@ -76,14 +76,14 @@ func TestScanIntegers(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		if remtxt, val := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.ParseToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(int); !ok || v != int(ref.(float64)) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
 		config = NewConfig(JsonNumber, AnsiSpace, Stream)
-		if remtxt, val := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.ParseToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
 			t.Errorf("expected {%T,%v}, got {%T,%v} %v", v, v, test, test, ok)
@@ -97,7 +97,7 @@ func TestScanIntegers(t *testing.T) {
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
-		_, val := config.Parse(test)
+		_, val := config.ParseToValue(test)
 		if v, ok := val.(float64); !ok || v != ref.(float64) {
 			t.Errorf("%q int should be parsed to %v", test, ref)
 		}
@@ -112,13 +112,13 @@ func TestScanIntegers(t *testing.T) {
 			if err := json.Unmarshal([]byte(test), &ref); err != nil {
 				t.Fatalf("error parsing i/p %q: %v", test, err)
 			}
-			if remtxt, _ := config.Parse(test); remtxt == test {
+			if remtxt, _ := config.ParseToValue(test); remtxt == test {
 				t.Errorf("expected %v got %v", test, remtxt)
 			}
 		}()
 
 		config = NewConfig(JsonNumber, AnsiSpace, Stream)
-		if remtxt, val := config.Parse(test); remtxt != "" {
+		if remtxt, val := config.ParseToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
 			t.Errorf("%q should be parsed as String-number")
@@ -158,7 +158,8 @@ func TestScanValues(t *testing.T) {
 		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
 			t.Errorf("error parsing i/p %q: %v", tcase, err)
 		}
-		if _, val := config.Parse(tcase); reflect.DeepEqual(val, ref) == false {
+		_, val := config.ParseToValue(tcase)
+		if reflect.DeepEqual(val, ref) == false {
 			t.Errorf("%q should be parsed as: %v, got %v", tcase, ref, val)
 		}
 	}
@@ -175,7 +176,7 @@ func TestCodeJSON(t *testing.T) {
 	if err := json.Unmarshal(data, &ref); err != nil {
 		t.Errorf("error parsing codeJSON: %v", err)
 	}
-	if remtxt, val := config.Parse(string(data)); remtxt != "" {
+	if remtxt, val := config.ParseToValue(string(data)); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if reflect.DeepEqual(val, ref) == false {
 		t.Error("codeJSON parsing failed with reference: %v", ref)
@@ -239,7 +240,7 @@ func BenchmarkParseArr5(b *testing.B) {
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
-		config.Parse(txt)
+		config.ParseToValue(txt)
 	}
 }
 
@@ -257,7 +258,7 @@ func BenchmarkParseMap5(b *testing.B) {
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
-		config.Parse(txt)
+		config.ParseToValue(txt)
 	}
 }
 
@@ -275,7 +276,7 @@ func BenchmarkParseTypical(b *testing.B) {
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
-		config.Parse(txt)
+		config.ParseToValue(txt)
 	}
 }
 
@@ -297,7 +298,7 @@ func BenchmarkParseCodegz(b *testing.B) {
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
-		config.Parse(txt)
+		config.ParseToValue(txt)
 	}
 }
 

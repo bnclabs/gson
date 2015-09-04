@@ -64,16 +64,16 @@ func NewConfig(nk NumberKind, ws SpaceKind, ct CborContainerEncoding) *Config {
 	return &Config{nk: nk, ws: ws, ct: ct}
 }
 
-// Parse input JSON text to a single go-native value. If text is
+// ParseToValue input JSON text to a single go-native value. If text is
 // invalid raises panic. Remaining unparsed text is returned,
 // along with go-native value.
-func (config *Config) Parse(txt string) (string, interface{}) {
+func (config *Config) ParseToValue(txt string) (string, interface{}) {
 	return scanValue(txt, config)
 }
 
-// ParseMany will parse input JSON text to one or more go native
+// ParseToValues will parse input JSON text to one or more go native
 // values. If text is invalid raises panic.
-func (config *Config) ParseMany(txt string) []interface{} {
+func (config *Config) ParseToValues(txt string) []interface{} {
 	var values []interface{}
 	var tok interface{}
 	for len(txt) > 0 {
@@ -83,34 +83,34 @@ func (config *Config) ParseMany(txt string) []interface{} {
 	return values
 }
 
-// ParsePointer follows rfc-6901 allows ~0 and ~1 escapes, property
+// ParseJsonPointer follows rfc-6901 allows ~0 and ~1 escapes, property
 // lookup by specifying the key and array lookup by specifying the
 // index. Also allows empty "" pointer and empty key "/".
-func (config *Config) ParsePointer(pointer string, segments []string) []string {
-	return parsePointer(pointer, segments)
+func (config *Config) ParseJsonPointer(pointer string, sgmts []string) []string {
+	return parsePointer(pointer, sgmts)
 }
 
-// EncodePointer reverse of ParsePointer to convert parsed
+// ToJsonPointer reverse of ParseJsonPointer to convert parsed
 // `segments` back to json-pointer. Converted pointer is available
 // in the `pointer` array and returns the length of pointer-array.
-func (config *Config) EncodePointer(segments []string, pointer []byte) int {
+func (config *Config) ToJsonPointer(segments []string, pointer []byte) int {
 	return encodePointer(segments, pointer)
 }
 
 // ListPointers all possible pointers into object.
-func (config *Config) ListPointers(object interface{}, pointers []string) []string {
+func (config *Config) ListPointers(object interface{}, ptrs []string) []string {
 	prefix := prefixPool.Get()
 	defer prefixPool.Put(prefix)
-	pointers = allpaths(object, pointers, prefix.([]byte))
-	pointers = append(pointers, "")
-	return pointers
+	ptrs = allpaths(object, ptrs, prefix.([]byte))
+	ptrs = append(ptrs, "")
+	return ptrs
 }
 
 // Get field or nested field specified by json pointer.
-func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
+func (config *Config) DocGet(ptr string, doc interface{}) (item interface{}) {
 	segments := segmentsPool.Get()
 	defer segmentsPool.Put(segments)
-	segs := config.ParsePointer(ptr, segments.([]string))
+	segs := config.ParseJsonPointer(ptr, segments.([]string))
 	return get(segs, doc)
 }
 
@@ -119,10 +119,10 @@ func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
 // Suggested usage,
 //      doc := []interface{}{"hello"}
 //      doc, _ = config.Set("/-", doc, "world")
-func (config *Config) Set(ptr string, doc, item interface{}) (newdoc, old interface{}) {
+func (config *Config) DocSet(ptr string, doc, item interface{}) (newdoc, old interface{}) {
 	segments := segmentsPool.Get()
 	defer segmentsPool.Put(segments)
-	segs := config.ParsePointer(ptr, segments.([]string))
+	segs := config.ParseJsonPointer(ptr, segments.([]string))
 	return set(segs, doc, item)
 }
 
@@ -131,9 +131,99 @@ func (config *Config) Set(ptr string, doc, item interface{}) (newdoc, old interf
 // Suggested usage,
 //      doc := []interface{}{"hello", "world"}
 //      doc, _ = config.Delete("/1", doc)
-func (config *Config) Delete(ptr string, doc interface{}) (newdoc, deleted interface{}) {
+func (config *Config) DocDelete(ptr string, doc interface{}) (newdoc, deleted interface{}) {
 	segments := segmentsPool.Get()
 	defer segmentsPool.Put(segments)
-	segs := config.ParsePointer(ptr, segments.([]string))
+	segs := config.ParseJsonPointer(ptr, segments.([]string))
 	return del(segs, doc)
+}
+
+// CborEncodeSmallInt encode tiny integers between -23..+23.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) CborEncodeSmallInt(item int8, out []byte) int {
+	if item < 0 {
+		out[0] = hdr(type1, byte(-(item + 1))) // -23 to -1
+	} else {
+		out[0] = hdr(type0, byte(item)) // 0 to 23
+	}
+	return 1
+}
+
+// CborEncodeSimpleType that falls outside golang native type,
+// code points 0..19 and 32..255 are un-assigned.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) CborEncodeSimpleType(typcode byte, out []byte) int {
+	return encodeSimpleType(typcode, out)
+}
+
+// IsIndefiniteBytes can be used to check the shape of cbor
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsIndefiniteBytes(b Indefinite) bool {
+	return b == Indefinite(hdr(type2, indefiniteLength))
+}
+
+// IsIndefiniteText can be used to check the shape of cbor
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsIndefiniteText(b Indefinite) bool {
+	return b == Indefinite(hdr(type3, indefiniteLength))
+}
+
+// IsIndefiniteArray can be used to check the shape of cbor
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsIndefiniteArray(b Indefinite) bool {
+	return b == Indefinite(hdr(type4, indefiniteLength))
+}
+
+// IsIndefiniteMap can be used to check the shape of cbor
+// data-item, like byte-string, string, array or map, that
+// is going to come afterwards.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsIndefiniteMap(b Indefinite) bool {
+	return b == Indefinite(hdr(type5, indefiniteLength))
+}
+
+// IsBreakcodeBytes can be used to check whether chunks of
+// cbor byte-strings are ending with the current byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeBytes(b byte) bool {
+	return b == hdr(type2, itemBreak)
+}
+
+// IsBreakcodeText can be used to check whether chunks of
+// cbor text are ending with the current byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeText(b byte) bool {
+	return b == hdr(type3, itemBreak)
+}
+
+// IsBreakcodeArray can be used to check whether cbor array
+// items of indefinite length are coming to an end with the
+// current byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeArray(b byte) bool {
+	return b == hdr(type4, itemBreak)
+}
+
+// IsBreakcodeMap can be used to check whether cbor map items
+// of indefinite length are coming to an end with the current
+// byte.
+// Can be used by libraries that build on top of cbor.
+func (config *Config) IsBreakcodeMap(b byte) bool {
+	return b == hdr(type5, itemBreak)
+}
+
+// CborEncode golang data into cbor binary.
+func (config *Config) CborEncode(item interface{}, out []byte) int {
+	return encode(item, out, config)
+}
+
+// EncodeMapItems to encode key,value pairs into cbor
+func (config *Config) CborEncodeMapItems(items [][2]interface{}, out []byte) int {
+	return encodeMapItems(items, out, config)
 }
