@@ -1,7 +1,5 @@
 package gson
 
-var defaultStringLength = 1 * 1024 * 1024 // 1MB
-
 // NumberKind to parse JSON numbers.
 type NumberKind byte
 
@@ -32,33 +30,38 @@ const (
 	UnicodeSpace
 )
 
+// CborContainerEncoding, encoding method to use for arrays and maps.
+type CborContainerEncoding byte
+
+const (
+	// LengthPrefix encoding for composite types. That is, for arrays and maps
+	// encode the number of contained items as well.
+	LengthPrefix CborContainerEncoding = iota + 1
+	// Stream encoding for composite types. That is, for arrays and maps
+	// use cbor's indefinite and break-stop to encode member items.
+	Stream
+)
+
 // Config and access gson functions. All APIs to gson is defined via
 // config. To quickly get started, use NewDefaultConfig() that will
 // create a configuration with default values.
 type Config struct {
-	nk        NumberKind
-	ws        SpaceKind
-	maxString int
+	nk NumberKind
+	ws SpaceKind
+	ct CborContainerEncoding
 }
 
 // NewDefaultConfig returns a new configuration with default values.
 // NumberKind: FloatNumber
 // SpaceKind: UnicodeSpace
+// CborContainerEncoding: Stream
 func NewDefaultConfig() *Config {
-	config := NewConfig(FloatNumber, UnicodeSpace)
-	return config.SetMaxStringLength(defaultStringLength)
+	return NewConfig(FloatNumber, UnicodeSpace, Stream)
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	config := &Config{nk: nk, ws: ws}
-	return config.SetMaxStringLength(defaultStringLength)
-}
-
-// SetMaxStringLength allowed for a string value in a JSON document.
-func (config *Config) SetMaxStringLength(length int) *Config {
-	config.maxString = length
-	return config
+func NewConfig(nk NumberKind, ws SpaceKind, ct CborContainerEncoding) *Config {
+	return &Config{nk: nk, ws: ws, ct: ct}
 }
 
 // Parse input JSON text to a single go-native value. If text is
@@ -95,16 +98,20 @@ func (config *Config) EncodePointer(segments []string, pointer []byte) int {
 }
 
 // ListPointers all possible pointers into object.
-func (config *Config) ListPointers(object interface{}) []string {
-	pointers := allpaths(object)
+func (config *Config) ListPointers(object interface{}, pointers []string) []string {
+	prefix := prefixPool.Get()
+	defer prefixPool.Put(prefix)
+	pointers = allpaths(object, pointers, prefix.([]byte))
 	pointers = append(pointers, "")
 	return pointers
 }
 
 // Get field or nested field specified by json pointer.
 func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
-	segments := config.ParsePointer(ptr, []string{})
-	return get(segments, doc)
+	segments := segmentsPool.Get()
+	defer segmentsPool.Put(segments)
+	segs := config.ParsePointer(ptr, segments.([]string))
+	return get(segs, doc)
 }
 
 // Set field or nested field specified by json pointer. While
@@ -113,8 +120,10 @@ func (config *Config) Get(ptr string, doc interface{}) (item interface{}) {
 //      doc := []interface{}{"hello"}
 //      doc, _ = config.Set("/-", doc, "world")
 func (config *Config) Set(ptr string, doc, item interface{}) (newdoc, old interface{}) {
-	segments := config.ParsePointer(ptr, []string{})
-	return set(segments, doc, item)
+	segments := segmentsPool.Get()
+	defer segmentsPool.Put(segments)
+	segs := config.ParsePointer(ptr, segments.([]string))
+	return set(segs, doc, item)
 }
 
 // Delete field or nested field specified by json pointer. While
@@ -123,6 +132,8 @@ func (config *Config) Set(ptr string, doc, item interface{}) (newdoc, old interf
 //      doc := []interface{}{"hello", "world"}
 //      doc, _ = config.Delete("/1", doc)
 func (config *Config) Delete(ptr string, doc interface{}) (newdoc, deleted interface{}) {
-	segments := config.ParsePointer(ptr, []string{})
-	return del(segments, doc)
+	segments := segmentsPool.Get()
+	defer segmentsPool.Put(segments)
+	segs := config.ParsePointer(ptr, segments.([]string))
+	return del(segs, doc)
 }

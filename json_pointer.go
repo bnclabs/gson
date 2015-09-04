@@ -53,7 +53,7 @@ func encodePointer(p []string, out []byte) int {
 	for _, s := range p {
 		out[n] = '/'
 		n++
-		for _, c := range []byte(s) {
+		for _, c := range str2bytes(s) {
 			switch c {
 			case '/':
 				out[n] = '~'
@@ -72,46 +72,49 @@ func encodePointer(p []string, out []byte) int {
 	return n
 }
 
-func allpaths(doc interface{}) []string {
-	pointers := make([]string, 0, 4)
+func allpaths(doc interface{}, pointers []string, prefix []byte) []string {
+	var scratch [64]byte
 
+	n := len(prefix)
+	prefix = append(prefix, '/', '-')
 	switch v := doc.(type) {
 	case []interface{}:
+		pointers = append(pointers, string(prefix)) // new allocation
 		if len(v) > 0 {
 			for i, val := range v {
-				prefix := "/" + strconv.Itoa(i)
-				pointers = append(pointers, prefix)
-				for _, pointer := range allpaths(val) {
-					pointers = append(pointers, prefix+pointer)
-				}
+				prefix = prefix[:n]
+				dst := strconv.AppendInt(scratch[:0], int64(i), 10)
+				prefix = append(prefix, '/')
+				prefix = append(prefix, dst...)
+				pointers = append(pointers, string(prefix)) // new allocation
+				pointers = allpaths(val, pointers, prefix)
 			}
 		}
-		pointers = append(pointers, "/-")
 
 	case map[string]interface{}:
+		pointers = append(pointers, string(prefix)) // new allocation
 		if len(v) > 0 {
 			for key, val := range v {
-				prefix := "/" + escapeJp(key)
-				pointers = append(pointers, prefix)
-				for _, pointer := range allpaths(val) {
-					pointers = append(pointers, prefix+pointer)
-				}
+				prefix = prefix[:n]
+				prefix = append(prefix, '/')
+				prefix = append(prefix, str2bytes(escapeJp(key))...)
+				pointers = append(pointers, string(prefix)) // new allocation
+				pointers = allpaths(val, pointers, prefix)
 			}
 		}
-		pointers = append(pointers, "/-")
 
 	case [][2]interface{}:
+		pointers = append(pointers, string(prefix)) // new allocation
 		if len(v) > 0 {
 			for _, pairs := range v {
+				prefix = prefix[:n]
 				key, val := pairs[0].(string), pairs[1]
-				prefix := "/" + escapeJp(key)
-				pointers = append(pointers, prefix)
-				for _, pointer := range allpaths(val) {
-					pointers = append(pointers, prefix+pointer)
-				}
+				prefix = append(prefix, '/')
+				prefix = append(prefix, str2bytes(escapeJp(key))...)
+				pointers = append(pointers, string(prefix)) // new allocation
+				pointers = allpaths(val, pointers, prefix)
 			}
 		}
-		pointers = append(pointers, "/-")
 
 	}
 	return pointers

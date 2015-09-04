@@ -118,7 +118,7 @@ func TestPointerDel(t *testing.T) {
 	}
 }
 
-func BenchmarkPtrGet(b *testing.B) {
+func BenchmarkPointerGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
 	_, doc := config.Parse(txt)
@@ -128,7 +128,7 @@ func BenchmarkPtrGet(b *testing.B) {
 	}
 }
 
-func BenchmarkPtrSet(b *testing.B) {
+func BenchmarkPointerSet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
 	_, doc := config.Parse(txt)
@@ -138,7 +138,7 @@ func BenchmarkPtrSet(b *testing.B) {
 	}
 }
 
-func BenchmarkPtrDelete(b *testing.B) {
+func BenchmarkPointerDelete(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
 	_, doc := config.Parse(txt)

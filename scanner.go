@@ -49,7 +49,7 @@ var escapeCode = [256]byte{ // TODO: size can be optimized
 
 func scanString(txt string, out []byte) (string, int) {
 	if len(txt) < 2 {
-		panic("gson scanner expectedString")
+		panic("scanner expectedString")
 	}
 
 	e := 1
@@ -68,7 +68,7 @@ func scanString(txt string, out []byte) (string, int) {
 		}
 		e += size
 		if e == len(txt) {
-			panic("gson scanner expectedString")
+			panic("scanner expectedString")
 		}
 	}
 
@@ -90,7 +90,7 @@ loop:
 			if txt[e+1] == 'u' {
 				r := getu4(txt[e:])
 				if r < 0 { // invalid
-					panic("gson scanner expectedString")
+					panic("scanner expectedString")
 				}
 				e += 6
 				if utf16.IsSurrogate(r) {
@@ -113,7 +113,7 @@ loop:
 			}
 
 		case c < ' ': // control character is invalid
-			panic("gson scanner expectedString")
+			panic("scanner expectedString")
 
 		case c < utf8.RuneSelf: // ASCII
 			out[oute] = c
@@ -130,7 +130,7 @@ loop:
 	if out[oute] == '"' {
 		return txt[e:], oute
 	}
-	panic("gson scanner expectedString")
+	panic("scanner expectedString")
 }
 
 // getu4 decodes \uXXXX from the beginning of s, returning the hex value,
@@ -144,4 +144,36 @@ func getu4(s string) rune {
 		return -1
 	}
 	return rune(r)
+}
+
+var intCheck = [256]byte{}
+var digitCheck = [256]byte{}
+var numCheck = [256]byte{}
+var fltCheck = [256]byte{}
+
+func init() {
+	for i := 48; i <= 57; i++ {
+		intCheck[i] = 1
+		numCheck[i] = 1
+	}
+	intCheck['-'] = 1
+	intCheck['+'] = 1
+	intCheck['.'] = 1
+	intCheck['e'] = 1
+	intCheck['E'] = 1
+
+	numCheck['-'] = 1
+	numCheck['+'] = 1
+	numCheck['.'] = 1
+
+	fltCheck['.'] = 1
+	fltCheck['e'] = 1
+	fltCheck['E'] = 1
+
+	for i := 48; i <= 57; i++ {
+		digitCheck[i] = 1
+	}
+	digitCheck['-'] = 1
+	digitCheck['+'] = 1
+	digitCheck['.'] = 1
 }

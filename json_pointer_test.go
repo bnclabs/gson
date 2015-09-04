@@ -63,7 +63,7 @@ func TestTypicalPointers(t *testing.T) {
 	// test list pointers
 	txt := string(testdataFile("testdata/typical.json"))
 	_, value := config.Parse(txt)
-	pointers := config.ListPointers(value)
+	pointers := config.ListPointers(value, make([]string, 0, 1024))
 	sort.Strings(pointers)
 
 	if len(refs) != len(pointers) {
@@ -79,7 +79,7 @@ func TestTypicalPointers(t *testing.T) {
 func BenchmarkParsePtrSmall(b *testing.B) {
 	config := NewDefaultConfig()
 	path := "/foo/g/0"
-	segments := []string{}
+	segments := make([]string, 0, 16)
 	b.SetBytes(int64(len(path)))
 	for i := 0; i < b.N; i++ {
 		config.ParsePointer(path, segments)
@@ -89,7 +89,7 @@ func BenchmarkParsePtrSmall(b *testing.B) {
 func BenchmarkParsePtrMed(b *testing.B) {
 	config := NewDefaultConfig()
 	path := "/foo/g~1n~1r/0/hello"
-	segments := []string{}
+	segments := make([]string, 0, 16)
 	b.SetBytes(int64(len(path)))
 	for i := 0; i < b.N; i++ {
 		config.ParsePointer(path, segments)
@@ -100,11 +100,11 @@ func BenchmarkParsePtrLarge(b *testing.B) {
 	config := NewDefaultConfig()
 	out := make([]byte, 1024)
 	n := config.EncodePointer([]string{"a", "ab", "a~b", "a/b", "a~/~/b"}, out)
-	segments := []string{}
+	segments := make([]string, 0, 16)
 	b.SetBytes(int64(n))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.ParsePointer(string(out[:n]), segments)
+		config.ParsePointer(bytes2str(out[:n]), segments)
 	}
 }
 
@@ -122,9 +122,10 @@ func BenchmarkListPointers(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
 	_, doc := config.Parse(txt)
+	pointers := make([]string, 0, 1024)
 	b.SetBytes(int64(len(txt)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.ListPointers(doc)
+		config.ListPointers(doc, pointers)
 	}
 }

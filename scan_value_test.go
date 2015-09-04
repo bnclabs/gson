@@ -72,7 +72,7 @@ func TestScanIntegers(t *testing.T) {
 
 	ints := []string{"10", "-10"}
 	for _, test := range ints {
-		config := NewConfig(IntNumber, AnsiSpace)
+		config := NewConfig(IntNumber, AnsiSpace, Stream)
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
@@ -82,7 +82,7 @@ func TestScanIntegers(t *testing.T) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
-		config = NewConfig(JsonNumber, AnsiSpace)
+		config = NewConfig(JsonNumber, AnsiSpace, Stream)
 		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
@@ -93,7 +93,7 @@ func TestScanIntegers(t *testing.T) {
 	floats := []string{"0.1", "-0.1", "10.1", "-10.1", "-10E-1",
 		"-10e+1", "10E-1", "10e+1"}
 	for _, test := range floats {
-		config := NewConfig(FloatNumber, AnsiSpace)
+		config := NewConfig(FloatNumber, AnsiSpace, Stream)
 		if err := json.Unmarshal([]byte(test), &ref); err != nil {
 			t.Fatalf("error parsing i/p %q: %v", test, err)
 		}
@@ -108,7 +108,7 @@ func TestScanIntegers(t *testing.T) {
 					t.Errorf("expected panic")
 				}
 			}()
-			config = NewConfig(IntNumber, AnsiSpace)
+			config = NewConfig(IntNumber, AnsiSpace, Stream)
 			if err := json.Unmarshal([]byte(test), &ref); err != nil {
 				t.Fatalf("error parsing i/p %q: %v", test, err)
 			}
@@ -117,7 +117,7 @@ func TestScanIntegers(t *testing.T) {
 			}
 		}()
 
-		config = NewConfig(JsonNumber, AnsiSpace)
+		config = NewConfig(JsonNumber, AnsiSpace, Stream)
 		if remtxt, val := config.Parse(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
@@ -127,7 +127,7 @@ func TestScanIntegers(t *testing.T) {
 }
 
 func TestScanMalformed(t *testing.T) {
-	config := NewConfig(IntNumber, AnsiSpace)
+	config := NewConfig(IntNumber, AnsiSpace, Stream)
 	for _, tcase := range scan_invalid {
 		func() {
 			defer func() {
@@ -165,8 +165,11 @@ func TestScanValues(t *testing.T) {
 }
 
 func TestCodeJSON(t *testing.T) {
-	var ref interface{}
+	if testing.Short() {
+		t.Skip("skipping code.json.gz")
+	}
 
+	var ref interface{}
 	data := testdataFile("testdata/code.json.gz")
 	config := NewDefaultConfig()
 	if err := json.Unmarshal(data, &ref); err != nil {
@@ -233,7 +236,7 @@ func BenchmarkJsonString(b *testing.B) {
 
 func BenchmarkParseArr5(b *testing.B) {
 	txt := ` [null,true,false,10,"tru\"e"]`
-	config := NewConfig(FloatNumber, AnsiSpace)
+	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
 		config.Parse(txt)
@@ -251,7 +254,7 @@ func BenchmarkJsonArr5(b *testing.B) {
 
 func BenchmarkParseMap5(b *testing.B) {
 	txt := `{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`
-	config := NewConfig(FloatNumber, AnsiSpace)
+	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
 		config.Parse(txt)
@@ -269,7 +272,7 @@ func BenchmarkJsonMap5(b *testing.B) {
 
 func BenchmarkParseTypical(b *testing.B) {
 	txt := string(testdataFile("testdata/typical.json"))
-	config := NewConfig(FloatNumber, AnsiSpace)
+	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
 		config.Parse(txt)
@@ -286,8 +289,12 @@ func BenchmarkJsonTypical(b *testing.B) {
 }
 
 func BenchmarkParseCodegz(b *testing.B) {
+	if testing.Short() {
+		b.Skip("skipping code.json.gz")
+	}
+
 	txt := string(testdataFile("testdata/code.json.gz"))
-	config := NewConfig(FloatNumber, AnsiSpace)
+	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
 	for i := 0; i < b.N; i++ {
 		config.Parse(txt)
@@ -295,6 +302,10 @@ func BenchmarkParseCodegz(b *testing.B) {
 }
 
 func BenchmarkJsonCodegz(b *testing.B) {
+	if testing.Short() {
+		b.Skip("skipping code.json.gz")
+	}
+
 	var m map[string]interface{}
 	txt := testdataFile("testdata/code.json.gz")
 	b.SetBytes(int64(len(txt)))

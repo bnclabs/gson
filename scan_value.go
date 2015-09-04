@@ -38,7 +38,8 @@ func scanValue(txt string, config *Config) (string, interface{}) {
 		panic("gson scanner expectedFalse")
 
 	case '"':
-		scratch := make([]byte, config.maxString)
+		scratch := stringPool.Get().([]byte)
+		defer stringPool.Put(scratch)
 		remtxt, n := scanString(txt, scratch)
 		value := string(scratch[:n]) // this will copy the content.
 		return remtxt, value
@@ -49,7 +50,7 @@ func scanValue(txt string, config *Config) (string, interface{}) {
 		} else if txt[0] == ']' {
 			return txt[1:], []interface{}{}
 		}
-		arr := make([]interface{}, 0, len(txt)/10)
+		arr := make([]interface{}, 0, 16)
 		for {
 			var tok interface{}
 			txt, tok = scanValue(txt, config)
@@ -79,7 +80,8 @@ func scanValue(txt string, config *Config) (string, interface{}) {
 		var n int
 
 		m := make(map[string]interface{})
-		scratch := make([]byte, config.maxString)
+		scratch := stringPool.Get().([]byte)
+		defer stringPool.Put(scratch)
 		for {
 			txt, n = scanString(txt, scratch) // empty string is also valid key
 			key := string(scratch[:n])
@@ -116,7 +118,7 @@ func scanNum(txt string, nk NumberKind) (string, interface{}) {
 		return txt[e:], json.Number(txt[s:e])
 
 	case IntNumber:
-		num, err := strconv.Atoi(string(txt[s:e]))
+		num, err := strconv.Atoi(txt[s:e])
 		if err != nil {
 			panic("gson scanner expectedJsonInteger")
 		}
@@ -127,25 +129,4 @@ func scanNum(txt string, nk NumberKind) (string, interface{}) {
 	// valid text to parse.
 	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
 	return txt[e:], num
-}
-
-var intCheck = [256]byte{}
-var digitCheck = [256]byte{}
-
-func init() {
-	for i := 48; i <= 57; i++ {
-		intCheck[i] = 1
-	}
-	intCheck['-'] = 1
-	intCheck['+'] = 1
-	intCheck['.'] = 1
-	intCheck['e'] = 1
-	intCheck['E'] = 1
-
-	for i := 48; i <= 57; i++ {
-		digitCheck[i] = 1
-	}
-	digitCheck['-'] = 1
-	digitCheck['+'] = 1
-	digitCheck['.'] = 1
 }
