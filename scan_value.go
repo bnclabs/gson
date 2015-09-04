@@ -102,36 +102,6 @@ func scanValue(txt string, config *Config) (string, interface{}) {
 	panic("gson scanner expectedToken")
 }
 
-var spaceCode = [256]byte{ // TODO: size can be optimized
-	'\t': 1,
-	'\n': 1,
-	'\v': 1,
-	'\f': 1,
-	'\r': 1,
-	' ':  1,
-}
-
-func skipWS(txt string, ws SpaceKind) string {
-	switch ws {
-	case UnicodeSpace:
-		for i, ch := range txt {
-			if unicode.IsSpace(ch) {
-				continue
-			}
-			return txt[i:]
-		}
-		return ""
-
-	case AnsiSpace:
-		i := 0
-		for i < len(txt) && spaceCode[txt[i]] == 1 {
-			i++
-		}
-		txt = txt[i:]
-	}
-	return txt
-}
-
 func scanNum(txt string, nk NumberKind) (string, interface{}) {
 	s, e, l := 0, 1, len(txt)
 	if len(txt) > 1 {

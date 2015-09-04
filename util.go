@@ -2,6 +2,7 @@ package gson
 
 import "reflect"
 import "unsafe"
+import "unicode"
 
 func bytes2str(bytes []byte) string {
 	if bytes == nil {
@@ -19,4 +20,34 @@ func str2bytes(str string) []byte {
 	st := (*reflect.StringHeader)(unsafe.Pointer(&str))
 	sl := &reflect.SliceHeader{Data: st.Data, Len: st.Len, Cap: st.Len}
 	return *(*[]byte)(unsafe.Pointer(sl))
+}
+
+var spaceCode = [256]byte{
+	'\t': 1,
+	'\n': 1,
+	'\v': 1,
+	'\f': 1,
+	'\r': 1,
+	' ':  1,
+}
+
+func skipWS(txt string, ws SpaceKind) string {
+	switch ws {
+	case UnicodeSpace:
+		for i, ch := range txt {
+			if unicode.IsSpace(ch) {
+				continue
+			}
+			return txt[i:]
+		}
+		return ""
+
+	case AnsiSpace:
+		i := 0
+		for i < len(txt) && spaceCode[txt[i]] == 1 {
+			i++
+		}
+		txt = txt[i:]
+	}
+	return txt
 }
