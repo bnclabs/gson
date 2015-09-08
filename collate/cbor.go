@@ -7,7 +7,7 @@ import "encoding/binary"
 
 //---- collate to cbor
 
-func collate2cbor(code []byte, out []byte, config *Config) (int, int) {
+func collate2cbor(code, out []byte, config *Config) (int, int) {
 	if len(code) == 0 {
 		return 0, 0
 	}
@@ -19,7 +19,7 @@ func collate2cbor(code []byte, out []byte, config *Config) (int, int) {
 		return m + 1, n
 
 	case TypeNull:
-		n := encodeNull(out[n:])
+		n += encodeNull(out[n:])
 		return m + 1, n
 
 	case TypeTrue:
@@ -461,7 +461,7 @@ func collateCborLength(length int, out []byte, config *Config) int {
 	n := 0
 	out[n] = TypeLength
 	n++
-	n += normalizeFloat(int64(length), out[n:], config.nt)
+	n += normalizeFloat(int64(length), out[n:], Int64)
 	out[n] = Terminator
 	n++
 	return n
@@ -504,6 +504,7 @@ func collateCborType4Indefinite(buf, out []byte, config *Config) (m int, n int) 
 		return
 	}()
 
+	m = 1
 	if buf[1] == brkstp {
 		m = 2
 		return
@@ -556,26 +557,6 @@ func collateCborType5Indefinite(buf, out []byte, config *Config) (m int, n int) 
 	ln := 0
 	out[n] = TypeObj
 	n++
-	n_, n__ := n, n
-	if config.propertyLenPrefix {
-		n_, n__ = n+32, n+32 // length encoding can go upto max of 32 bytes
-	}
-
-	defer func() {
-		if config.propertyLenPrefix {
-			n += collateCborLength(ln, out[n:], config)
-		}
-		copy(out[n:], out[n_:n__])
-		n += (n__ - n_)
-		out[n] = Terminator
-		n++
-		return
-	}()
-
-	if buf[1] == brkstp {
-		m = 2
-		return
-	}
 
 	pool := getJsonKeyPool(config.maxKeys)
 	altcode, p := pool.codepool.Get().([]byte), 0
@@ -583,6 +564,7 @@ func collateCborType5Indefinite(buf, out []byte, config *Config) (m int, n int) 
 	refs := pool.keypool.Get().(kvrefs)
 	defer pool.keypool.Put(refs)
 
+	m = 1
 	for buf[m] != brkstp {
 		x, y := collateCbor(buf[m:], altcode[p:], config) // key
 		key := altcode[p : p+y]
@@ -593,6 +575,10 @@ func collateCborType5Indefinite(buf, out []byte, config *Config) (m int, n int) 
 		ln++
 	}
 	sort.Sort(refs[:ln])
+
+	if config.propertyLenPrefix {
+		n += collateCborLength(ln, out[n:], config)
+	}
 	for i := 0; i < ln; i++ {
 		kv := refs[i]
 		copy(out[n:], str2bytes(kv.key))
@@ -600,6 +586,8 @@ func collateCborType5Indefinite(buf, out []byte, config *Config) (m int, n int) 
 		copy(out[n:], kv.code)
 		n += len(kv.code)
 	}
+	out[n] = Terminator
+	n++
 	return
 }
 
