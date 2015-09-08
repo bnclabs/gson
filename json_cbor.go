@@ -286,8 +286,6 @@ func cbor2jsont1info27(buf, out []byte, config *Config) (int, int) {
 
 // this is to support strings that are encoded via golang,
 // but used by cbor->json decoder.
-var xyz = []byte("hello world")
-
 func cbor2jsont3(buf, out []byte, config *Config) (int, int) {
 	ln, n := cborItemLength(buf)
 
@@ -295,7 +293,7 @@ func cbor2jsont3(buf, out []byte, config *Config) (int, int) {
 	config.enc.Encode(bytes2str(buf[n : n+ln]))
 	s := config.buf.Bytes()
 
-	copy(out, config.buf.Bytes()[:len(s)-1]) // -1 to strip \n
+	copy(out, s[:len(s)-1]) // -1 to strip \n
 	return n + ln, len(s) - 1
 }
 
@@ -389,7 +387,7 @@ func tag2json(buf, out []byte, config *Config) (int, int) {
 		config.enc.Encode(bytes2str(buf[n : n+ln]))
 		s := config.buf.Bytes()
 
-		copy(out, config.buf.Bytes()[:len(s)-1])
+		copy(out, s[:len(s)-1])
 		return n + ln, len(s) - 1
 
 	case tagJsonNumber:

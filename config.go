@@ -67,7 +67,7 @@ func NewDefaultConfig() *Config {
 // NewConfig returns a new configuration.
 func NewConfig(nk NumberKind, ws SpaceKind, ct CborContainerEncoding) *Config {
 	config := &Config{nk: nk, ws: ws, ct: ct}
-	config.buf = bytes.NewBuffer(make([]byte, 0, 0))
+	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // TODO: no magic num.
 	config.enc = json.NewEncoder(config.buf)
 	return config
 }
