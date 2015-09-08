@@ -280,7 +280,9 @@ func TestByteString(t *testing.T) {
 	NewDefaultConfig().CborToJson(buf[:n], out)
 }
 
-func BenchmarkParseJsonN(b *testing.B) {
+//---- benchmarks
+
+func BenchmarkJson2CborNull(b *testing.B) {
 	out := make([]byte, 1024)
 	in := "null"
 	config := NewDefaultConfig()
@@ -290,7 +292,7 @@ func BenchmarkParseJsonN(b *testing.B) {
 	}
 }
 
-func BenchmarkToJsonN(b *testing.B) {
+func BenchmarkCbor2JsonNull(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	_, n := config.JsonToCbor("null", buf)
@@ -300,7 +302,7 @@ func BenchmarkToJsonN(b *testing.B) {
 	}
 }
 
-func BenchmarkParseJsonI(b *testing.B) {
+func BenchmarkJson2CborInt(b *testing.B) {
 	out := make([]byte, 1024)
 	in := "123456567"
 	config := NewDefaultConfig()
@@ -310,7 +312,7 @@ func BenchmarkParseJsonI(b *testing.B) {
 	}
 }
 
-func BenchmarkToJsonI(b *testing.B) {
+func BenchmarkCbor2JsonInt(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	_, n := config.JsonToCbor("123456567", buf)
@@ -320,7 +322,7 @@ func BenchmarkToJsonI(b *testing.B) {
 	}
 }
 
-func BenchmarkParseJsonF(b *testing.B) {
+func BenchmarkJson2CborFlt(b *testing.B) {
 	out := make([]byte, 1024)
 	in := "1234.12312"
 	config := NewDefaultConfig()
@@ -330,7 +332,7 @@ func BenchmarkParseJsonF(b *testing.B) {
 	}
 }
 
-func BenchmarkToJsonF(b *testing.B) {
+func BenchmarkCbor2JsonFlt(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	_, n := config.JsonToCbor("1234.12312", buf)
@@ -340,7 +342,7 @@ func BenchmarkToJsonF(b *testing.B) {
 	}
 }
 
-func BenchmarkParseJsonB(b *testing.B) {
+func BenchmarkJson2CborBool(b *testing.B) {
 	out := make([]byte, 1024)
 	in := "false"
 	config := NewDefaultConfig()
@@ -350,7 +352,7 @@ func BenchmarkParseJsonB(b *testing.B) {
 	}
 }
 
-func BenchmarkToJsonB(b *testing.B) {
+func BenchmarkCbor2JsonBool(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	_, n := config.JsonToCbor("false", buf)
@@ -360,7 +362,7 @@ func BenchmarkToJsonB(b *testing.B) {
 	}
 }
 
-func BenchmarkParseJsonS(b *testing.B) {
+func BenchmarkJson2CborStr(b *testing.B) {
 	out := make([]byte, 1024)
 	in := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
 	config := NewDefaultConfig()
@@ -370,7 +372,7 @@ func BenchmarkParseJsonS(b *testing.B) {
 	}
 }
 
-func BenchmarkToJsonS(b *testing.B) {
+func BenchmarkCbor2JsonStr(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	_, n := config.JsonToCbor(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`, buf)
@@ -380,7 +382,7 @@ func BenchmarkToJsonS(b *testing.B) {
 	}
 }
 
-func BenchmarkParseJsonA(b *testing.B) {
+func BenchmarkJson2CborArr(b *testing.B) {
 	out := make([]byte, 1024)
 	in := ` [null,true,false,10,"tru\"e"]`
 	config := NewDefaultConfig()
@@ -390,7 +392,7 @@ func BenchmarkParseJsonA(b *testing.B) {
 	}
 }
 
-func BenchmarkToJsonA(b *testing.B) {
+func BenchmarkCbor2JsonArr(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	config := NewDefaultConfig()
 	_, n := config.JsonToCbor(` [null,true,false,10,"tru\"e"]`, buf)
@@ -400,7 +402,7 @@ func BenchmarkToJsonA(b *testing.B) {
 	}
 }
 
-func BenchmarkParseJsonM(b *testing.B) {
+func BenchmarkJson2CborMap(b *testing.B) {
 	out := make([]byte, 1024)
 	in := `{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`
 	config := NewDefaultConfig()
@@ -409,7 +411,7 @@ func BenchmarkParseJsonM(b *testing.B) {
 		config.JsonToCbor(in, out)
 	}
 }
-func BenchmarkToJsonM(b *testing.B) {
+func BenchmarkCbor2JsonMap(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	in := `{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`
 	config := NewDefaultConfig()

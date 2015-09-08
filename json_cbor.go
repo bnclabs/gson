@@ -286,6 +286,8 @@ func cbor2jsont1info27(buf, out []byte, config *Config) (int, int) {
 
 // this is to support strings that are encoded via golang,
 // but used by cbor->json decoder.
+var xyz = []byte("hello world")
+
 func cbor2jsont3(buf, out []byte, config *Config) (int, int) {
 	ln, n := cborItemLength(buf)
 

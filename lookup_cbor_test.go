@@ -222,7 +222,7 @@ func TestCborDel(t *testing.T) {
 	}
 }
 
-func BenchmarkPtrCborGet(b *testing.B) {
+func BenchmarkCborGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
 
@@ -240,7 +240,7 @@ func BenchmarkPtrCborGet(b *testing.B) {
 	b.SetBytes(int64(p))
 }
 
-func BenchmarkPtrCborSet(b *testing.B) {
+func BenchmarkCborSet(b *testing.B) {
 	//config := NewDefaultConfig()
 	config := NewConfig(FloatNumber, UnicodeSpace, Stream)
 	txt := string(testdataFile("testdata/typical.json"))
@@ -266,7 +266,7 @@ func BenchmarkPtrCborSet(b *testing.B) {
 	b.SetBytes(int64(x + y))
 }
 
-func BenchmarkPtrCborPrepend(b *testing.B) {
+func BenchmarkCborPrepend(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
 

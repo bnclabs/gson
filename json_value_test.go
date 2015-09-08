@@ -183,7 +183,7 @@ func TestCodeJSON(t *testing.T) {
 	}
 }
 
-func BenchmarkScanNumF(b *testing.B) {
+func BenchmarkScanNumFlt(b *testing.B) {
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -191,7 +191,7 @@ func BenchmarkScanNumF(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonNumF(b *testing.B) {
+func BenchmarkUnmarshalFlt(b *testing.B) {
 	var val interface{}
 	in := []byte("100000.23")
 	b.SetBytes(int64(len(in)))
@@ -200,7 +200,7 @@ func BenchmarkJsonNumF(b *testing.B) {
 	}
 }
 
-func BenchmarkScanNumS(b *testing.B) {
+func BenchmarkScanNumJsonNum(b *testing.B) {
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -208,7 +208,7 @@ func BenchmarkScanNumS(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonNumS(b *testing.B) {
+func BenchmarkUnmarshalNum(b *testing.B) {
 	var val interface{}
 	in := []byte("100000.23")
 	b.SetBytes(int64(len(in)))
@@ -226,7 +226,7 @@ func BenchmarkScanString(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonString(b *testing.B) {
+func BenchmarkUnmarshalStr(b *testing.B) {
 	var val interface{}
 	in := []byte(`"汉语 / 漢語; Hàn\b \tyǔ "`)
 	b.SetBytes(int64(len(in)))
@@ -235,7 +235,7 @@ func BenchmarkJsonString(b *testing.B) {
 	}
 }
 
-func BenchmarkParseArr5(b *testing.B) {
+func BenchmarkJson2ValArr5(b *testing.B) {
 	txt := ` [null,true,false,10,"tru\"e"]`
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
@@ -244,7 +244,7 @@ func BenchmarkParseArr5(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonArr5(b *testing.B) {
+func BenchmarkUnmarshalArr5(b *testing.B) {
 	var a []interface{}
 	txt := []byte(` [null,true,false,10,"tru\"e"]`)
 	b.SetBytes(int64(len(txt)))
@@ -253,7 +253,7 @@ func BenchmarkJsonArr5(b *testing.B) {
 	}
 }
 
-func BenchmarkParseMap5(b *testing.B) {
+func BenchmarkJson2ValMap5(b *testing.B) {
 	txt := `{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
@@ -262,7 +262,7 @@ func BenchmarkParseMap5(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonMap5(b *testing.B) {
+func BenchmarkUnmarshalMap5(b *testing.B) {
 	var m map[string]interface{}
 	txt := []byte(`{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`)
 	b.SetBytes(int64(len(txt)))
@@ -271,7 +271,7 @@ func BenchmarkJsonMap5(b *testing.B) {
 	}
 }
 
-func BenchmarkParseTypical(b *testing.B) {
+func BenchmarkJson2ValTyp(b *testing.B) {
 	txt := string(testdataFile("testdata/typical.json"))
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
 	b.SetBytes(int64(len(txt)))
@@ -280,7 +280,7 @@ func BenchmarkParseTypical(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonTypical(b *testing.B) {
+func BenchmarkUnmarshalTyp(b *testing.B) {
 	var m map[string]interface{}
 	txt := testdataFile("testdata/typical.json")
 	b.SetBytes(int64(len(txt)))
@@ -289,7 +289,7 @@ func BenchmarkJsonTypical(b *testing.B) {
 	}
 }
 
-func BenchmarkParseCodegz(b *testing.B) {
+func BenchmarkJson2ValCgz(b *testing.B) {
 	if testing.Short() {
 		b.Skip("skipping code.json.gz")
 	}
@@ -302,7 +302,7 @@ func BenchmarkParseCodegz(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCodegz(b *testing.B) {
+func BenchmarkUnmarshalCgz(b *testing.B) {
 	if testing.Short() {
 		b.Skip("skipping code.json.gz")
 	}

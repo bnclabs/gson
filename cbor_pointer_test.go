@@ -34,7 +34,7 @@ func TestCborPointer(t *testing.T) {
 	}
 }
 
-func BenchmarkPtrJsonCborS(b *testing.B) {
+func BenchmarkJsonPtr2Cbor3(b *testing.B) {
 	config := NewDefaultConfig()
 	jsonptr := []byte("/foo/g/0")
 	out := make([]byte, 1024)
@@ -44,7 +44,7 @@ func BenchmarkPtrJsonCborS(b *testing.B) {
 	}
 }
 
-func BenchmarkPtrJsonCborM(b *testing.B) {
+func BenchmarkJsonPtr2Cbor4(b *testing.B) {
 	config := NewDefaultConfig()
 	jsonptr := []byte("/foo/g~1n~1r/0/hello")
 	out := make([]byte, 1024)
@@ -54,7 +54,7 @@ func BenchmarkPtrJsonCborM(b *testing.B) {
 	}
 }
 
-func BenchmarkPtrJsonCborL(b *testing.B) {
+func BenchmarkJsonPtrCbor5(b *testing.B) {
 	config, out := NewDefaultConfig(), make([]byte, 1024)
 	n := config.ToJsonPointer([]string{"/a", "ab", "a~b", "a/b", "a~/~/b"}, out)
 	jsonptr := make([]byte, 1024)
@@ -67,7 +67,7 @@ func BenchmarkPtrJsonCborL(b *testing.B) {
 	}
 }
 
-func BenchmarkPtrCborJsonL(b *testing.B) {
+func BenchmarkCborJsonPtr5(b *testing.B) {
 	config, out := NewDefaultConfig(), make([]byte, 1024)
 	n := config.ToJsonPointer([]string{"/a", "ab", "a~b", "a/b", "a~/~/b"}, out)
 	jsonptr := make([]byte, 1024)

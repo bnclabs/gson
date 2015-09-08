@@ -76,7 +76,7 @@ func TestTypicalPointers(t *testing.T) {
 	}
 }
 
-func BenchmarkParsePtrSmall(b *testing.B) {
+func BenchmarkParseJsonPtr3(b *testing.B) {
 	config := NewDefaultConfig()
 	path := "/foo/g/0"
 	segments := make([]string, 0, 16)
@@ -86,7 +86,7 @@ func BenchmarkParsePtrSmall(b *testing.B) {
 	}
 }
 
-func BenchmarkParsePtrMed(b *testing.B) {
+func BenchmarkParseJsonPtr4(b *testing.B) {
 	config := NewDefaultConfig()
 	path := "/foo/g~1n~1r/0/hello"
 	segments := make([]string, 0, 16)
@@ -96,7 +96,7 @@ func BenchmarkParsePtrMed(b *testing.B) {
 	}
 }
 
-func BenchmarkParsePtrLarge(b *testing.B) {
+func BenchmarkParseJsonPtr5(b *testing.B) {
 	config := NewDefaultConfig()
 	out := make([]byte, 1024)
 	n := config.ToJsonPointer([]string{"a", "ab", "a~b", "a/b", "a~/~/b"}, out)
@@ -108,7 +108,7 @@ func BenchmarkParsePtrLarge(b *testing.B) {
 	}
 }
 
-func BenchmarkEncPtrLarge(b *testing.B) {
+func BenchmarkToJsonPtr5(b *testing.B) {
 	config := NewDefaultConfig()
 	path := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
 	out := make([]byte, 1024)

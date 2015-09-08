@@ -1,9 +1,9 @@
 package gson
 
 import "testing"
+import "fmt"
 import "reflect"
 import "encoding/json"
-import "fmt"
 import "time"
 import "regexp"
 import "math/big"
@@ -718,7 +718,7 @@ func TestCborPrefix(t *testing.T) {
 
 //---- benchmarks
 
-func BenchmarkEncodeNull(b *testing.B) {
+func BenchmarkVal2CborNull(b *testing.B) {
 	buf := make([]byte, 10)
 	config := NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
@@ -726,7 +726,7 @@ func BenchmarkEncodeNull(b *testing.B) {
 	}
 }
 
-func BenchmarkDecodeNull(b *testing.B) {
+func BenchmarkCbor2ValNull(b *testing.B) {
 	buf := make([]byte, 10)
 	config := NewDefaultConfig()
 	n := value2cbor(nil, buf, config)
@@ -735,15 +735,16 @@ func BenchmarkDecodeNull(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeTrue(b *testing.B) {
+func BenchmarkVal2CborTrue(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(true)
 	for i := 0; i < b.N; i++ {
-		value2cbor(true, buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeTrue(b *testing.B) {
+func BenchmarkCbor2ValTrue(b *testing.B) {
 	buf := make([]byte, 10)
 	config := NewDefaultConfig()
 	n := value2cbor(true, buf, config)
@@ -752,15 +753,16 @@ func BenchmarkDecodeTrue(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeFalse(b *testing.B) {
+func BenchmarkVal2CborFalse(b *testing.B) {
 	buf := make([]byte, 10)
 	config := NewDefaultConfig()
+	val := interface{}(false)
 	for i := 0; i < b.N; i++ {
-		value2cbor(false, buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeFalse(b *testing.B) {
+func BenchmarkCbor2ValFalse(b *testing.B) {
 	buf := make([]byte, 10)
 	config := NewDefaultConfig()
 	n := value2cbor(false, buf, config)
@@ -769,15 +771,16 @@ func BenchmarkDecodeFalse(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeUint8(b *testing.B) {
+func BenchmarkVal2CborUint8(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(uint8(255))
 	for i := 0; i < b.N; i++ {
-		value2cbor(uint8(255), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeUint8(b *testing.B) {
+func BenchmarkCbor2ValUint8(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(uint8(255), buf, config)
@@ -786,15 +789,16 @@ func BenchmarkDecodeUint8(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeInt8(b *testing.B) {
+func BenchmarkVal2CborInt8(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(int8(-128))
 	for i := 0; i < b.N; i++ {
-		value2cbor(int8(-128), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeInt8(b *testing.B) {
+func BenchmarkCbor2ValInt8(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(int8(-128), buf, config)
@@ -803,15 +807,16 @@ func BenchmarkDecodeInt8(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeUint16(b *testing.B) {
+func BenchmarkVal2CborUint16(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(uint16(65535))
 	for i := 0; i < b.N; i++ {
-		value2cbor(uint16(65535), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeUint16(b *testing.B) {
+func BenchmarkCbor2ValUint16(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(uint16(65535), buf, config)
@@ -820,15 +825,16 @@ func BenchmarkDecodeUint16(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeInt16(b *testing.B) {
+func BenchmarkVal2CborInt16(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(int16(-32768))
 	for i := 0; i < b.N; i++ {
-		value2cbor(int16(-32768), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeInt16(b *testing.B) {
+func BenchmarkCbor2ValInt16(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(int16(-32768), buf, config)
@@ -837,15 +843,16 @@ func BenchmarkDecodeInt16(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeUint32(b *testing.B) {
+func BenchmarkVal2CborUint32(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(uint32(4294967295))
 	for i := 0; i < b.N; i++ {
-		value2cbor(uint32(4294967295), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeUint32(b *testing.B) {
+func BenchmarkCbor2ValUint32(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(uint32(4294967295), buf, config)
@@ -854,15 +861,16 @@ func BenchmarkDecodeUint32(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeInt32(b *testing.B) {
+func BenchmarkVal2CborInt32(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(int32(-2147483648))
 	for i := 0; i < b.N; i++ {
-		value2cbor(int32(-2147483648), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeInt32(b *testing.B) {
+func BenchmarkCbor2ValInt32(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(int32(-2147483648), buf, config)
@@ -871,15 +879,16 @@ func BenchmarkDecodeInt32(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeUint64(b *testing.B) {
+func BenchmarkVal2CborUint64(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(uint64(18446744073709551615))
 	for i := 0; i < b.N; i++ {
-		value2cbor(uint64(18446744073709551615), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeUint64(b *testing.B) {
+func BenchmarkCbor2ValUint64(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(uint64(18446744073709551615), buf, config)
@@ -888,15 +897,16 @@ func BenchmarkDecodeUint64(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeInt64(b *testing.B) {
+func BenchmarkVal2CborInt64(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(int64(-2147483648))
 	for i := 0; i < b.N; i++ {
-		value2cbor(int64(-2147483648), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeInt64(b *testing.B) {
+func BenchmarkCbor2ValInt64(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(int64(-2147483648), buf, config)
@@ -905,15 +915,16 @@ func BenchmarkDecodeInt64(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeFlt32(b *testing.B) {
+func BenchmarkVal2CborFlt32(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(float32(10.2))
 	for i := 0; i < b.N; i++ {
-		value2cbor(float32(10.2), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeFlt32(b *testing.B) {
+func BenchmarkCbor2ValFlt32(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(float32(10.2), buf, config)
@@ -922,15 +933,16 @@ func BenchmarkDecodeFlt32(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeFlt64(b *testing.B) {
+func BenchmarkVal2CborFlt64(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	val := interface{}(float64(10.2))
 	for i := 0; i < b.N; i++ {
-		value2cbor(float64(10.2), buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeFlt64(b *testing.B) {
+func BenchmarkCbor2ValFlt64(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor(float64(10.2), buf, config)
@@ -939,16 +951,16 @@ func BenchmarkDecodeFlt64(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeBytes(b *testing.B) {
+func BenchmarkVal2CborBytes(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	bs := []byte("hello world")
+	val := interface{}([]byte("hello world"))
 	for i := 0; i < b.N; i++ {
-		value2cbor(bs, buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeBytes(b *testing.B) {
+func BenchmarkCbor2ValBytes(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor([]byte("hello world"), buf, config)
@@ -957,16 +969,16 @@ func BenchmarkDecodeBytes(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeText(b *testing.B) {
+func BenchmarkVal2CborText(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	text := "hello world"
+	val := interface{}("hello world")
 	for i := 0; i < b.N; i++ {
-		value2cbor(text, buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeText(b *testing.B) {
+func BenchmarkCbor2ValText(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	n := value2cbor("hello world", buf, config)
@@ -975,15 +987,16 @@ func BenchmarkDecodeText(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeArr0(b *testing.B) {
+func BenchmarkVal2CborArr0(b *testing.B) {
 	buf, arr := make([]byte, 1024), make([]interface{}, 0)
 	config := NewDefaultConfig()
+	val := interface{}(arr)
 	for i := 0; i < b.N; i++ {
-		value2cbor(arr, buf, config)
+		value2cbor(val, buf, config)
 	}
 }
 
-func BenchmarkDecodeArr0(b *testing.B) {
+func BenchmarkCbor2ValArr0(b *testing.B) {
 	buf, arr := make([]byte, 1024), make([]interface{}, 0)
 	config := NewDefaultConfig()
 	n := value2cbor(arr, buf, config)
@@ -992,16 +1005,16 @@ func BenchmarkDecodeArr0(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeArr5(b *testing.B) {
+func BenchmarkVal2CborArr5(b *testing.B) {
 	buf := make([]byte, 1024)
 	config := NewDefaultConfig()
-	arr := []interface{}{5, 5.0, "hello world", true, nil}
+	arr := interface{}([]interface{}{5, 5.0, "hello world", true, nil})
 	for i := 0; i < b.N; i++ {
 		value2cbor(arr, buf, config)
 	}
 }
 
-func BenchmarkDecodeArr5(b *testing.B) {
+func BenchmarkCbor2ValArr5(b *testing.B) {
 	buf := make([]byte, 1024)
 	config := NewDefaultConfig()
 	arr := []interface{}{5, 5.0, "hello world", true, nil}
@@ -1011,16 +1024,16 @@ func BenchmarkDecodeArr5(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeMap0(b *testing.B) {
+func BenchmarkVal2CborMap0(b *testing.B) {
 	buf := make([]byte, 1024)
 	config := NewDefaultConfig()
-	m := make([][2]interface{}, 0)
+	m := interface{}(make([][2]interface{}, 0))
 	for i := 0; i < b.N; i++ {
 		value2cbor(m, buf, config)
 	}
 }
 
-func BenchmarkDecodeMap0(b *testing.B) {
+func BenchmarkCbor2ValMap0(b *testing.B) {
 	buf := make([]byte, 1024)
 	config := NewDefaultConfig()
 	m := make([][2]interface{}, 0)
@@ -1030,20 +1043,20 @@ func BenchmarkDecodeMap0(b *testing.B) {
 	}
 }
 
-func BenchmarkEncodeMap5(b *testing.B) {
+func BenchmarkVal2CborMap5(b *testing.B) {
 	buf := make([]byte, 1024)
 	config := NewDefaultConfig()
-	m := [][2]interface{}{
+	m := interface{}([][2]interface{}{
 		[2]interface{}{"key0", 5}, [2]interface{}{"key1", 5.0},
 		[2]interface{}{"key2", "hello world"},
 		[2]interface{}{"key3", true}, [2]interface{}{"key4", nil},
-	}
+	})
 	for i := 0; i < b.N; i++ {
 		value2cbor(m, buf, config)
 	}
 }
 
-func BenchmarkDecodeMap5(b *testing.B) {
+func BenchmarkCbor2ValMap5(b *testing.B) {
 	buf := make([]byte, 1024)
 	config := NewDefaultConfig()
 	m := [][2]interface{}{
