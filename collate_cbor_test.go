@@ -13,7 +13,7 @@ func TestCbor2CollateNil(t *testing.T) {
 	inp, ref := "null", `\x02\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	out, coll := make([]byte, 1024), make([]byte, 1024)
-	_, n := scanToken(inp, coll, config)
+	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -28,7 +28,7 @@ func TestCbor2CollateTrue(t *testing.T) {
 	inp, ref := "true", `\x04\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	out, coll := make([]byte, 1024), make([]byte, 1024)
-	_, n := scanToken(inp, coll, config)
+	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -43,7 +43,7 @@ func TestCbor2CollateFalse(t *testing.T) {
 	inp, ref := "false", `\x03\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	out, coll := make([]byte, 1024), make([]byte, 1024)
-	_, n := scanToken(inp, coll, config)
+	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -59,7 +59,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	out, coll := make([]byte, 1024), make([]byte, 1024)
 	// as float64 using Float64 configuration
 	inp, refcode := "10.2", `\x05>>2102-\x00`
-	_, n := scanToken(inp, coll, config.NumberKind(Float64))
+	_, n := json2collate(inp, coll, config.NumberKind(Float64))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -71,7 +71,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as int64 using Float64 configuration
 	inp, refcode = "10", `\x05>>21-\x00`
-	_, n = scanToken(inp, coll, config.NumberKind(Float64))
+	_, n = json2collate(inp, coll, config.NumberKind(Float64))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -83,7 +83,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as float64 using Int64 configuration
 	inp, refcode = "10.2", `\x05>>210\x00`
-	_, n = scanToken(inp, coll, config.NumberKind(Int64))
+	_, n = json2collate(inp, coll, config.NumberKind(Int64))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -95,7 +95,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as int64 using Int64 configuration
 	inp, refcode = "10", `\x05>>210\x00`
-	_, n = scanToken(inp, coll, config.NumberKind(Int64))
+	_, n = json2collate(inp, coll, config.NumberKind(Int64))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -107,7 +107,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as float64 using Decimal configuration
 	inp, refcode = "0.2", `\x05>2-\x00`
-	_, n = scanToken(inp, coll, config.NumberKind(Decimal))
+	_, n = json2collate(inp, coll, config.NumberKind(Decimal))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -123,7 +123,7 @@ func TestCbor2CollateString(t *testing.T) {
 	out, coll := make([]byte, 1024), make([]byte, 1024)
 	// empty string
 	inp, refcode := `""`, `\x06\x00\x00`
-	_, n := scanToken(inp, coll, config)
+	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -135,7 +135,7 @@ func TestCbor2CollateString(t *testing.T) {
 
 	// normal string
 	inp, refcode = `"hello world"`, `\x06hello world\x00\x00`
-	_, n = scanToken(inp, coll, config)
+	_, n = json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -147,7 +147,7 @@ func TestCbor2CollateString(t *testing.T) {
 
 	// missing string
 	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`
-	_, n = scanToken(inp, coll, config)
+	_, n = json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -160,7 +160,7 @@ func TestCbor2CollateString(t *testing.T) {
 	// missing string without doMissing configuration
 	inp = fmt.Sprintf(`"%s"`, MissingLiteral)
 	refcode = `\x06~[]{}falsenilNA~\x00\x00`
-	_, n = scanToken(inp, coll, config.UseMissing(false))
+	_, n = json2collate(inp, coll, config.UseMissing(false))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -195,7 +195,7 @@ func TestCbor2CollateArray(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[1].(string)
-		_, n := scanToken(inp, coll, config)
+		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = collateCbor(code[:n], out, config)
@@ -210,7 +210,7 @@ func TestCbor2CollateArray(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
-		_, n := scanToken(inp, coll, config)
+		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = collateCbor(code[:n], out, config)
@@ -240,7 +240,7 @@ func TestCbor2CollateMap(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[1].(string)
-		_, n := scanToken(inp, coll, config)
+		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = collateCbor(code[:n], out, config)
@@ -255,7 +255,7 @@ func TestCbor2CollateMap(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
-		_, n := scanToken(inp, coll, config.SortbyPropertyLen(false))
+		_, n := json2collate(inp, coll, config.SortbyPropertyLen(false))
 
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = collateCbor(code[:n], out, config)
@@ -270,14 +270,14 @@ func TestCbor2CollateMap(t *testing.T) {
 //func BenchmarkJsonCollNil(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    for i := 0; i < b.N; i++ {
-//        scanToken("null", code, config)
+//        json2collate("null", code, config)
 //    }
 //}
 //
 //func BenchmarkCollJsonNil(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
-//    _, n := scanToken("null", code, config)
+//    _, n := json2collate("null", code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -286,14 +286,14 @@ func TestCbor2CollateMap(t *testing.T) {
 //func BenchmarkJsonCollTrue(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    for i := 0; i < b.N; i++ {
-//        scanToken("true", code, config)
+//        json2collate("true", code, config)
 //    }
 //}
 //
 //func BenchmarkCollJsonTrue(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
-//    _, n := scanToken("true", code, config)
+//    _, n := json2collate("true", code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -302,14 +302,14 @@ func TestCbor2CollateMap(t *testing.T) {
 //func BenchmarkJsonCollFalse(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    for i := 0; i < b.N; i++ {
-//        scanToken("false", code, config)
+//        json2collate("false", code, config)
 //    }
 //}
 //
 //func BenchmarkCollJsonFalse(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
-//    _, n := scanToken("false", code, config)
+//    _, n := json2collate("false", code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -318,14 +318,14 @@ func TestCbor2CollateMap(t *testing.T) {
 //func BenchmarkJsonCollF64(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    for i := 0; i < b.N; i++ {
-//        scanToken("10.121312213123123", code, config)
+//        json2collate("10.121312213123123", code, config)
 //    }
 //}
 //
 //func BenchmarkCollJsonF64(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
-//    _, n := scanToken("10.121312213123123", code, config)
+//    _, n := json2collate("10.121312213123123", code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -334,14 +334,14 @@ func TestCbor2CollateMap(t *testing.T) {
 //func BenchmarkJsonCollI64(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    for i := 0; i < b.N; i++ {
-//        scanToken("123456789", code, config)
+//        json2collate("123456789", code, config)
 //    }
 //}
 //
 //func BenchmarkCollJsonI64(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
-//    _, n := scanToken("123456789", code, config)
+//    _, n := json2collate("123456789", code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -351,7 +351,7 @@ func TestCbor2CollateMap(t *testing.T) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    inp := fmt.Sprintf(`"%s"`, MissingLiteral)
 //    for i := 0; i < b.N; i++ {
-//        scanToken(inp, code, config)
+//        json2collate(inp, code, config)
 //    }
 //}
 //
@@ -359,7 +359,7 @@ func TestCbor2CollateMap(t *testing.T) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
 //    inp := fmt.Sprintf(`"%s"`, MissingLiteral)
-//    _, n := scanToken(inp, code, config)
+//    _, n := json2collate(inp, code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -368,14 +368,14 @@ func TestCbor2CollateMap(t *testing.T) {
 //func BenchmarkJsonCollStr(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    for i := 0; i < b.N; i++ {
-//        scanToken(`"hello world"`, code, config)
+//        json2collate(`"hello world"`, code, config)
 //    }
 //}
 //
 //func BenchmarkCollJsonStr(b *testing.B) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
-//    _, n := scanToken(`"hello world"`, code, config)
+//    _, n := json2collate(`"hello world"`, code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -385,7 +385,7 @@ func TestCbor2CollateMap(t *testing.T) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    inp := `[null,true,false,"hello world",10.23122312]`
 //    for i := 0; i < b.N; i++ {
-//        scanToken(inp, code, config)
+//        json2collate(inp, code, config)
 //    }
 //}
 //
@@ -393,7 +393,7 @@ func TestCbor2CollateMap(t *testing.T) {
 //    code, config := make([]byte, 1024), NewDefaultConfig()
 //    txt := make([]byte, 1024)
 //    inp := `[null,true,false,"hello world",10.23122312]`
-//    _, n := scanToken(inp, code, config)
+//    _, n := json2collate(inp, code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }
@@ -404,7 +404,7 @@ func TestCbor2CollateMap(t *testing.T) {
 //    inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 //        `"key5":10.23122312}`
 //    for i := 0; i < b.N; i++ {
-//        scanToken(inp, code, config)
+//        json2collate(inp, code, config)
 //    }
 //}
 //
@@ -413,7 +413,7 @@ func TestCbor2CollateMap(t *testing.T) {
 //    txt := make([]byte, 1024)
 //    inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 //        `"key5":10.23122312}`
-//    _, n := scanToken(inp, code, config)
+//    _, n := json2collate(inp, code, config)
 //    for i := 0; i < b.N; i++ {
 //        collate2json(code[:n], txt, config)
 //    }

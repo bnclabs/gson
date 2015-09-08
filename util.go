@@ -3,6 +3,7 @@ package gson
 import "reflect"
 import "unsafe"
 import "sort"
+import "strconv"
 
 func bytes2str(bytes []byte) string {
 	if bytes == nil {
@@ -60,89 +61,89 @@ func GolangMap2cborMap(value interface{}) interface{} {
 	return value
 }
 
-//// numbers can be encoded as integers, or as small-decimal,
-//// or as floating-point - normalizeFloat() takes the number as
-//// float64 or int64 and based on the configuration encodes it
-//// integer or small-decimal or floating-point.
-//func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
-//	var num [64]byte
-//	switch nt {
-//	case FloatNumber:
-//		v, ok := value.(float64)
-//		if !ok {
-//			v = float64(value.(int64))
-//		}
-//		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
-//		return collateFloat(bs, code)
-//
-//	case IntNumber:
-//		v, ok := value.(int64)
-//		if !ok {
-//			v = int64(value.(float64))
-//		}
-//		bs := strconv.AppendInt(num[:0], v, 10)
-//		return collateInt(bs, code)
-//
-//	case Decimal:
-//		v, ok := value.(float64)
-//		if !ok {
-//			v = float64(value.(int64))
-//		}
-//		if -1 >= v || v <= 1 {
-//			bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
-//			return collateSD(bs, code)
-//		}
-//		panic("collate invalid decimal")
-//	}
-//	panic("collate invalid number configuration")
-//}
-//
-//func denormalizeFloat(code []byte, nt NumberKind) interface{} {
-//	var scratch [64]byte
-//	switch nt {
-//	case FloatNumber:
-//		_, y := collated2Float(code, scratch[:])
-//		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-//		if err != nil {
-//			panic(err)
-//		}
-//		return res
-//
-//	case IntNumber:
-//		_, y := collated2Int(code, scratch[:])
-//		i, err := strconv.Atoi(bytes2str(scratch[:y]))
-//		if err != nil {
-//			panic(err)
-//		}
-//		return int64(i)
-//
-//	case Decimal:
-//		_, y := collated2SD(code, scratch[:])
-//		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-//		if err != nil {
-//			panic(err)
-//		}
-//		return res
-//	}
-//	panic("collate gson denormalizeFloat bad configuration")
-//}
-//
-//func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
-//	switch nt {
-//	case FloatNumber:
-//		_, y := collated2Float(code, text[:])
-//		return y
-//
-//	case IntNumber:
-//		_, y := collated2Int(code, text[:])
-//		return y
-//
-//	case Decimal:
-//		_, y := collated2SD(code, text[:])
-//		return y
-//	}
-//	panic("collate gson denormalizeFloat bad configuration")
-//}
+// numbers can be encoded as integers, or as small-decimal,
+// or as floating-point - normalizeFloat() takes the number as
+// float64 or int64 and based on the configuration encodes it
+// integer or small-decimal or floating-point.
+func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
+	var num [64]byte
+	switch nt {
+	case FloatNumber:
+		v, ok := value.(float64)
+		if !ok {
+			v = float64(value.(int64))
+		}
+		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
+		return collateFloat(bs, code)
+
+	case IntNumber:
+		v, ok := value.(int64)
+		if !ok {
+			v = int64(value.(float64))
+		}
+		bs := strconv.AppendInt(num[:0], v, 10)
+		return collateInt(bs, code)
+
+	case Decimal:
+		v, ok := value.(float64)
+		if !ok {
+			v = float64(value.(int64))
+		}
+		if -1 >= v || v <= 1 {
+			bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
+			return collateSD(bs, code)
+		}
+		panic("collate invalid decimal")
+	}
+	panic("collate invalid number configuration")
+}
+
+func denormalizeFloat(code []byte, nt NumberKind) interface{} {
+	var scratch [64]byte
+	switch nt {
+	case FloatNumber:
+		_, y := collated2Float(code, scratch[:])
+		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+		if err != nil {
+			panic(err)
+		}
+		return res
+
+	case IntNumber:
+		_, y := collated2Int(code, scratch[:])
+		i, err := strconv.Atoi(bytes2str(scratch[:y]))
+		if err != nil {
+			panic(err)
+		}
+		return int64(i)
+
+	case Decimal:
+		_, y := collated2SD(code, scratch[:])
+		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+		if err != nil {
+			panic(err)
+		}
+		return res
+	}
+	panic("collate gson denormalizeFloat bad configuration")
+}
+
+func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
+	switch nt {
+	case FloatNumber:
+		_, y := collated2Float(code, text[:])
+		return y
+
+	case IntNumber:
+		_, y := collated2Int(code, text[:])
+		return y
+
+	case Decimal:
+		_, y := collated2SD(code, text[:])
+		return y
+	}
+	panic("collate gson denormalizeFloat bad configuration")
+}
 
 // sort JSON property objects based on property names.
 func sortProps(props map[string]interface{}) []string {

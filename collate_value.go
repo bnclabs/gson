@@ -1,5 +1,3 @@
-// +build ignore
-
 package gson
 
 import "strconv"
@@ -26,7 +24,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(obj, code[n:], config.nt)
+		n += normalizeFloat(obj, code[n:], config.nk)
 		code[n] = Terminator
 		n++
 		return n
@@ -35,7 +33,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(obj, code[n:], config.nt)
+		n += normalizeFloat(obj, code[n:], config.nk)
 		code[n] = Terminator
 		n++
 		return n
@@ -133,7 +131,7 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 
 	case TypeNumber:
 		m := getDatum(code[n:])
-		f := denormalizeFloat(code[n:n+m-1], config.nt) // -1 to skip terminator
+		f := denormalizeFloat(code[n:n+m-1], config.nk) // -1 to skip terminator
 		return f, n + m
 
 	case TypeString:

@@ -1,11 +1,7 @@
-// +build ignore
-
 package gson
 
 import "testing"
 import "fmt"
-
-//import "reflect"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -13,7 +9,7 @@ func TestJson2CollateNil(t *testing.T) {
 	inp, ref := "null", `\x02\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -29,7 +25,7 @@ func TestJson2CollateTrue(t *testing.T) {
 	inp, ref := "true", `\x04\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -45,7 +41,7 @@ func TestJson2CollateFalse(t *testing.T) {
 	inp, ref := "false", `\x03\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -60,9 +56,9 @@ func TestJson2CollateFalse(t *testing.T) {
 func TestJson2CollateNumber(t *testing.T) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	// as float64 using Float64 configuration
+	// as float64 using FloatNumber configuration
 	inp, refcode, reftxt := "10.2", `\x05>>2102-\x00`, "+0.102e+2"
-	_, n := scanToken(inp, code, config.NumberKind(Float64))
+	_, n := json2collate(inp, code, config.NumberKind(FloatNumber))
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -72,9 +68,9 @@ func TestJson2CollateNumber(t *testing.T) {
 	if s := string(txt[:y]); s != reftxt || n != x {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", reftxt, n, s, x)
 	}
-	// as int64 using Float64 configuration
+	// as int64 using FloatNumber configuration
 	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "+0.1e+2"
-	_, n = scanToken(inp, code, config.NumberKind(Float64))
+	_, n = json2collate(inp, code, config.NumberKind(FloatNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -85,9 +81,9 @@ func TestJson2CollateNumber(t *testing.T) {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", reftxt, n, s, x)
 	}
 
-	// as float64 using Int64 configuration
+	// as float64 using IntNumber configuration
 	inp, refcode, reftxt = "10.2", `\x05>>210\x00`, "+10"
-	_, n = scanToken(inp, code, config.NumberKind(Int64))
+	_, n = json2collate(inp, code, config.NumberKind(IntNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -97,9 +93,9 @@ func TestJson2CollateNumber(t *testing.T) {
 	if s := string(txt[:y]); s != reftxt || n != x {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", reftxt, n, s, x)
 	}
-	// as int64 using Int64 configuration
+	// as int64 using IntNumber configuration
 	inp, refcode, reftxt = "10", `\x05>>210\x00`, "+10"
-	_, n = scanToken(inp, code, config.NumberKind(Int64))
+	_, n = json2collate(inp, code, config.NumberKind(IntNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -112,7 +108,7 @@ func TestJson2CollateNumber(t *testing.T) {
 
 	// as float64 using Decimal configuration
 	inp, refcode, reftxt = "0.2", `\x05>2-\x00`, "+0.2"
-	_, n = scanToken(inp, code, config.NumberKind(Decimal))
+	_, n = json2collate(inp, code, config.NumberKind(Decimal))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -129,7 +125,7 @@ func TestJson2CollateNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		scanToken("10", code, config.NumberKind(Decimal))
+		json2collate("10", code, config.NumberKind(Decimal))
 	}()
 	func() {
 		defer func() {
@@ -137,7 +133,7 @@ func TestJson2CollateNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		scanToken("10.2", code, config.NumberKind(Decimal))
+		json2collate("10.2", code, config.NumberKind(Decimal))
 	}()
 }
 
@@ -146,7 +142,7 @@ func TestJson2CollateString(t *testing.T) {
 	txt := make([]byte, 1024)
 	// empty string
 	inp, refcode, reftxt := `""`, `\x06\x00\x00`, `""`
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -159,7 +155,7 @@ func TestJson2CollateString(t *testing.T) {
 	// normal string
 	inp, refcode = `"hello world"`, `\x06hello world\x00\x00`
 	reftxt = `"hello world"`
-	_, n = scanToken(inp, code, config)
+	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -172,7 +168,7 @@ func TestJson2CollateString(t *testing.T) {
 	// missing string
 	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`
 	reftxt = string(MissingLiteral)
-	_, n = scanToken(inp, code, config)
+	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -185,7 +181,7 @@ func TestJson2CollateString(t *testing.T) {
 	// missing string without doMissing configuration
 	inp = fmt.Sprintf(`"%s"`, MissingLiteral)
 	refcode, reftxt = `\x06~[]{}falsenilNA~\x00\x00`, inp
-	_, n = scanToken(inp, code, config.UseMissing(false))
+	_, n = json2collate(inp, code, config.UseMissing(false))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -222,7 +218,7 @@ func TestJson2CollateArray(t *testing.T) {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[1].(string)
 		reftxt := tcase[3].(string)
-		_, n := scanToken(inp, code, config)
+		_, n := json2collate(inp, code, config)
 		out := fmt.Sprintf("%q", code[:n])
 		out = out[1 : len(out)-1]
 		if out != refcode {
@@ -239,7 +235,7 @@ func TestJson2CollateArray(t *testing.T) {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
 		reftxt := tcase[3].(string)
-		_, n := scanToken(inp, code, config)
+		_, n := json2collate(inp, code, config)
 		out := fmt.Sprintf("%q", code[:n])
 		out = out[1 : len(out)-1]
 		if out != refcode {
@@ -271,7 +267,7 @@ func TestJson2CollateMap(t *testing.T) {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[1].(string)
 		reftxt := tcase[3].(string)
-		_, n := scanToken(inp, code, config)
+		_, n := json2collate(inp, code, config)
 		out := fmt.Sprintf("%q", code[:n])
 		out = out[1 : len(out)-1]
 		if out != refcode {
@@ -288,7 +284,7 @@ func TestJson2CollateMap(t *testing.T) {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
 		reftxt := tcase[3].(string)
-		_, n := scanToken(inp, code, config.SortbyPropertyLen(false))
+		_, n := json2collate(inp, code, config.SortbyPropertyLen(false))
 		out := fmt.Sprintf("%q", code[:n])
 		out = out[1 : len(out)-1]
 		if out != refcode {
@@ -304,14 +300,14 @@ func TestJson2CollateMap(t *testing.T) {
 func BenchmarkJsonCollNil(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		scanToken("null", code, config)
+		json2collate("null", code, config)
 	}
 }
 
 func BenchmarkCollJsonNil(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken("null", code, config)
+	_, n := json2collate("null", code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -320,14 +316,14 @@ func BenchmarkCollJsonNil(b *testing.B) {
 func BenchmarkJsonCollTrue(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		scanToken("true", code, config)
+		json2collate("true", code, config)
 	}
 }
 
 func BenchmarkCollJsonTrue(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken("true", code, config)
+	_, n := json2collate("true", code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -336,14 +332,14 @@ func BenchmarkCollJsonTrue(b *testing.B) {
 func BenchmarkJsonCollFalse(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		scanToken("false", code, config)
+		json2collate("false", code, config)
 	}
 }
 
 func BenchmarkCollJsonFalse(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken("false", code, config)
+	_, n := json2collate("false", code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -352,14 +348,14 @@ func BenchmarkCollJsonFalse(b *testing.B) {
 func BenchmarkJsonCollF64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		scanToken("10.121312213123123", code, config)
+		json2collate("10.121312213123123", code, config)
 	}
 }
 
 func BenchmarkCollJsonF64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken("10.121312213123123", code, config)
+	_, n := json2collate("10.121312213123123", code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -368,14 +364,14 @@ func BenchmarkCollJsonF64(b *testing.B) {
 func BenchmarkJsonCollI64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		scanToken("123456789", code, config)
+		json2collate("123456789", code, config)
 	}
 }
 
 func BenchmarkCollJsonI64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken("123456789", code, config)
+	_, n := json2collate("123456789", code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -385,7 +381,7 @@ func BenchmarkJsonCollMiss(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
 	for i := 0; i < b.N; i++ {
-		scanToken(inp, code, config)
+		json2collate(inp, code, config)
 	}
 }
 
@@ -393,7 +389,7 @@ func BenchmarkCollJsonMiss(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -402,14 +398,14 @@ func BenchmarkCollJsonMiss(b *testing.B) {
 func BenchmarkJsonCollStr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
-		scanToken(`"hello world"`, code, config)
+		json2collate(`"hello world"`, code, config)
 	}
 }
 
 func BenchmarkCollJsonStr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
-	_, n := scanToken(`"hello world"`, code, config)
+	_, n := json2collate(`"hello world"`, code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -419,7 +415,7 @@ func BenchmarkJsonCollArr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	inp := `[null,true,false,"hello world",10.23122312]`
 	for i := 0; i < b.N; i++ {
-		scanToken(inp, code, config)
+		json2collate(inp, code, config)
 	}
 }
 
@@ -427,7 +423,7 @@ func BenchmarkCollJsonArr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	inp := `[null,true,false,"hello world",10.23122312]`
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}
@@ -438,7 +434,7 @@ func BenchmarkJsonCollMap(b *testing.B) {
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
 	for i := 0; i < b.N; i++ {
-		scanToken(inp, code, config)
+		json2collate(inp, code, config)
 	}
 }
 
@@ -447,7 +443,7 @@ func BenchmarkCollJsonMap(b *testing.B) {
 	txt := make([]byte, 1024)
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
-	_, n := scanToken(inp, code, config)
+	_, n := json2collate(inp, code, config)
 	for i := 0; i < b.N; i++ {
 		collate2json(code[:n], txt, config)
 	}

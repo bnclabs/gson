@@ -1,14 +1,9 @@
-// +build ignore
-
 package gson
 
 import "strconv"
 import "sort"
-import "unicode"
-import "unicode/utf8"
-import "unicode/utf16"
 
-func scanToken(txt string, code []byte, config *Config) (string, int) {
+func json2collate(txt string, code []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.ws)
 	if len(txt) < 1 {
 		panic("collate scanner jsonEmpty")
@@ -19,7 +14,7 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 	if digitCheck[txt[0]] == 1 {
 		code[n] = TypeNumber
 		n++
-		m, remtxt := scanNum(txt, code[n:], config.nt)
+		m, remtxt := jsonnum2collate(txt, code[n:], config.nk)
 		n += m
 		code[n] = Terminator
 		n++
@@ -49,17 +44,20 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 		panic("collate scanner expectedFalse")
 
 	case '"':
-		s, remtxt := scanString(str2bytes(txt))
-		if config.doMissing && MissingLiteral.Equal(bytes2str(s)) {
+		scratch := stringPool.Get().([]byte)
+		defer stringPool.Put(scratch)
+
+		txt, p := scanString(txt, scratch)
+		if config.doMissing && MissingLiteral.Equal(bytes2str(scratch[:p])) {
 			code[n], code[n+1] = TypeMissing, Terminator
-			return bytes2str(remtxt), n + 2
+			return txt, n + 2
 		}
 		code[n] = TypeString
 		n++
-		n += suffixEncodeString(s, code[n:])
+		n += suffixEncodeString(scratch[:p], code[n:])
 		code[n] = Terminator
 		n++
-		return bytes2str(remtxt), n
+		return txt, n
 
 	case '[':
 		var x int
@@ -76,7 +74,7 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 
 		} else if txt[0] != ']' {
 			for {
-				txt, x = scanToken(txt, code[n__:], config)
+				txt, x = json2collate(txt, code[n__:], config)
 				n__ += x
 				ln++
 				if txt = skipWS(txt, config.ws); len(txt) == 0 {
@@ -103,6 +101,7 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 
 	case '{':
 		var x int
+
 		code[n] = TypeObj
 		n++
 
@@ -119,14 +118,16 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 		} else if txt[0] != '}' {
 			for {
 				// NOTE: empty string is also a valid key
-				key, remtxt := scanString(str2bytes(txt))
-				txt = bytes2str(remtxt)
+				txt, x = scanString(txt, altcode[p:])
 				if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 					panic("collate scanner expectedColon")
 				}
+				key := bytes2str(altcode[p : p+x])
+				p += x
+
 				txt = skipWS(txt[1:], config.ws)
-				txt, x = scanToken(txt, altcode[p:], config)
-				refs[ln] = kvref{bytes2str(key), altcode[p : p+x]}
+				txt, x = json2collate(txt, altcode[p:], config)
+				refs[ln] = kvref{key, altcode[p : p+x]}
 				p += x
 				ln++
 
@@ -158,37 +159,7 @@ func scanToken(txt string, code []byte, config *Config) (string, int) {
 	panic("collate scanner expectedToken")
 }
 
-var spaceCode = [256]byte{ // TODO: size can be optimized
-	'\t': 1,
-	'\n': 1,
-	'\v': 1,
-	'\f': 1,
-	'\r': 1,
-	' ':  1,
-}
-
-func skipWS(txt string, ws SpaceKind) string {
-	switch ws {
-	case UnicodeSpace:
-		for i, ch := range txt {
-			if unicode.IsSpace(ch) {
-				continue
-			}
-			return txt[i:]
-		}
-		return ""
-
-	case AnsiSpace:
-		i := 0
-		for i < len(txt) && spaceCode[txt[i]] == 1 {
-			i++
-		}
-		txt = txt[i:]
-	}
-	return txt
-}
-
-func scanNum(txt string, code []byte, nk NumberKind) (int, string) {
+func jsonnum2collate(txt string, code []byte, nk NumberKind) (int, string) {
 	s, e, l := 0, 1, len(txt)
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
@@ -200,118 +171,6 @@ func scanNum(txt string, code []byte, nk NumberKind) (int, string) {
 	}
 	n := normalizeFloat(f, code, nk)
 	return n, txt[e:]
-}
-
-var escapeCode = [256]byte{ // TODO: size can be optimized
-	'"':  '"',
-	'\\': '\\',
-	'/':  '/',
-	'\'': '\'',
-	'b':  '\b',
-	'f':  '\f',
-	'n':  '\n',
-	'r':  '\r',
-	't':  '\t',
-}
-
-func scanString(txt []byte) ([]byte, []byte) {
-	if len(txt) < 2 {
-		panic("collate scanner expectedString")
-	}
-
-	e := 1
-	for txt[e] != '"' {
-		c := txt[e]
-		if c == '\\' || c == '"' || c < ' ' {
-			break
-		}
-		if c < utf8.RuneSelf {
-			e++
-			continue
-		}
-		r, size := utf8.DecodeRune(txt[e:])
-		if r == utf8.RuneError && size == 1 {
-			break
-		}
-		e += size
-		if e == len(txt) {
-			panic("collate scanner expectedString")
-		}
-	}
-
-	if txt[e] == '"' { // done we have nothing to unquote
-		return txt[1:e], txt[e+1:]
-	}
-
-	out := make([]byte, (len(txt)+2)*utf8.UTFMax)
-	oute := copy(out, txt[:e]) // copy so far
-
-loop:
-	for e < len(txt) {
-		switch c := txt[e]; {
-		case c == '"':
-			out[oute] = c
-			e++
-			break loop
-
-		case c == '\\':
-			if txt[e+1] == 'u' {
-				r := getu4(txt[e:])
-				if r < 0 { // invalid
-					panic("collate scanner expectedString")
-				}
-				e += 6
-				if utf16.IsSurrogate(r) {
-					nextr := getu4(txt[e:])
-					dec := utf16.DecodeRune(r, nextr)
-					if dec != unicode.ReplacementChar { // A valid pair consume
-						oute += utf8.EncodeRune(out[oute:], dec)
-						e += 6
-						break loop
-					}
-					// Invalid surrogate; fall back to replacement rune.
-					r = unicode.ReplacementChar
-				}
-				oute += utf8.EncodeRune(out[oute:], r)
-
-			} else { // escaped with " \ / ' b f n r t
-				out[oute] = escapeCode[txt[e+1]]
-				e += 2
-				oute++
-			}
-
-		case c < ' ': // control character is invalid
-			panic("collate scanner expectedString")
-
-		case c < utf8.RuneSelf: // ASCII
-			out[oute] = c
-			oute++
-			e++
-
-		default: // coerce to well-formed UTF-8
-			r, size := utf8.DecodeRune(txt[e:])
-			e += size
-			oute += utf8.EncodeRune(out[oute:], r)
-		}
-	}
-
-	if out[oute] == '"' {
-		return out[1:oute], txt[e:]
-	}
-	panic("collate scanner expectedString")
-}
-
-// getu4 decodes \uXXXX from the beginning of s, returning the hex value,
-// or it returns -1.
-func getu4(s []byte) rune {
-	if len(s) < 6 || s[0] != '\\' || s[1] != 'u' {
-		return -1
-	}
-	r, err := strconv.ParseUint(string(s[2:6]), 16, 64)
-	if err != nil {
-		return -1
-	}
-	return rune(r)
 }
 
 func collate2json(code []byte, text []byte, config *Config) (int, int) {
@@ -339,7 +198,7 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 
 	case TypeNumber:
 		x := getDatum(code[n:])
-		y := denormalizeFloatTojson(code[n:n+x-1], text, config.nt)
+		y := denormalizeFloatTojson(code[n:n+x-1], text, config.nk)
 		return n + x, m + y
 
 	case TypeString:
@@ -403,25 +262,4 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		return n, m
 	}
 	panic("collate decode to json invalid binary")
-}
-
-var intCheck = [256]byte{}
-var digitCheck = [256]byte{}
-
-func init() {
-	for i := 48; i <= 57; i++ {
-		intCheck[i] = 1
-	}
-	intCheck['-'] = 1
-	intCheck['+'] = 1
-	intCheck['.'] = 1
-	intCheck['e'] = 1
-	intCheck['E'] = 1
-
-	for i := 48; i <= 57; i++ {
-		digitCheck[i] = 1
-	}
-	digitCheck['-'] = 1
-	digitCheck['+'] = 1
-	digitCheck['.'] = 1
 }

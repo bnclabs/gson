@@ -1,5 +1,3 @@
-// +build ignore
-
 package gson
 
 import "testing"
@@ -49,9 +47,9 @@ func TestGson2CollateFalse(t *testing.T) {
 
 func TestGson2CollateNumber(t *testing.T) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
-	// as float64 using Float64 configuration
+	// as float64 using FloatNumber configuration
 	obj, ref := float64(10.2), `\x05>>2102-\x00`
-	n := gson2collate(obj, code, config.NumberKind(Float64))
+	n := gson2collate(obj, code, config.NumberKind(FloatNumber))
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -61,9 +59,9 @@ func TestGson2CollateNumber(t *testing.T) {
 	if !reflect.DeepEqual(val, obj) || n != m {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
 	}
-	// as int64 using Float64 configuration
+	// as int64 using FloatNumber configuration
 	obj1, ref := int64(10), `\x05>>21-\x00`
-	n = gson2collate(obj1, code, config.NumberKind(Float64))
+	n = gson2collate(obj1, code, config.NumberKind(FloatNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -74,9 +72,9 @@ func TestGson2CollateNumber(t *testing.T) {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", obj1, n, val, m)
 	}
 
-	// as float64 using Int64 configuration
+	// as float64 using IntNumber configuration
 	obj, ref = float64(10.2), `\x05>>210\x00`
-	n = gson2collate(obj, code, config.NumberKind(Int64))
+	n = gson2collate(obj, code, config.NumberKind(IntNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -86,9 +84,9 @@ func TestGson2CollateNumber(t *testing.T) {
 	if !reflect.DeepEqual(val, int64(10)) || n != m {
 		t.Errorf("expected {%v,%v}, got {%T,%v}", obj, n, val, m)
 	}
-	// as int64 using Int64 configuration
+	// as int64 using IntNumber configuration
 	obj1, ref = int64(10), `\x05>>210\x00`
-	n = gson2collate(obj1, code, config.NumberKind(Int64))
+	n = gson2collate(obj1, code, config.NumberKind(IntNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {

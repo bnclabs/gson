@@ -187,7 +187,7 @@ func BenchmarkScanNumFlt(b *testing.B) {
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		scanNum(in, FloatNumber)
+		jsonnum2value(in, FloatNumber)
 	}
 }
 
@@ -204,7 +204,7 @@ func BenchmarkScanNumJsonNum(b *testing.B) {
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		scanNum(in, JsonNumber)
+		jsonnum2value(in, JsonNumber)
 	}
 }
 
