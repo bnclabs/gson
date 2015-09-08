@@ -6,7 +6,7 @@ import "testing"
 func BenchmarkMarshalJson(b *testing.B) {
 	txt := string(testdataFile("testdata/typical.json"))
 	config := NewConfig(FloatNumber, AnsiSpace, Stream)
-	_, val := config.ParseToValue(txt)
+	_, val := config.JsonToValue(txt)
 	b.SetBytes(int64(len(txt)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

@@ -14,7 +14,7 @@ func TestPointerGet(t *testing.T) {
 		[2]interface{}{"/dict/b", 20.0},
 	}
 	config := NewDefaultConfig()
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	t.Logf("%v", doc)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
@@ -55,7 +55,7 @@ func TestPointerSet(t *testing.T) {
 		[3]interface{}{"/dict/b", 2.0, 20.0},
 	}
 	config := NewDefaultConfig()
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		t.Logf("%v", ptr)
@@ -103,7 +103,7 @@ func TestPointerDel(t *testing.T) {
 	}
 	var val interface{}
 	config := NewDefaultConfig()
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		doc, val = config.DocDelete(ptr, doc)
@@ -112,7 +112,7 @@ func TestPointerDel(t *testing.T) {
 		}
 	}
 	remtxt := `{"arr": [], "-": [], "dict":{}}"`
-	_, remdoc := config.ParseToValue(remtxt)
+	_, remdoc := config.JsonToValue(remtxt)
 	if !reflect.DeepEqual(doc, remdoc) {
 		t.Errorf("expected %v, got %v", remdoc, doc)
 	}
@@ -121,7 +121,7 @@ func TestPointerDel(t *testing.T) {
 func BenchmarkPointerGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.DocGet("/projects/Sherri/members/0", doc)
@@ -131,7 +131,7 @@ func BenchmarkPointerGet(b *testing.B) {
 func BenchmarkPointerSet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.DocSet("/projects/Sherri/members/0", doc, 10)
@@ -141,7 +141,7 @@ func BenchmarkPointerSet(b *testing.B) {
 func BenchmarkPointerDelete(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.DocDelete("/projects/Sherri/members/0", doc)

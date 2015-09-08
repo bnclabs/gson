@@ -62,7 +62,7 @@ func TestTypicalPointers(t *testing.T) {
 
 	// test list pointers
 	txt := string(testdataFile("testdata/typical.json"))
-	_, value := config.ParseToValue(txt)
+	_, value := config.JsonToValue(txt)
 	pointers := config.ListPointers(value, make([]string, 0, 1024))
 	sort.Strings(pointers)
 
@@ -121,7 +121,7 @@ func BenchmarkEncPtrLarge(b *testing.B) {
 func BenchmarkListPointers(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.ParseToValue(txt)
+	_, doc := config.JsonToValue(txt)
 	pointers := make([]string, 0, 1024)
 	b.SetBytes(int64(len(txt)))
 	b.ResetTimer()
