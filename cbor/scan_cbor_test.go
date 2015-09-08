@@ -23,7 +23,7 @@ func TestScanEmpty(t *testing.T) {
 			t.Errorf("expected panic")
 		}
 	}()
-	scanToken("", out, config)
+	scanToCbor("", out, config)
 }
 
 func TestJson(t *testing.T) {
@@ -88,18 +88,18 @@ func TestScanNumber(t *testing.T) {
 	code, out := make([]byte, 1024), make([]byte, 1024)
 	// test JsonNumber
 	ref := []byte{216, 38, 98, 49, 48}
-	_, n := scanNum("10", JsonNumber, code)
+	_, n := scanNumToCbor("10", code, JsonNumber)
 	if bytes.Compare(code[:n], ref) != 0 {
 		t.Errorf("expected %v, got %v", ref, code[:n])
 	}
 	// test FloatNumber
-	_, n = scanNum("10", FloatNumber, code)
+	_, n = scanNumToCbor("10", code, FloatNumber)
 	_, y := decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10.00000000000000000000" {
 		t.Errorf("expected %q, got %q", "10.00000000000000000000", s)
 	}
 	// test IntNumber
-	_, n = scanNum("10", IntNumber, code)
+	_, n = scanNumToCbor("10", code, IntNumber)
 	_, y = decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
 		t.Errorf("expected %q, got %q", "10", s)
@@ -111,34 +111,34 @@ func TestScanNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		scanNum("10.2", IntNumber, out)
+		scanNumToCbor("10.2", out, IntNumber)
 	}()
 	// test FloatNumber32
-	_, n = scanNum("10", FloatNumber32, code)
+	_, n = scanNumToCbor("10", code, FloatNumber32)
 	_, y = decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10.000000" {
 		t.Errorf("expected %q, got %q", "10.000000", s)
 	}
 	// test SmartNumber32
-	_, n = scanNum("10.2", SmartNumber32, code)
+	_, n = scanNumToCbor("10.2", code, SmartNumber32)
 	_, y = decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10.200000" {
 		t.Errorf("expected %q, got %q", "10.200000", s)
 	}
 	// test SmartNumber32 (integer)
-	_, n = scanNum("10", SmartNumber32, code)
+	_, n = scanNumToCbor("10", code, SmartNumber32)
 	_, y = decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
 		t.Errorf("expected %q, got %q", "10", s)
 	}
 	// test SmartNumber
-	_, n = scanNum("10.2", SmartNumber, code)
+	_, n = scanNumToCbor("10.2", code, SmartNumber)
 	_, y = decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10.19999999999999928946" {
 		t.Errorf("expected %q, got %q", "10.19999999999999928946", s)
 	}
 	// test SmartNumber (integer)
-	_, n = scanNum("10", SmartNumber32, code)
+	_, n = scanNumToCbor("10", code, SmartNumber32)
 	_, y = decodeTojson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
 		t.Errorf("expected %q, got %q", "10", s)
@@ -209,7 +209,7 @@ func TestScanBadToken(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		scanToken(in, out, config)
+		scanToCbor(in, out, config)
 	}
 	testcases := []string{
 		"    ",

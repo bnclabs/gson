@@ -391,7 +391,7 @@ func TestCborMaster(t *testing.T) {
 		}
 
 		value, _ := config.Decode(cborout[:n])     // cbor -> golang
-		p := config.Encode(value, cborout)         // golang -> cbor
+		p := config.CborEncode(value, cborout)     // golang -> cbor
 		_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
 		if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
 			t.Fatalf("error parsing %q: %v", jsonout[:q], err)
@@ -425,7 +425,7 @@ func TestCborSmartnum(t *testing.T) {
 	}
 
 	value, _ := config.Decode(cborout[:n])     // cbor -> golang
-	p := config.Encode(value, cborout)         // golang -> cbor
+	p := config.CborEncode(value, cborout)     // golang -> cbor
 	_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
 	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
 		t.Fatalf("error parsing %v", err)
@@ -481,7 +481,7 @@ func TestCborCodeJSON(t *testing.T) {
 
 	// cbor->golang->cbor->json->golang
 	value, _ := config.Decode(cborout[:n])     // cbor -> golang
-	p := config.Encode(value, cborout)         // golang -> cbor
+	p := config.CborEncode(value, cborout)     // golang -> cbor
 	_, q = config.ToJson(cborout[:p], jsonout) // cbor -> json
 	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
 		t.Fatalf("error parsing %v", err)
@@ -525,7 +525,7 @@ func TestDateTime(t *testing.T) {
 		t.Errorf("time.Parse() failed: %v", err)
 	}
 
-	n := config.Encode(ref, buf)
+	n := config.CborEncode(ref, buf)
 	item, m := config.Decode(buf[:n])
 	if n != 28 || n != m {
 		t.Errorf("expected %v got %v %v", 28, n, m)
@@ -553,7 +553,7 @@ func TestEpoch(t *testing.T) {
 	// positive and negative epoch
 	for _, val := range [2]int64{1000000, -100000} {
 		ref := Epoch(val)
-		n := config.Encode(ref, buf)
+		n := config.CborEncode(ref, buf)
 		item, m := config.Decode(buf[:n])
 		if n != 6 || n != m {
 			t.Errorf("expected %v got %v %v", 6, n, m)
@@ -592,7 +592,7 @@ func TestEpochMicro(t *testing.T) {
 	// positive and negative epoch in uS.
 	for _, val := range [2]float64{1000000.123456, -100000.123456} {
 		ref := EpochMicro(val)
-		n := config.Encode(ref, buf)
+		n := config.CborEncode(ref, buf)
 		item, m := config.Decode(buf[:n])
 		if n != 10 || n != m {
 			t.Errorf("expected %v got %v %v", 10, n, m)
@@ -611,7 +611,7 @@ func TestBigNum(t *testing.T) {
 		bigx := big.NewInt(9223372036854775807)
 		bigy := big.NewInt(val)
 		bigz := big.NewInt(0).Mul(bigx, bigy)
-		n := config.Encode(bigz, buf)
+		n := config.CborEncode(bigz, buf)
 		item, m := config.Decode(buf[:n])
 		if n != 12 || n != m {
 			t.Errorf("expected %v got %v %v", 12, n, m)
@@ -633,7 +633,7 @@ func TestDecimalFraction(t *testing.T) {
 		DecimalFraction([2]interface{}{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
-		n := config.Encode(ref, buf)
+		n := config.CborEncode(ref, buf)
 		item, m := config.Decode(buf[:n])
 		if n != 3 || n != m {
 			t.Errorf("expected %v got %v %v", 3, n, m)
@@ -654,7 +654,7 @@ func TestBigFloat(t *testing.T) {
 		BigFloat([2]interface{}{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
-		n := config.Encode(ref, buf)
+		n := config.CborEncode(ref, buf)
 		item, m := config.Decode(buf[:n])
 		if n != 3 || n != m {
 			t.Errorf("expected %v got %v %v", 3, n, m)
@@ -669,7 +669,7 @@ func TestCbor(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	ref := Cbor([]byte("hello world"))
-	n := config.Encode(ref, buf)
+	n := config.CborEncode(ref, buf)
 	item, m := config.Decode(buf[:n])
 	if n != 14 || n != m {
 		t.Errorf("expected %v got %v %v", 14, n, m)
@@ -686,7 +686,7 @@ func TestRegexp(t *testing.T) {
 	if err != nil {
 		t.Errorf("compiling regex")
 	}
-	n := config.Encode(ref, buf)
+	n := config.CborEncode(ref, buf)
 	item, m := config.Decode(buf[:n])
 	if n != 14 || n != m {
 		t.Errorf("expected %v got %v %v", 14, n, m)
@@ -711,7 +711,7 @@ func TestCborPrefix(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	ref := CborPrefix([]byte("hello world"))
-	n := config.Encode(ref, buf)
+	n := config.CborEncode(ref, buf)
 	item, m := config.Decode(buf[:n])
 	if n != 15 || n != m {
 		t.Errorf("expected %v got %v %v", 15, n, m)

@@ -8,46 +8,17 @@ import "github.com/prataprc/gson"
 
 var _ = fmt.Sprintf("dummy")
 
-var tcasesJSONPointers = []string{
-	``,
-	`/`,
-	"/foo",
-	"/foo/0",
-	"/a~1b",
-	"/c%d",
-	"/e^f",
-	"/g|h",
-	"/i\\j",
-	"/k\"l",
-	"/ ",
-	"/m~0n",
-	"/g~1n~1r",
-	"/g/n/r",
-}
-
-func TestCborPointer(t *testing.T) {
-	buf, out := make([]byte, 1024), make([]byte, 1024)
-	config := NewDefaultConfig()
-	for _, tcase := range tcasesJSONPointers {
-		t.Logf(tcase)
-		n := config.FromJsonPointer([]byte(tcase), buf)
-		m := config.ToJsonPointer(buf[:n], out)
-		if result := string(out[:m]); tcase != result {
-			t.Errorf("expected %q, got %q", tcase, result)
-		}
-	}
-}
-
 func TestCborTypicalPointers(t *testing.T) {
 	config := NewDefaultConfig()
 	cborptr := make([]byte, 1024)
 	cbordoc := make([]byte, 1024*1024)
 	item := make([]byte, 10*1024)
+	pointers := make([]string, 0, 1024)
 
 	gsonc := gson.NewDefaultConfig()
 	txt := string(testdataFile("../testdata/typical.json"))
 	_, doc := gsonc.Parse(txt)
-	pointers := gsonc.ListPointers(doc)
+	pointers = gsonc.ListPointers(doc, pointers)
 	_, n := config.ParseJson(txt, cbordoc)
 	cbordoc = cbordoc[:n]
 	for _, ptr := range pointers {
@@ -122,7 +93,7 @@ func TestCborSet(t *testing.T) {
 	for _, tcase := range testcases {
 		ptr := tcase[0].(string)
 		t.Logf("%v", ptr)
-		n := config.Encode(tcase[1], item)
+		n := config.CborEncode(tcase[1], item)
 		item = item[:n]
 
 		config.FromJsonPointer([]byte(ptr), cborptr)
@@ -160,21 +131,23 @@ func TestCborPrepend(t *testing.T) {
 	// prepend "/", {"b": 20}
 	t.Logf(`prepend "/", {"b": 20}`)
 	i := config.FromJsonPointer([]byte(""), cborptr)
-	m := config.EncodeMapItems([][2]interface{}{[2]interface{}{"b", 20}}, item)
+	m := config.CborEncodeMapItems(
+		[][2]interface{}{[2]interface{}{"b", 20}}, item)
 	n = config.Prepend(cbordoc[:n], cborptr[:i], item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
 	// prepend "/arr" 3.0
 	t.Logf(`prepend "/arr" 3.0`)
 	config.FromJsonPointer([]byte("/arr"), cborptr)
-	m = config.Encode(float64(3.0), item)
+	m = config.CborEncode(float64(3.0), item)
 	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
 	// prepend "/dict/c" 30.0
 	t.Logf(`prepend "/dict/c" 30.0`)
 	config.FromJsonPointer([]byte("/dict"), cborptr)
-	m = config.EncodeMapItems([][2]interface{}{[2]interface{}{"c", 30}}, item)
+	m = config.CborEncodeMapItems(
+		[][2]interface{}{[2]interface{}{"c", 30}}, item)
 	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
@@ -191,7 +164,7 @@ func TestCborPrepend(t *testing.T) {
 	ftxt = `[1,2,3]`
 	_, n = config.ParseJson(txt, cbordoc)
 	config.FromJsonPointer([]byte(""), cborptr)
-	m = config.Encode(float64(3.0), item)
+	m = config.CborEncode(float64(3.0), item)
 	n = config.Prepend(cbordoc[:n], cborptr, item[:m], cbordocnew)
 	copy(cbordoc, cbordocnew[:n])
 
@@ -250,56 +223,6 @@ func TestCborDel(t *testing.T) {
 	}
 }
 
-func BenchmarkPtrJsonCborS(b *testing.B) {
-	config := NewDefaultConfig()
-	jsonptr := []byte("/foo/g/0")
-	out := make([]byte, 1024)
-	b.SetBytes(int64(len(jsonptr)))
-	for i := 0; i < b.N; i++ {
-		config.FromJsonPointer(jsonptr, out)
-	}
-}
-
-func BenchmarkPtrJsonCborM(b *testing.B) {
-	config := NewDefaultConfig()
-	jsonptr := []byte("/foo/g~1n~1r/0/hello")
-	out := make([]byte, 1024)
-	b.SetBytes(int64(len(jsonptr)))
-	for i := 0; i < b.N; i++ {
-		config.FromJsonPointer(jsonptr, out)
-	}
-}
-
-func BenchmarkPtrJsonCborL(b *testing.B) {
-	gsonc, out := gson.NewDefaultConfig(), make([]byte, 1024)
-	n := gsonc.EncodePointer([]string{"/a", "ab", "a~b", "a/b", "a~/~/b"}, out)
-	jsonptr := make([]byte, 1024)
-	copy(jsonptr, out[:n])
-
-	config := NewDefaultConfig()
-	b.SetBytes(int64(n))
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		config.FromJsonPointer(jsonptr[:n], out)
-	}
-}
-
-func BenchmarkPtrCborJsonL(b *testing.B) {
-	gsonc, out := gson.NewDefaultConfig(), make([]byte, 1024)
-	n := gsonc.EncodePointer([]string{"/a", "ab", "a~b", "a/b", "a~/~/b"}, out)
-	jsonptr := make([]byte, 1024)
-	copy(jsonptr, out[:n]) // shall copy out to new location
-
-	config := NewDefaultConfig()
-	m := config.FromJsonPointer(jsonptr[:n], out)
-
-	jsonout := make([]byte, 1024)
-	b.SetBytes(int64(m))
-	for i := 0; i < b.N; i++ {
-		config.ToJsonPointer(out[:m], jsonout)
-	}
-}
-
 func BenchmarkPtrCborGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("../testdata/typical.json"))
@@ -331,7 +254,7 @@ func BenchmarkPtrCborSet(b *testing.B) {
 
 	item := make([]byte, 10*1024)
 	itemref := 10
-	p := config.Encode(itemref, item)
+	p := config.CborEncode(itemref, item)
 
 	newdoc := make([]byte, 10*1024)
 	old := make([]byte, 10*1024)
@@ -355,7 +278,7 @@ func BenchmarkPtrCborPrepend(b *testing.B) {
 	q := config.FromJsonPointer([]byte("/projects/Sherri/members/0"), cborptr2)
 	item := make([]byte, 10*1024)
 	refitem := 10.0
-	m := config.Encode(refitem, item)
+	m := config.CborEncode(refitem, item)
 
 	newdoc := make([]byte, 10*1024)
 

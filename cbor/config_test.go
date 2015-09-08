@@ -9,7 +9,7 @@ var _ = fmt.Sprintf("dummy")
 func TestConfig(t *testing.T) {
 	config := NewDefaultConfig()
 	ref, buf := 10.2, make([]byte, 16)
-	n := config.Encode(ref, buf)
+	n := config.CborEncode(ref, buf)
 	val, m := config.Decode(buf[:n])
 	if n != m {
 		t.Errorf("expected %v got %v", n, m)
@@ -23,7 +23,7 @@ func TestCborSmallInt(t *testing.T) {
 	config := NewDefaultConfig()
 
 	for i := int8(-24); i < 24; i++ { // SmallInt is -24..23
-		if n := config.EncodeSmallInt(i, buf); n != 1 {
+		if n := config.CborEncodeSmallInt(i, buf); n != 1 {
 			t.Errorf("fail Encode SmallInt: %v want 1", n)
 		} else if item, m := config.Decode(buf); m != 1 {
 			t.Errorf("fail decode on SmallInt len: %v want 1", m)
@@ -41,7 +41,7 @@ func TestCborSimpleType(t *testing.T) {
 
 	// test encoding type7/simpletype < 20
 	for i := 0; i < 20; i++ {
-		if n := config.EncodeSimpleType(byte(i), buf); n != 1 {
+		if n := config.CborEncodeSimpleType(byte(i), buf); n != 1 {
 			t.Errorf("fail Encode simple-type: %v want 1", n)
 		} else if item, m := config.Decode(buf); m != 1 {
 			t.Errorf("fail decode on simple-type: %v want 1", m)
@@ -54,7 +54,7 @@ func TestCborSimpleType(t *testing.T) {
 
 	// test decoding typ7/simpletype extended byte
 	for i := 32; i < 255; i++ {
-		n := config.EncodeSimpleType(byte(i), buf)
+		n := config.CborEncodeSimpleType(byte(i), buf)
 		item, m := config.Decode(buf)
 		if n != m || item.(byte) != byte(i) {
 			t.Errorf("fail codec simpletype extended: %v %v %v", n, m, item)
@@ -67,7 +67,7 @@ type testLocal byte
 func TestUndefined(t *testing.T) {
 	config := NewDefaultConfig()
 	ref, buf := Undefined(simpleUndefined), make([]byte, 16)
-	n := config.Encode(ref, buf)
+	n := config.CborEncode(ref, buf)
 	val, m := config.Decode(buf[:n])
 	if n != m {
 		t.Errorf("expected %v got %v", n, m)
@@ -81,7 +81,7 @@ func TestUndefined(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config.Encode(testLocal(10), buf)
+		config.CborEncode(testLocal(10), buf)
 	}()
 }
 

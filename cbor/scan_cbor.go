@@ -1,7 +1,6 @@
 package cbor
 
 import "strconv"
-import "unicode"
 import "math"
 import "encoding/binary"
 
@@ -9,7 +8,7 @@ var nullStr = "null"
 var trueStr = "true"
 var falseStr = "false"
 
-func scanToken(txt string, out []byte, config *Config) (string, int) {
+func scanToCbor(txt string, out []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.ws)
 
 	if len(txt) < 1 {
@@ -17,7 +16,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 	}
 
 	if numCheck[txt[0]] == 1 {
-		return scanNum(txt, config.nk, out)
+		return scanNumToCbor(txt, out, config.nk)
 	}
 
 	switch txt[0] {
@@ -43,7 +42,10 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 		panic("cbor scanner expected false")
 
 	case '"':
-		return scanString(txt, out)
+		n := encodeTag(uint64(tagJsonString), out)
+		txt, x := scanString(txt, out[n+16:]) // 16 reserved for cbor hdr
+		n += encodeText(bytes2str(out[n+32:n+32+x]), out[n:])
+		return txt, n
 
 	case '[':
 		if config.ct == LengthPrefix {
@@ -58,7 +60,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			return txt[1:], n
 		}
 		for {
-			txt, m = scanToken(txt, out[n:], config)
+			txt, m = scanToCbor(txt, out[n:], config)
 			n += m
 			if txt = skipWS(txt, config.ws); len(txt) == 0 {
 				panic("cbor scanner expected ']'")
@@ -93,7 +95,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 				panic("cbor scanner expected property colon")
 			}
-			txt, m = scanToken(skipWS(txt[1:], config.ws), out[n:], config)
+			txt, m = scanToCbor(skipWS(txt[1:], config.ws), out[n:], config)
 			n += m
 
 			if txt = skipWS(txt, config.ws); len(txt) == 0 {
@@ -114,35 +116,7 @@ func scanToken(txt string, out []byte, config *Config) (string, int) {
 	}
 }
 
-var spaceCode = [256]byte{ // TODO: size can be optimized
-	'\t': 1,
-	'\n': 1,
-	'\v': 1,
-	'\f': 1,
-	'\r': 1,
-	' ':  1,
-}
-
-func skipWS(txt string, ws SpaceKind) string {
-	switch ws {
-	case UnicodeSpace:
-		for i, ch := range txt {
-			if unicode.IsSpace(ch) {
-				continue
-			}
-			return txt[i:]
-		}
-		return ""
-
-	case AnsiSpace:
-		for spaceCode[txt[0]] == 1 {
-			txt = txt[1:]
-		}
-	}
-	return txt
-}
-
-func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
+func scanNumToCbor(txt string, out []byte, nk NumberKind) (string, int) {
 	s, e, l, flt := 0, 1, len(txt), false
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
@@ -204,28 +178,6 @@ func scanNum(txt string, nk NumberKind, out []byte) (string, int) {
 	}
 	n := encodeInt64(int64(num), out)
 	return txt[e:], n
-}
-
-func scanString(txt string, out []byte) (string, int) {
-	if len(txt) < 2 {
-		panic("cbor scanner expected string")
-	}
-
-	skipchar := false
-	for off, ch := range txt[1:] {
-		if skipchar {
-			skipchar = false
-			continue
-		} else if ch == '\\' {
-			skipchar = true
-		} else if ch == '"' {
-			end := off + 2
-			n := encodeTag(uint64(tagJsonString), out)
-			n += encodeText(txt[1:end-1], out[n:])
-			return txt[end:], n
-		}
-	}
-	panic("cbor scanner expected string")
 }
 
 //---- CBOR to JSON convertor
@@ -576,28 +528,4 @@ func init() {
 	cborTojson[hdr(type7, 30)] = makePanic(msg)
 	msg = "cbor->json simple-type break-code not supported"
 	cborTojson[hdr(type7, itemBreak)] = makePanic(msg)
-}
-
-var intCheck = [256]byte{}
-var numCheck = [256]byte{}
-var fltCheck = [256]byte{}
-
-func init() {
-	for i := 48; i <= 57; i++ {
-		intCheck[i] = 1
-		numCheck[i] = 1
-	}
-	intCheck['-'] = 1
-	intCheck['+'] = 1
-	intCheck['.'] = 1
-	intCheck['e'] = 1
-	intCheck['E'] = 1
-
-	numCheck['-'] = 1
-	numCheck['+'] = 1
-	numCheck['.'] = 1
-
-	fltCheck['.'] = 1
-	fltCheck['e'] = 1
-	fltCheck['E'] = 1
 }
