@@ -7,20 +7,28 @@ import "encoding/json"
 type NumberKind byte
 
 const (
-	// SmartNumber will either use str.Atoi to parse JSON numbers
-	// or fall back to float32.
+	// SmartNumber32 will treat number as either integer or
+	// fall back to float32.
 	SmartNumber32 NumberKind = iota + 1
-	// SmartNumber will either use str.Atoi to parse JSON numbers
-	// or fall back to float64.
+
+	// SmartNumber will treat number as either integer or
+	// fall back to float64.
 	SmartNumber
-	// IntNumber will use str.Atoi to parse JSON numbers.
+
+	// IntNumber will treat number as integer.
 	IntNumber
-	// FloatNumber will use 32 bit strconv.ParseFloat to parse JSON numbers.
+
+	// FloatNumber will treat number as float32.
 	FloatNumber32
-	// FloatNumber will use 64 bit strconv.ParseFloat to parse JSON numbers.
+
+	// FloatNumber will treat number as float64.
 	FloatNumber
+
 	// JsonNumber will store number in JSON encoding.
 	JsonNumber
+
+	// Decimal to collate input numbers as N, where -1 < N < 1
+	Decimal
 )
 
 // SpaceKind to skip white-spaces in JSON text.
@@ -29,6 +37,7 @@ type SpaceKind byte
 const (
 	// AnsiSpace will skip white space characters defined by ANSI spec.
 	AnsiSpace SpaceKind = iota + 1
+
 	// UnicodeSpace will skip white space characters defined by Unicode spec.
 	UnicodeSpace
 )
@@ -40,6 +49,7 @@ const (
 	// LengthPrefix encoding for composite types. That is, for arrays and maps
 	// encode the number of contained items as well.
 	LengthPrefix CborContainerEncoding = iota + 1
+
 	// Stream encoding for composite types. That is, for arrays and maps
 	// use cbor's indefinite and break-stop to encode member items.
 	Stream
@@ -49,26 +59,101 @@ const (
 // config. To quickly get started, use NewDefaultConfig() that will
 // create a configuration with default values.
 type Config struct {
-	nk  NumberKind
-	ws  SpaceKind
-	ct  CborContainerEncoding
-	enc *json.Encoder
-	buf *bytes.Buffer
+	nk                NumberKind
+	ws                SpaceKind
+	ct                CborContainerEncoding
+	arrayLenPrefix    bool // first sort arrays based on its length
+	propertyLenPrefix bool // first sort properties based on length
+	doMissing         bool // handle missing values (for N1QL)
+	enc               *json.Encoder
+	buf               *bytes.Buffer
+	maxKeys           int
+	//-- unicode
+	//backwards        bool
+	//hiraganaQ        bool
+	//caseLevel        bool
+	//numeric          bool
+	//nfkd              bool
+	//utf8              bool
+	//strength          colltab.Level
+	//alternate         collate.AlternateHandling
+	//language          language.Tag
 }
+
+// Length is an internal type used for prefixing collated arrays
+// and properties with number of items.
+type Length int64
+
+// MaxKeys maximum number of keys allowed in a property item.
+const MaxKeys = 1000
 
 // NewDefaultConfig returns a new configuration with default values.
 // NumberKind: FloatNumber
 // SpaceKind: UnicodeSpace
 // CborContainerEncoding: Stream
 func NewDefaultConfig() *Config {
-	return NewConfig(FloatNumber, UnicodeSpace, Stream)
+	config := &Config{
+		nk:                FloatNumber,
+		ws:                UnicodeSpace,
+		ct:                Stream,
+		arrayLenPrefix:    false,
+		propertyLenPrefix: true,
+		doMissing:         true,
+		maxKeys:           MaxKeys,
+	}
+	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // TODO: no magic num.
+	config.enc = json.NewEncoder(config.buf)
+	return config
 }
 
 // NewConfig returns a new configuration.
-func NewConfig(nk NumberKind, ws SpaceKind, ct CborContainerEncoding) *Config {
-	config := &Config{nk: nk, ws: ws, ct: ct}
-	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // TODO: no magic num.
-	config.enc = json.NewEncoder(config.buf)
+func NewConfig(nk NumberKind, ws SpaceKind) *Config {
+	config := NewDefaultConfig()
+	config.nk = nk
+	config.ws = ws
+	return config
+}
+
+// NumberKind representation for number types.
+func (config *Config) NumberKind(nk NumberKind) *Config {
+	config.nk = nk
+	return config
+}
+
+// SpaceKind representation for interpreting whitespace.
+func (config *Config) SpaceKind(ws SpaceKind) *Config {
+	config.ws = ws
+	return config
+}
+
+// ContainerEncoding for cbor.
+func (config *Config) ContainerEncoding(ct CborContainerEncoding) *Config {
+	config.ct = ct
+	return config
+}
+
+// SortbyArrayLen sorts array by length before sorting by array elements.
+func (config *Config) SortbyArrayLen(what bool) *Config {
+	config.arrayLenPrefix = what
+	return config
+}
+
+// SortbyPropertyLen sorts property by length before sorting by property items.
+func (config *Config) SortbyPropertyLen(what bool) *Config {
+	config.propertyLenPrefix = what
+	return config
+}
+
+// UseMissing shall interpret special string MissingLiteral and
+// collate them as TypeMissing.
+func (config *Config) UseMissing(what bool) *Config {
+	config.doMissing = what
+	return config
+}
+
+// SetMaxkeys will set the maximum number of keys allowed in property item.
+func (config *Config) SetMaxkeys(n int) *Config {
+	config.maxKeys = n
 	return config
 }
 
@@ -315,4 +400,36 @@ func (config *Config) CborDelete(doc, cborptr, newdoc, deleted []byte) (int, int
 		panic("cbor emptyPointer")
 	}
 	return cborDel(doc, cborptr, newdoc, deleted)
+}
+
+// CollateGson encode input golang object to order preserving
+// binary representation.
+//func (config *Config) CollateGson(obj interface{}, code []byte) int {
+//	return gson2collate(obj, code, config)
+//}
+
+// CollateToGson will decode collated object back to golang object.
+//func (config *Config) CollateToGson(code []byte) (interface{}, int) {
+//	if len(code) == 0 {
+//		return nil, 0
+//	}
+//	return collate2gson(code, config)
+//}
+
+// Missing denotes a special type for an item that evaluates
+// to _nothing_, used for collation.
+type Missing string
+
+// MissingLiteral is special string to denote missing item.
+// IMPORTANT: we are assuming that MissingLiteral will not
+// occur in the keyspace.
+const MissingLiteral = Missing("~[]{}falsenilNA~")
+
+// Equal checks wether n is MissingLiteral
+func (m Missing) Equal(n string) bool {
+	s := string(m)
+	if len(n) == len(s) && n[0] == '~' && n[1] == '[' {
+		return s == n
+	}
+	return false
 }

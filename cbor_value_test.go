@@ -290,14 +290,15 @@ func TestCborArray(t *testing.T) {
 	ref := []interface{}{10.2, "hello world"}
 
 	// encoding use LengthPrefix
-	config := NewConfig(FloatNumber, UnicodeSpace, LengthPrefix)
+	config := NewConfig(FloatNumber, UnicodeSpace)
+	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf)
 	if n != 22 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// encoding use Stream
-	config = NewConfig(FloatNumber, UnicodeSpace, Stream)
+	config = NewConfig(FloatNumber, UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf)
 	if n != 23 || n != m || !reflect.DeepEqual(ref, val) {
@@ -312,14 +313,15 @@ func TestCborMap(t *testing.T) {
 		[2]interface{}{"hello world", 10.2},
 	}
 	// encoding use LengthPrefix
-	config := NewConfig(FloatNumber, UnicodeSpace, LengthPrefix)
+	config := NewConfig(FloatNumber, UnicodeSpace)
+	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf)
 	if n != 43 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// encoding use Stream
-	config = NewConfig(FloatNumber, UnicodeSpace, Stream)
+	config = NewConfig(FloatNumber, UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf)
 	if n != 44 || n != m || !reflect.DeepEqual(ref, val) {
@@ -434,7 +436,7 @@ func TestCborSmartnum(t *testing.T) {
 }
 
 func TestCborMalformed(t *testing.T) {
-	config := NewConfig(IntNumber, AnsiSpace, Stream)
+	config := NewConfig(IntNumber, AnsiSpace)
 	out := make([]byte, 1024)
 	for _, tcase := range scan_invalid {
 		func() {
