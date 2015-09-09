@@ -1,11 +1,7 @@
-// +build ignore
-
 package gson
 
 import "testing"
 import "fmt"
-
-//import "reflect"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -59,7 +55,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	out, coll := make([]byte, 1024), make([]byte, 1024)
 	// as float64 using Float64 configuration
 	inp, refcode := "10.2", `\x05>>2102-\x00`
-	_, n := json2collate(inp, coll, config.NumberKind(Float64))
+	_, n := json2collate(inp, coll, config.NumberKind(FloatNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -71,7 +67,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as int64 using Float64 configuration
 	inp, refcode = "10", `\x05>>21-\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(Float64))
+	_, n = json2collate(inp, coll, config.NumberKind(FloatNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -83,7 +79,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as float64 using Int64 configuration
 	inp, refcode = "10.2", `\x05>>210\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(Int64))
+	_, n = json2collate(inp, coll, config.NumberKind(IntNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)
@@ -95,7 +91,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 	// as int64 using Int64 configuration
 	inp, refcode = "10", `\x05>>210\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(Int64))
+	_, n = json2collate(inp, coll, config.NumberKind(IntNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = collateCbor(code[:n], out, config)

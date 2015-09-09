@@ -8,8 +8,6 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		return 2
 	}
 
-	var scratch [64]byte
-
 	switch value := obj.(type) {
 	case bool:
 		if value {
@@ -42,8 +40,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeLength
 		n++
-		bs := strconv.AppendInt(scratch[:0], int64(value), 10)
-		n += collateInt(bs, code[n:])
+		n += normalizeFloat(int64(value), code[n:], IntNumber)
 		code[n] = Terminator
 		n++
 		return n
