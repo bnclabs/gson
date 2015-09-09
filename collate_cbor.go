@@ -43,7 +43,8 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 		return m + x, n
 
 	case TypeString:
-		scratch := make([]byte, len(code[m:]))
+		scratch := stringPool.Get().([]byte)
+		defer stringPool.Put(scratch)
 		x, y := suffixDecodeString(code[m:], scratch)
 		n := valtext2cbor(bytes2str(scratch[:y]), out[n:])
 		return m + x, n
@@ -409,7 +410,10 @@ func collateCborTag(buf, out []byte, config *Config) (int, int) {
 		ln, x := cborItemLength(buf[m:])
 		m += x
 		// copy the JSON string into scratch buffer.
-		scratch, utf8str := make([]byte, ln+2), make([]byte, ln*2)
+		scratch := stringPool.Get().([]byte)
+		utf8str := stringPool.Get().([]byte)
+		defer stringPool.Put(scratch)
+		defer stringPool.Put(utf8str)
 		scratch[0] = '"'
 		copy(scratch[1:], buf[m:m+ln])
 		scratch[1+ln] = '"'

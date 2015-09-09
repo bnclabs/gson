@@ -193,18 +193,18 @@ func (config *Config) ToJsonPointer(segments []string, pointer []byte) int {
 
 // ListPointers all possible pointers into object.
 func (config *Config) ListPointers(object interface{}, ptrs []string) []string {
-	prefix := prefixPool.Get()
-	defer prefixPool.Put(prefix)
-	ptrs = allpaths(object, ptrs, prefix.([]byte))
+	prefix := prefixPool.Get().([]byte)
+	defer prefixPool.Put(prefix[:0])
+	ptrs = allpaths(object, ptrs, prefix)
 	ptrs = append(ptrs, "")
 	return ptrs
 }
 
 // DocGet field or nested field specified by json pointer.
 func (config *Config) DocGet(ptr string, doc interface{}) (item interface{}) {
-	segments := segmentsPool.Get()
-	defer segmentsPool.Put(segments)
-	segs := config.ParseJsonPointer(ptr, segments.([]string))
+	segments := segmentsPool.Get().([]string)
+	defer segmentsPool.Put(segments[:0])
+	segs := config.ParseJsonPointer(ptr, segments)
 	return docGet(segs, doc)
 }
 
@@ -214,9 +214,9 @@ func (config *Config) DocGet(ptr string, doc interface{}) (item interface{}) {
 //      doc := []interface{}{"hello"}
 //      doc, _ = config.Set("/-", doc, "world")
 func (config *Config) DocSet(ptr string, doc, item interface{}) (newdoc, old interface{}) {
-	segments := segmentsPool.Get()
-	defer segmentsPool.Put(segments)
-	segs := config.ParseJsonPointer(ptr, segments.([]string))
+	segments := segmentsPool.Get().([]string)
+	defer segmentsPool.Put(segments[:0])
+	segs := config.ParseJsonPointer(ptr, segments)
 	return docSet(segs, doc, item)
 }
 
@@ -226,9 +226,9 @@ func (config *Config) DocSet(ptr string, doc, item interface{}) (newdoc, old int
 //      doc := []interface{}{"hello", "world"}
 //      doc, _ = config.Delete("/1", doc)
 func (config *Config) DocDelete(ptr string, doc interface{}) (newdoc, deleted interface{}) {
-	segments := segmentsPool.Get()
-	defer segmentsPool.Put(segments)
-	segs := config.ParseJsonPointer(ptr, segments.([]string))
+	segments := segmentsPool.Get().([]string)
+	defer segmentsPool.Put(segments[:0])
+	segs := config.ParseJsonPointer(ptr, segments)
 	return docDel(segs, doc)
 }
 

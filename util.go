@@ -146,8 +146,7 @@ func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
 }
 
 // sort JSON property objects based on property names.
-func sortProps(props map[string]interface{}) []string {
-	keys := make([]string, 0, len(props))
+func sortProps(props map[string]interface{}, keys []string) []string {
 	for k := range props {
 		keys = append(keys, k)
 	}

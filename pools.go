@@ -13,20 +13,28 @@ var segmentsPool *sync.Pool
 // scratch pad for string objects
 var stringPool *sync.Pool
 
+// property keys
+var keysPool *sync.Pool
+
 func init() {
 	prefixPool = &sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 0, 1024) // TODO: export 1024
+			return make([]byte, 0, 1024) // TODO: no magic number
 		},
 	}
 	segmentsPool = &sync.Pool{
 		New: func() interface{} {
-			return make([]string, 0, 1024) // TODO: export 1024
+			return make([]string, 0, 1024) // TODO: no magic number
 		},
 	}
 	stringPool = &sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 1024*1024) // TODO: export 1024
+			return make([]byte, 1024*1024) // TODO: no magic number
+		},
+	}
+	keysPool = &sync.Pool{
+		New: func() interface{} {
+			return make([]string, 0, 1024) // TODO: no magic number
 		},
 	}
 }
