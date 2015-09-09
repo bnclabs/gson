@@ -84,6 +84,25 @@ func TestJson(t *testing.T) {
 	}
 }
 
+func TestValue2Cbor2Json(t *testing.T) {
+	testcases := []string{
+		`[null,true,false,10,"tru\"e"]`,
+		`[]`,
+		`{}`,
+		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e","f":[1,2]}`,
+	}
+	cborout, jsonout := make([]byte, 1024), make([]byte, 1024)
+	config := NewDefaultConfig().NumberKind(IntNumber)
+	config = config.ContainerEncoding(LengthPrefix)
+	for _, tcase := range testcases {
+		t.Logf("testcase - %v", tcase)
+		_, val1 := config.JsonToValue(tcase)
+		n := config.ValueToCbor(GolangMap2cborMap(val1), cborout)
+		_, m := config.CborToJson(cborout[:n], jsonout)
+		compare_jsons(t, tcase, string(jsonout[:m]))
+	}
+}
+
 func TestScanNumber(t *testing.T) {
 	code, out := make([]byte, 1024), make([]byte, 1024)
 	// test JsonNumber
@@ -93,10 +112,14 @@ func TestScanNumber(t *testing.T) {
 	if bytes.Compare(code[:n], ref) != 0 {
 		t.Errorf("expected %v, got %v", ref, code[:n])
 	}
+	_, y := config.CborToJson(code[:n], out)
+	if s := string(out[:y]); s != "10" {
+		t.Errorf("exected %v, got %v", "10", s)
+	}
 	// test FloatNumber
 	config = NewConfig(FloatNumber, UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
-	_, y := config.CborToJson(code[:n], out)
+	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10.00000000000000000000" {
 		t.Errorf("expected %q, got %q", "10.00000000000000000000", s)
 	}
@@ -269,6 +292,19 @@ func TestFloat32(t *testing.T) {
 	if !reflect.DeepEqual(ref1, ref2) {
 		t.Errorf("mismatch %v, got %v", ref1, ref2)
 	}
+}
+
+func TestJsonString(t *testing.T) {
+	config := NewDefaultConfig()
+	buf, out := make([]byte, 64), make([]byte, 64)
+
+	ref := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
+	n := tag2cbor(uint64(tagJsonString), buf)
+	_, x := json2cbor(ref, buf[n:], config)
+	n += x
+
+	_, m := cbor2json(buf[:n], out, config)
+	compare_jsons(t, ref, string(out[:m]))
 }
 
 func TestByteString(t *testing.T) {
