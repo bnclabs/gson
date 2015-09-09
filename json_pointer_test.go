@@ -22,7 +22,7 @@ func TestParsePointer(t *testing.T) {
 		[2]interface{}{"/ ", []string{" "}},
 		[2]interface{}{"/m~0n", []string{"m~n"}},
 		[2]interface{}{"/g~1n~1r", []string{"g/n/r"}},
-		[2]interface{}{"/g/n/r", []string{"g", "n", "r"}},
+		[2]interface{}{"/g/汉语/r", []string{"g", "汉语", "r"}},
 	}
 
 	// test ParseJsonPointer
@@ -60,12 +60,25 @@ func TestTypicalPointers(t *testing.T) {
 	sort.Strings(refs)
 	config := NewDefaultConfig()
 
-	// test list pointers
 	txt := string(testdataFile("testdata/typical.json"))
 	_, value := config.JsonToValue(txt)
+
+	// test list pointers
 	pointers := config.ListPointers(value, make([]string, 0, 1024))
 	sort.Strings(pointers)
+	if len(refs) != len(pointers) {
+		t.Errorf("expected %v, got %v", len(refs), len(pointers))
+	}
+	for i, r := range refs {
+		if r != pointers[i] {
+			t.Errorf("expected %v, got %v", r, pointers[i])
+		}
+	}
 
+	// test list pointers for document using [][2]interface{} for map.
+	value = GolangMap2cborMap(value)
+	pointers = config.ListPointers(value, make([]string, 0, 1024))
+	sort.Strings(pointers)
 	if len(refs) != len(pointers) {
 		t.Errorf("expected %v, got %v", len(refs), len(pointers))
 	}
