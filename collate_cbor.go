@@ -92,7 +92,7 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 
 //---- CBOR to Collate
 
-func collateCbor(in, out []byte, config *Config) (int, int) {
+func cbor2collate(in, out []byte, config *Config) (int, int) {
 	return cbor2collateM[in[0]](in, out, config)
 }
 
@@ -288,7 +288,7 @@ func collateCborT4(buf, out []byte, config *Config) (int, int) {
 		n += collateCborLength(ln, out[n:], config)
 	}
 	for ; ln > 0; ln-- {
-		x, y := collateCbor(buf[m:], out[n:], config)
+		x, y := cbor2collate(buf[m:], out[n:], config)
 		m, n = m+x, n+y
 	}
 	out[n] = Terminator
@@ -322,7 +322,7 @@ func collateCborT4Indef(buf, out []byte, config *Config) (m int, n int) {
 		return
 	}
 	for buf[m] != brkstp {
-		x, y := collateCbor(buf[m:], out[n__:], config)
+		x, y := cbor2collate(buf[m:], out[n__:], config)
 		m, n__ = m+x, n__+y
 	}
 	return
@@ -344,10 +344,10 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 	defer pool.keypool.Put(refs)
 
 	for i := 0; i < ln; i++ {
-		x, y := collateCbor(buf[m:], altcode[p:], config) // key
+		x, y := cbor2collate(buf[m:], altcode[p:], config) // key
 		key := altcode[p : p+y]
 		m, p = m+x, p+y
-		x, y = collateCbor(buf[m:], altcode[p:], config) // value
+		x, y = cbor2collate(buf[m:], altcode[p:], config) // value
 		refs[i] = kvref{bytes2str(key), altcode[p : p+y]}
 		m, p = m+x, p+y
 	}
@@ -378,10 +378,10 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 
 	m = 1
 	for buf[m] != brkstp {
-		x, y := collateCbor(buf[m:], altcode[p:], config) // key
+		x, y := cbor2collate(buf[m:], altcode[p:], config) // key
 		key := altcode[p : p+y]
 		m, p = m+x, p+y
-		x, y = collateCbor(buf[m:], altcode[p:], config) // value
+		x, y = cbor2collate(buf[m:], altcode[p:], config) // value
 		refs[ln] = kvref{bytes2str(key), altcode[p : p+y]}
 		m, p = m+x, p+y
 		ln++

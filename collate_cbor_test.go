@@ -12,7 +12,7 @@ func TestCbor2CollateNil(t *testing.T) {
 	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn := fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != ref {
@@ -27,7 +27,7 @@ func TestCbor2CollateTrue(t *testing.T) {
 	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn := fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != ref {
@@ -42,7 +42,7 @@ func TestCbor2CollateFalse(t *testing.T) {
 	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn := fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != ref {
@@ -58,7 +58,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	_, n := json2collate(inp, coll, config.NumberKind(FloatNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn := fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -70,7 +70,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	_, n = json2collate(inp, coll, config.NumberKind(FloatNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -82,7 +82,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	_, n = json2collate(inp, coll, config.NumberKind(IntNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -94,7 +94,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	_, n = json2collate(inp, coll, config.NumberKind(IntNumber))
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -106,7 +106,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 	_, n = json2collate(inp, coll, config.NumberKind(Decimal))
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -122,7 +122,7 @@ func TestCbor2CollateString(t *testing.T) {
 	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn := fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -134,7 +134,7 @@ func TestCbor2CollateString(t *testing.T) {
 	_, n = json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -146,7 +146,7 @@ func TestCbor2CollateString(t *testing.T) {
 	_, n = json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -159,7 +159,7 @@ func TestCbor2CollateString(t *testing.T) {
 	_, n = json2collate(inp, coll, config.UseMissing(false))
 
 	_, n = collate2cbor(coll[:n], code, config)
-	_, n = collateCbor(code[:n], out, config)
+	_, n = cbor2collate(code[:n], out, config)
 	seqn = fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
@@ -194,7 +194,7 @@ func TestCbor2CollateArray(t *testing.T) {
 		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
-		_, n = collateCbor(code[:n], out, config)
+		_, n = cbor2collate(code[:n], out, config)
 		seqn := fmt.Sprintf("%q", out[:n])
 		seqn = seqn[1 : len(seqn)-1]
 		if seqn != refcode {
@@ -209,7 +209,7 @@ func TestCbor2CollateArray(t *testing.T) {
 		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
-		_, n = collateCbor(code[:n], out, config)
+		_, n = cbor2collate(code[:n], out, config)
 		seqn := fmt.Sprintf("%q", out[:n])
 		seqn = seqn[1 : len(seqn)-1]
 		if seqn != refcode {
@@ -239,7 +239,7 @@ func TestCbor2CollateMap(t *testing.T) {
 		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
-		_, n = collateCbor(code[:n], out, config)
+		_, n = cbor2collate(code[:n], out, config)
 		seqn := fmt.Sprintf("%q", out[:n])
 		seqn = seqn[1 : len(seqn)-1]
 		if seqn != refcode {
@@ -254,7 +254,7 @@ func TestCbor2CollateMap(t *testing.T) {
 		_, n := json2collate(inp, coll, config.SortbyPropertyLen(false))
 
 		_, n = collate2cbor(coll[:n], code, config)
-		_, n = collateCbor(code[:n], out, config)
+		_, n = cbor2collate(code[:n], out, config)
 		seqn := fmt.Sprintf("%q", out[:n])
 		seqn = seqn[1 : len(seqn)-1]
 		if seqn != refcode {

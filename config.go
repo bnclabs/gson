@@ -398,16 +398,45 @@ func (config *Config) CborDelete(doc, cborptr, newdoc, deleted []byte) (int, int
 	return cborDel(doc, cborptr, newdoc, deleted)
 }
 
-// CollateGson encode input golang object to order preserving
+// GsonToCollate encode input golang object to order preserving
 // binary representation.
-//func (config *Config) CollateGson(obj interface{}, code []byte) int {
-//	return gson2collate(obj, code, config)
-//}
+func (config *Config) GsonToCollate(obj interface{}, code []byte) int {
+	return gson2collate(obj, code, config)
+}
 
 // CollateToGson will decode collated object back to golang object.
-//func (config *Config) CollateToGson(code []byte) (interface{}, int) {
-//	if len(code) == 0 {
-//		return nil, 0
-//	}
-//	return collate2gson(code, config)
-//}
+func (config *Config) CollateToGson(code []byte) (interface{}, int) {
+	if len(code) == 0 {
+		return nil, 0
+	}
+	return collate2gson(code, config)
+}
+
+// JsonToCollate encode input json text into order preserving
+// binary representation.
+func (config *Config) JsonToCollate(text string, code []byte) int {
+	_, n := json2collate(text, code, config)
+	return n
+}
+
+// CollateToJson will decode collated text back to JSON.
+func (config *Config) CollateToJson(code, text []byte) (int, int) {
+	if len(code) == 0 {
+		return 0, 0
+	}
+	return collate2json(code, text, config)
+}
+
+// CborToCollate encode input cbor encoded item into order preserving
+// binary representation.
+func (config *Config) CborToCollate(cborin, code []byte) (int, int) {
+	return cbor2collate(cborin, code, config)
+}
+
+// CollateToCbor will decode collated item back to Cbor format.
+func (config *Config) CollateToCbor(code, cborout []byte) (int, int) {
+	if len(code) == 0 {
+		return 0, 0
+	}
+	return collate2cbor(code, cborout, config)
+}
