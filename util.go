@@ -68,7 +68,7 @@ func GolangMap2cborMap(value interface{}) interface{} {
 func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 	var num [64]byte
 	switch nt {
-	case FloatNumber:
+	case FloatNumber, FloatNumber32, JsonNumber:
 		v, ok := value.(float64)
 		if !ok {
 			v = float64(value.(int64))
@@ -95,13 +95,13 @@ func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 		}
 		panic("collate invalid decimal")
 	}
-	panic("collate invalid number configuration")
+	panic("SmartNumber32 or SmartNumber not supported for collation")
 }
 
 func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 	var scratch [64]byte
 	switch nt {
-	case FloatNumber:
+	case FloatNumber, FloatNumber32, JsonNumber:
 		_, y := collated2Float(code, scratch[:])
 		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
 		if err != nil {
@@ -125,12 +125,12 @@ func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 		}
 		return res
 	}
-	panic("collate gson denormalizeFloat bad configuration")
+	panic("SmartNumber32 or SmartNumber not supported for collation")
 }
 
 func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
 	switch nt {
-	case FloatNumber:
+	case FloatNumber, FloatNumber32, JsonNumber:
 		_, y := collated2Float(code, text[:])
 		return y
 
@@ -142,7 +142,7 @@ func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
 		_, y := collated2SD(code, text[:])
 		return y
 	}
-	panic("collate gson denormalizeFloat bad configuration")
+	panic("SmartNumber32 or SmartNumber not supported for collation")
 }
 
 // sort JSON property objects based on property names.
