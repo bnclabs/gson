@@ -55,6 +55,9 @@ const (
 	Stream
 )
 
+// MaxKeys maximum number of keys allowed in a property item.
+const MaxKeys = 1000
+
 // Config and access gson functions. All APIs to gson is defined via
 // config. To quickly get started, use NewDefaultConfig() that will
 // create a configuration with default values.
@@ -79,13 +82,6 @@ type Config struct {
 	//alternate         collate.AlternateHandling
 	//language          language.Tag
 }
-
-// Length is an internal type used for prefixing collated arrays
-// and properties with number of items.
-type Length int64
-
-// MaxKeys maximum number of keys allowed in a property item.
-const MaxKeys = 1000
 
 // NewDefaultConfig returns a new configuration with default values.
 // NumberKind: FloatNumber
@@ -415,21 +411,3 @@ func (config *Config) CborDelete(doc, cborptr, newdoc, deleted []byte) (int, int
 //	}
 //	return collate2gson(code, config)
 //}
-
-// Missing denotes a special type for an item that evaluates
-// to _nothing_, used for collation.
-type Missing string
-
-// MissingLiteral is special string to denote missing item.
-// IMPORTANT: we are assuming that MissingLiteral will not
-// occur in the keyspace.
-const MissingLiteral = Missing("~[]{}falsenilNA~")
-
-// Equal checks wether n is MissingLiteral
-func (m Missing) Equal(n string) bool {
-	s := string(m)
-	if len(n) == len(s) && n[0] == '~' && n[1] == '[' {
-		return s == n
-	}
-	return false
-}
