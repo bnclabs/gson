@@ -82,7 +82,8 @@ func TestCbor2CollateNumber(t *testing.T) {
 		inp, refcode := tcase[0].(string), tcase[1].(string)
 		t.Logf("%v", inp)
 		nk := tcase[2].(NumberKind)
-		_, n := json2collate(inp, coll, config.NumberKind(nk))
+		config = config.NumberKind(nk)
+		_, n := json2collate(inp, coll, config)
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = cbor2collate(code[:n], out, config)
 		seqn := fmt.Sprintf("%q", out[:n])
@@ -115,7 +116,8 @@ func TestCbor2CollateString(t *testing.T) {
 	// missing string without doMissing configuration
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
 	refcode := `\x06~[]{}falsenilNA~\x00\x00`
-	_, n := json2collate(inp, coll, config.UseMissing(false))
+	config = config.UseMissing(false)
+	_, n := json2collate(inp, coll, config)
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = cbor2collate(code[:n], out, config)
@@ -230,7 +232,7 @@ func TestCbor2CollateMap(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
-		_, n := json2collate(inp, coll, config.SortbyPropertyLen(false))
+		_, n := json2collate(inp, coll, config)
 
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = cbor2collate(code[:n], out, config)

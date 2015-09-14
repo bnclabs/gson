@@ -49,7 +49,8 @@ func TestGson2CollateNumber(t *testing.T) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	// as float64 using FloatNumber configuration
 	obj, ref := float64(10.2), `\x05>>2102-\x00`
-	n := gson2collate(obj, code, config.NumberKind(FloatNumber))
+	config = config.NumberKind(FloatNumber)
+	n := gson2collate(obj, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -61,7 +62,8 @@ func TestGson2CollateNumber(t *testing.T) {
 	}
 	// as int64 using FloatNumber configuration
 	obj1, ref := int64(10), `\x05>>21-\x00`
-	n = gson2collate(obj1, code, config.NumberKind(FloatNumber))
+	config = config.NumberKind(FloatNumber)
+	n = gson2collate(obj1, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -74,7 +76,8 @@ func TestGson2CollateNumber(t *testing.T) {
 
 	// as float64 using IntNumber configuration
 	obj, ref = float64(10.2), `\x05>>210\x00`
-	n = gson2collate(obj, code, config.NumberKind(IntNumber))
+	config = config.NumberKind(IntNumber)
+	n = gson2collate(obj, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -86,7 +89,8 @@ func TestGson2CollateNumber(t *testing.T) {
 	}
 	// as int64 using IntNumber configuration
 	obj1, ref = int64(10), `\x05>>210\x00`
-	n = gson2collate(obj1, code, config.NumberKind(IntNumber))
+	config = config.NumberKind(IntNumber)
+	n = gson2collate(obj1, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -99,7 +103,8 @@ func TestGson2CollateNumber(t *testing.T) {
 
 	// as float64 using Decimal configuration
 	obj, ref = float64(0.2), `\x05>2-\x00`
-	n = gson2collate(obj, code, config.NumberKind(Decimal))
+	config = config.NumberKind(Decimal)
+	n = gson2collate(obj, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -110,13 +115,14 @@ func TestGson2CollateNumber(t *testing.T) {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
 	}
 	// as int64 using Decimal configuration, expect a panic
+	config = config.NumberKind(Decimal)
 	func() {
 		defer func() {
 			if r := recover(); r == nil {
 				t.Errorf("expected panic")
 			}
 		}()
-		gson2collate(int64(10), code, config.NumberKind(Decimal))
+		gson2collate(int64(10), code, config)
 	}()
 	func() {
 		defer func() {
@@ -124,7 +130,7 @@ func TestGson2CollateNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		gson2collate(float64(10.2), code, config.NumberKind(Decimal))
+		gson2collate(float64(10.2), code, config)
 	}()
 }
 
@@ -157,13 +163,14 @@ func TestGson2CollateMissing(t *testing.T) {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
 	}
 	// expect panic when not configured for missing
+	config = config.UseMissing(false)
 	func() {
 		defer func() {
 			if r := recover(); r == nil {
 				t.Errorf("expected panic")
 			}
 		}()
-		gson2collate(MissingLiteral, code, config.UseMissing(false))
+		gson2collate(MissingLiteral, code, config)
 	}()
 }
 
@@ -193,7 +200,8 @@ func TestGson2CollateString(t *testing.T) {
 	}
 	// missing string without doMissing configuration
 	obj, ref := string(MissingLiteral), `\x06~[]{}falsenilNA~\x00\x00`
-	n := gson2collate(obj, code, config.UseMissing(false))
+	config = config.UseMissing(false)
+	n := gson2collate(obj, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -315,7 +323,8 @@ func TestGson2CollateMap(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		obj, ref := tcase[0], tcase[1].(string)
-		n := gson2collate(obj, code, config.SortbyPropertyLen(false))
+		config = config.SortbyPropertyLen(false)
+		n := gson2collate(obj, code, config)
 		out := fmt.Sprintf("%q", code[:n])
 		out = out[1 : len(out)-1]
 		if out != ref {

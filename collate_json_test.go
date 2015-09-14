@@ -58,7 +58,8 @@ func TestJson2CollateNumber(t *testing.T) {
 	txt := make([]byte, 1024)
 	// as float64 using FloatNumber configuration
 	inp, refcode, reftxt := "10.2", `\x05>>2102-\x00`, "+0.102e+2"
-	_, n := json2collate(inp, code, config.NumberKind(FloatNumber))
+	config = config.NumberKind(FloatNumber)
+	_, n := json2collate(inp, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -83,7 +84,8 @@ func TestJson2CollateNumber(t *testing.T) {
 
 	// as float64 using IntNumber configuration
 	inp, refcode, reftxt = "10.2", `\x05>>210\x00`, "+10"
-	_, n = json2collate(inp, code, config.NumberKind(IntNumber))
+	config = config.NumberKind(IntNumber)
+	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -108,7 +110,8 @@ func TestJson2CollateNumber(t *testing.T) {
 
 	// as float64 using Decimal configuration
 	inp, refcode, reftxt = "0.2", `\x05>2-\x00`, "+0.2"
-	_, n = json2collate(inp, code, config.NumberKind(Decimal))
+	config = config.NumberKind(Decimal)
+	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -119,13 +122,14 @@ func TestJson2CollateNumber(t *testing.T) {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", reftxt, n, s, x)
 	}
 	// as int64 using Decimal configuration, expect a panic
+	config = config.NumberKind(Decimal)
 	func() {
 		defer func() {
 			if r := recover(); r == nil {
 				t.Errorf("expected panic")
 			}
 		}()
-		json2collate("10", code, config.NumberKind(Decimal))
+		json2collate("10", code, config)
 	}()
 	func() {
 		defer func() {
@@ -133,7 +137,7 @@ func TestJson2CollateNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		json2collate("10.2", code, config.NumberKind(Decimal))
+		json2collate("10.2", code, config)
 	}()
 }
 
@@ -180,8 +184,9 @@ func TestJson2CollateString(t *testing.T) {
 	}
 	// missing string without doMissing configuration
 	inp = fmt.Sprintf(`"%s"`, MissingLiteral)
+	config = config.UseMissing(false)
 	refcode, reftxt = `\x06~[]{}falsenilNA~\x00\x00`, inp
-	_, n = json2collate(inp, code, config.UseMissing(false))
+	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -279,12 +284,12 @@ func TestJson2CollateMap(t *testing.T) {
 		}
 	}
 	// without length prefix, and different length for keys
-	config = NewDefaultConfig().SetMaxkeys(10)
+	config = NewDefaultConfig().SetMaxkeys(10).SortbyPropertyLen(false)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
 		reftxt := tcase[3].(string)
-		_, n := json2collate(inp, code, config.SortbyPropertyLen(false))
+		_, n := json2collate(inp, code, config)
 		out := fmt.Sprintf("%q", code[:n])
 		out = out[1 : len(out)-1]
 		if out != refcode {

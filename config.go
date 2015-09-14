@@ -111,46 +111,46 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 }
 
 // NumberKind representation for number types.
-func (config *Config) NumberKind(nk NumberKind) *Config {
+func (config Config) NumberKind(nk NumberKind) *Config {
 	config.nk = nk
-	return config
+	return &config
 }
 
 // SpaceKind representation for interpreting whitespace.
-func (config *Config) SpaceKind(ws SpaceKind) *Config {
+func (config Config) SpaceKind(ws SpaceKind) *Config {
 	config.ws = ws
-	return config
+	return &config
 }
 
 // ContainerEncoding for cbor.
-func (config *Config) ContainerEncoding(ct CborContainerEncoding) *Config {
+func (config Config) ContainerEncoding(ct CborContainerEncoding) *Config {
 	config.ct = ct
-	return config
+	return &config
 }
 
 // SortbyArrayLen sorts array by length before sorting by array elements.
-func (config *Config) SortbyArrayLen(what bool) *Config {
+func (config Config) SortbyArrayLen(what bool) *Config {
 	config.arrayLenPrefix = what
-	return config
+	return &config
 }
 
 // SortbyPropertyLen sorts property by length before sorting by property items.
-func (config *Config) SortbyPropertyLen(what bool) *Config {
+func (config Config) SortbyPropertyLen(what bool) *Config {
 	config.propertyLenPrefix = what
-	return config
+	return &config
 }
 
 // UseMissing shall interpret special string MissingLiteral and
 // collate them as TypeMissing.
-func (config *Config) UseMissing(what bool) *Config {
+func (config Config) UseMissing(what bool) *Config {
 	config.doMissing = what
-	return config
+	return &config
 }
 
 // SetMaxkeys will set the maximum number of keys allowed in property item.
-func (config *Config) SetMaxkeys(n int) *Config {
+func (config Config) SetMaxkeys(n int) *Config {
 	config.maxKeys = n
-	return config
+	return &config
 }
 
 // JsonToValue input JSON text to a single go-native value. If text is
