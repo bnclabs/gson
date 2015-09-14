@@ -69,12 +69,12 @@ func TestCbor2CollateNumber(t *testing.T) {
 		[3]interface{}{"2147483647", `\x05>>>2102147483647\x00`, IntNumber},
 		[3]interface{}{"-2147483648", `\x05---7897852516351\x00`, IntNumber},
 		[3]interface{}{
-			"9223372036854775807",
-			`\x05---7800776627963145224191\x00`,
+			"4294967297",
+			`\x05>>>2104294967297\x00`,
 			IntNumber},
 		[3]interface{}{
-			"-18446744073709551616L",
-			`\x05---7800776627963145224191\x00`,
+			"-4294967297",
+			`\x05---7895705032702\x00`,
 			IntNumber},
 		[3]interface{}{"0.2", `\x05>2-\x00`, Decimal},
 	}
@@ -174,8 +174,8 @@ func TestCbor2CollateArray(t *testing.T) {
 			t.Errorf("expected %v, got %v", refcode, seqn)
 		}
 	}
-	// with length prefix
-	config = config.SortbyArrayLen(true)
+	// with sort by length and length prefix
+	config = config.SortbyArrayLen(true).ContainerEncoding(LengthPrefix)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
@@ -197,14 +197,19 @@ func TestCbor2CollateMap(t *testing.T) {
 	// with length prefix
 	testcases := [][4]interface{}{
 		[4]interface{}{
-			`{"a":null,"b":true,"c":false,"d":10.0,"e":"hello","f":["world"]}`,
+			`{}`,
+			`\t\a0\x00\x00`,
+			`\t\x00`,
+			`{}`},
+		[4]interface{}{
+			`{"a":null,"b":true,"c":false,"d":10.0,"e":"hello","f":["wo"]}`,
 			`\t\a>6\x00\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c` +
 				`\x00\x00\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +
-				`\x06hello\x00\x00\x06f\x00\x00\b\x06world\x00\x00\x00\x00`,
+				`\x06hello\x00\x00\x06f\x00\x00\b\x06wo\x00\x00\x00\x00`,
 			`\t\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c\x00\x00` +
 				`\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +
-				`\x06hello\x00\x00\x06f\x00\x00\b\x06world\x00\x00\x00\x00`,
-			`{"a":null,"b":true,"c":false,"d":+0.1e+2,"e":"hello","f":["world"]}`},
+				`\x06hello\x00\x00\x06f\x00\x00\b\x06wo\x00\x00\x00\x00`,
+			`{"a":null,"b":true,"c":false,"d":+0.1e+2,"e":"hello","f":["wo"]}`},
 	}
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
@@ -220,7 +225,8 @@ func TestCbor2CollateMap(t *testing.T) {
 		}
 	}
 	// without length prefix, and different length for keys
-	config = NewDefaultConfig().SetMaxkeys(10)
+	config = NewDefaultConfig().SetMaxkeys(10).SortbyPropertyLen(false)
+	config = config.ContainerEncoding(LengthPrefix)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)

@@ -66,12 +66,27 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 			collated2Int(code[m:m+x-1], scratch[:]) // skip length
 			m += x
 		}
-		n += arrayStart(out[n:])
-		for code[m] != Terminator {
-			x, y := collate2cbor(code[m:], out[n:], config)
-			m, n = m+x, n+y
+		n_, n__ := n, n
+		if config.ct == LengthPrefix {
+			n_, n__ = n+32, n+32
+		} else if config.ct == Stream {
+			n__ += arrayStart(out[n__:])
 		}
-		n += breakStop(out[n:])
+		ln := 0
+		for code[m] != Terminator {
+			x, y := collate2cbor(code[m:], out[n__:], config)
+			m, n__ = m+x, n__+y
+			ln++
+		}
+		if config.ct == LengthPrefix {
+			x := valuint642cbor(uint64(ln), out[n:])
+			out[n] = (out[n] & 0x1f) | cborType4 // fix type from type0->type4
+			n += x
+			n += copy(out[n:], out[n_:n__])
+		} else if config.ct == Stream {
+			n__ += breakStop(out[n__:])
+			n = n__
+		}
 		return m + 1, n
 
 	case TypeObj:
@@ -84,14 +99,30 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 			collated2Int(code[m:m+x-1], scratch[:]) // skip length
 			m += x
 		}
-		n += mapStart(out[n:])
-		for code[m] != Terminator {
-			x, y := collate2cbor(code[m:], out[n:], config)
-			m, n = m+x, n+y
-			x, y = collate2cbor(code[m:], out[n:], config)
-			m, n = m+x, n+y
+		n_, n__ := n, n
+		if config.ct == LengthPrefix {
+			n_, n__ = n+32, n+32
+		} else if config.ct == Stream {
+			n__ += mapStart(out[n__:])
 		}
-		n += breakStop(out[n:])
+
+		ln := 0
+		for code[m] != Terminator {
+			x, y := collate2cbor(code[m:], out[n__:], config)
+			m, n__ = m+x, n__+y
+			x, y = collate2cbor(code[m:], out[n__:], config)
+			m, n__ = m+x, n__+y
+			ln++
+		}
+		if config.ct == LengthPrefix {
+			x := valuint642cbor(uint64(ln), out[n:])
+			out[n] = (out[n] & 0x1f) | cborType5 // fix type from type0->type5
+			n += x
+			n += copy(out[n:], out[n_:n__])
+		} else if config.ct == Stream {
+			n__ += breakStop(out[n__:])
+			n = n__
+		}
 		return m + 1, n
 	}
 	panic("collate decode to cbor invalid binary")
