@@ -53,73 +53,69 @@ func TestCbor2CollateFalse(t *testing.T) {
 func TestCbor2CollateNumber(t *testing.T) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	out, coll := make([]byte, 1024), make([]byte, 1024)
-	// as float64 using Float64 configuration
-	inp, refcode := "10.2", `\x05>>2102-\x00`
-	_, n := json2collate(inp, coll, config.NumberKind(FloatNumber))
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn := fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
+	testcases := [][3]interface{}{
+		[3]interface{}{"10.2", `\x05>>2102-\x00`, FloatNumber},
+		[3]interface{}{"10.2", `\x05>>2102-\x00`, FloatNumber32},
+		[3]interface{}{"10", `\x05>>21-\x00`, FloatNumber},
+		[3]interface{}{"10.2", `\x05>>210\x00`, IntNumber},
+		[3]interface{}{"10", `\x05>>210\x00`, IntNumber},
+		[3]interface{}{"-10", `\x05--789\x00`, IntNumber},
+		[3]interface{}{"25", `\x05>>225\x00`, IntNumber},
+		[3]interface{}{"-25", `\x05--774\x00`, IntNumber},
+		[3]interface{}{"200", `\x05>>3200\x00`, IntNumber},
+		[3]interface{}{"-200", `\x05--6799\x00`, IntNumber},
+		[3]interface{}{"32767", `\x05>>532767\x00`, IntNumber},
+		[3]interface{}{"-32767", `\x05--467232\x00`, IntNumber},
+		[3]interface{}{"2147483647", `\x05>>>2102147483647\x00`, IntNumber},
+		[3]interface{}{"-2147483648", `\x05---7897852516351\x00`, IntNumber},
+		[3]interface{}{
+			"9223372036854775807",
+			`\x05---7800776627963145224191\x00`,
+			IntNumber},
+		[3]interface{}{
+			"-18446744073709551616L",
+			`\x05---7800776627963145224191\x00`,
+			IntNumber},
+		[3]interface{}{"0.2", `\x05>2-\x00`, Decimal},
 	}
-
-	// as int64 using Float64 configuration
-	inp, refcode = "10", `\x05>>21-\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(FloatNumber))
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
-	}
-
-	// as float64 using Int64 configuration
-	inp, refcode = "10.2", `\x05>>210\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(IntNumber))
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
-	}
-
-	// as int64 using Int64 configuration
-	inp, refcode = "10", `\x05>>210\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(IntNumber))
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
-	}
-
-	// as float64 using Decimal configuration
-	inp, refcode = "0.2", `\x05>2-\x00`
-	_, n = json2collate(inp, coll, config.NumberKind(Decimal))
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
+	for _, tcase := range testcases {
+		inp, refcode := tcase[0].(string), tcase[1].(string)
+		t.Logf("%v", inp)
+		nk := tcase[2].(NumberKind)
+		_, n := json2collate(inp, coll, config.NumberKind(nk))
+		_, n = collate2cbor(coll[:n], code, config)
+		_, n = cbor2collate(code[:n], out, config)
+		seqn := fmt.Sprintf("%q", out[:n])
+		seqn = seqn[1 : len(seqn)-1]
+		if seqn != refcode {
+			t.Errorf("expected %v, got %v", refcode, seqn)
+		}
 	}
 }
 
 func TestCbor2CollateString(t *testing.T) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	out, coll := make([]byte, 1024), make([]byte, 1024)
-	// empty string
-	inp, refcode := `""`, `\x06\x00\x00`
-	_, n := json2collate(inp, coll, config)
+	testcases := [][2]interface{}{
+		[2]interface{}{`""`, `\x06\x00\x00`},
+		[2]interface{}{`"hello world"`, `\x06hello world\x00\x00`},
+		[2]interface{}{fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`},
+	}
+	for _, tcase := range testcases {
+		inp, refcode := tcase[0].(string), tcase[1].(string)
+		_, n := json2collate(inp, coll, config)
+		_, n = collate2cbor(coll[:n], code, config)
+		_, n = cbor2collate(code[:n], out, config)
+		seqn := fmt.Sprintf("%q", out[:n])
+		seqn = seqn[1 : len(seqn)-1]
+		if seqn != refcode {
+			t.Errorf("expected %v, got %v", refcode, seqn)
+		}
+	}
+	// missing string without doMissing configuration
+	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
+	refcode := `\x06~[]{}falsenilNA~\x00\x00`
+	_, n := json2collate(inp, coll, config.UseMissing(false))
 
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = cbor2collate(code[:n], out, config)
@@ -128,39 +124,16 @@ func TestCbor2CollateString(t *testing.T) {
 	if seqn != refcode {
 		t.Errorf("expected %v, got %v", refcode, seqn)
 	}
+}
 
-	// normal string
-	inp, refcode = `"hello world"`, `\x06hello world\x00\x00`
-	_, n = json2collate(inp, coll, config)
-
+func TestCbor2CollateBytes(t *testing.T) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	out, coll := make([]byte, 1024), make([]byte, 1024)
+	inp, refcode := []byte("hello world"), `\nhello world\x00`
+	n := gson2collate(inp, coll, config)
 	_, n = collate2cbor(coll[:n], code, config)
 	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
-	}
-
-	// missing string
-	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`
-	_, n = json2collate(inp, coll, config)
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
-	seqn = seqn[1 : len(seqn)-1]
-	if seqn != refcode {
-		t.Errorf("expected %v, got %v", refcode, seqn)
-	}
-
-	// missing string without doMissing configuration
-	inp = fmt.Sprintf(`"%s"`, MissingLiteral)
-	refcode = `\x06~[]{}falsenilNA~\x00\x00`
-	_, n = json2collate(inp, coll, config.UseMissing(false))
-
-	_, n = collate2cbor(coll[:n], code, config)
-	_, n = cbor2collate(code[:n], out, config)
-	seqn = fmt.Sprintf("%q", out[:n])
+	seqn := fmt.Sprintf("%q", out[:n])
 	seqn = seqn[1 : len(seqn)-1]
 	if seqn != refcode {
 		t.Errorf("expected %v, got %v", refcode, seqn)
@@ -176,17 +149,17 @@ func TestCbor2CollateArray(t *testing.T) {
 			`\b\x00`,
 			`\b\a0\x00\x00`,
 			`[]`},
-		//[4]interface{}{`[null,true,false,10.0,"hello"]`,
-		//    `\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`,
-		//    `\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
-		//        `\x06hello\x00\x00\x00`,
-		//    `[null,true,false,+0.1e+2,"hello"]`},
-		//[4]interface{}{`[null,true,10.0,10.2,[],{"key":{}}]`,
-		//    `\b\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00\b\x00` +
-		//        `\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
-		//    `\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
-		//        `\b\a0\x00\x00\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
-		//    `[null,true,+0.1e+2,+0.102e+2,[],{"key":{}}]`},
+		[4]interface{}{`[null,true,false,10.0,"hello"]`,
+			`\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`,
+			`\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
+				`\x06hello\x00\x00\x00`,
+			`[null,true,false,+0.1e+2,"hello"]`},
+		[4]interface{}{`[null,true,10.0,10.2,[],{"key":{}}]`,
+			`\b\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00\b\x00` +
+				`\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
+			`\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
+				`\b\a0\x00\x00\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
+			`[null,true,+0.1e+2,+0.102e+2,[],{"key":{}}]`},
 	}
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])

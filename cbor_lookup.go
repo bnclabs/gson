@@ -77,9 +77,6 @@ func cborLookup(cborptr, doc []byte) (start, end int, key bool) {
 			break
 		}
 		if key {
-			if cborMajor(doc[n]) == cborType6 && doc[n+1] == tagJsonString {
-				n, start = n+2, start+2
-			}
 			keyln, k = cborItemLength(doc[n:])
 			n, start = n+k+keyln, start+k+keyln
 		}
@@ -113,9 +110,6 @@ func cborMapIndex(buf []byte, part []byte) (int, bool) {
 			return n + 1, false
 		}
 		// get key
-		if cborMajor(buf[n]) == cborType6 && buf[n+1] == tagJsonString {
-			n += 2
-		}
 		if cborMajor(buf[n]) != cborType3 {
 			panic("cbor pointer map index expectedKey")
 		}
@@ -175,20 +169,12 @@ func cborItemsEnd(buf []byte) int {
 			return 1 + 8
 		}
 		panic("cbor pointer lookup invalidDocument")
-
-	} else if mjr == cborType6 && buf[1] == tagJsonString && cborMajor(buf[2]) == cborType3 {
-		ln, j := cborItemLength(buf[2:])
-		return 2 + j + ln
 	}
 	//fmt.Println(buf)
 	panic("cbor pointer lookup invalidDocument")
 }
 
 func cborSkipkey(doc []byte) int {
-	if cborMajor(doc[0]) == cborType6 && doc[1] == tagJsonString {
-		ln, j := cborItemLength(doc[2:])
-		return 2 + j + ln
-	}
 	ln, j := cborItemLength(doc)
 	return j + ln
 }

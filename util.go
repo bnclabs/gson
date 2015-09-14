@@ -68,27 +68,23 @@ func GolangMap2cborMap(value interface{}) interface{} {
 func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 	var num [64]byte
 	switch nt {
-	case FloatNumber, FloatNumber32, JsonNumber:
-		v, ok := value.(float64)
-		if !ok {
-			v = float64(value.(int64))
-		}
+	case FloatNumber, JsonNumber:
+		v := asfloat64(value)
 		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
 		return collateFloat(bs, code)
 
+	case FloatNumber32:
+		v := asfloat64(value)
+		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 32)
+		return collateFloat(bs, code)
+
 	case IntNumber:
-		v, ok := value.(int64)
-		if !ok {
-			v = int64(value.(float64))
-		}
+		v := asint64(value)
 		bs := strconv.AppendInt(num[:0], v, 10)
 		return collateInt(bs, code)
 
 	case Decimal:
-		v, ok := value.(float64)
-		if !ok {
-			v = float64(value.(int64))
-		}
+		v := asfloat64(value)
 		if -1 >= v || v <= 1 {
 			bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
 			return collateSD(bs, code)
@@ -101,13 +97,21 @@ func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 	var scratch [64]byte
 	switch nt {
-	case FloatNumber, FloatNumber32, JsonNumber:
+	case FloatNumber, JsonNumber:
 		_, y := collated2Float(code, scratch[:])
 		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
 		if err != nil {
 			panic(err)
 		}
 		return res
+
+	case FloatNumber32:
+		_, y := collated2Float(code, scratch[:])
+		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 32)
+		if err != nil {
+			panic(err)
+		}
+		return float32(res)
 
 	case IntNumber:
 		_, y := collated2Int(code, scratch[:])
@@ -153,6 +157,22 @@ func sortProps(props map[string]interface{}, keys []string) []string {
 	ss := sort.StringSlice(keys)
 	ss.Sort()
 	return keys
+}
+
+func asfloat64(value interface{}) float64 {
+	v, ok := value.(float64)
+	if !ok {
+		v = float64(value.(int64))
+	}
+	return v
+}
+
+func asint64(value interface{}) int64 {
+	v, ok := value.(int64)
+	if !ok {
+		v = int64(value.(float64))
+	}
+	return v
 }
 
 //---- data modelling to sort and collate JSON property items.

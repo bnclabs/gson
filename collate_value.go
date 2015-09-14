@@ -65,6 +65,16 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n++
 		return n
 
+	case []byte:
+		n := 0
+		code[n] = TypeBinary
+		n++
+		m := copy(code[n:], value)
+		n += m
+		code[n] = Terminator
+		n++
+		return n
+
 	case []interface{}:
 		n := 0
 		code[n] = TypeArray
@@ -138,6 +148,12 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 		s := make([]byte, encodedStringSize(code[n:]))
 		x, y := suffixDecodeString(code[n:], s)
 		return bytes2str(s[:y]), n + x
+
+	case TypeBinary:
+		m := getDatum(code[n:])
+		bs := make([]byte, m-1)
+		copy(bs, code[n:n+m-1])
+		return bs, n + m
 
 	case TypeArray:
 		var arr []interface{}

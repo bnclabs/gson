@@ -222,6 +222,71 @@ func TestCborDel(t *testing.T) {
 	}
 }
 
+func TestCborLookups(t *testing.T) {
+	cbordoc, item := make([]byte, 1024), make([]byte, 1024)
+	cborptr := make([]byte, 1024)
+	// panic on invalid document
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config := NewDefaultConfig()
+		_, n := config.JsonToCbor("10", cbordoc)
+		p := config.JsonPointerToCbor([]byte("/a"), cborptr)
+		config.CborGet(cbordoc[:n], cborptr[:p], item)
+	}()
+	// panic on cbor pointer len-prefix
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config := NewDefaultConfig().ContainerEncoding(LengthPrefix)
+		_, n := config.JsonToCbor("[1,2]", cbordoc)
+		config.JsonPointerToCbor([]byte("/0"), cborptr)
+		config.CborGet(cbordoc, cborptr[:n], item)
+	}()
+	// panic on invalid array offset
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config := NewDefaultConfig()
+		_, n := config.JsonToCbor("[1,2]", cbordoc)
+		config.JsonPointerToCbor([]byte("/2"), cborptr)
+		config.CborGet(cbordoc, cborptr[:n], item)
+	}()
+	// panic key not found
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config := NewDefaultConfig()
+		_, n := config.JsonToCbor(`{"1": 10, "2": 20}`, cbordoc)
+		config.JsonPointerToCbor([]byte("/3"), cborptr)
+		config.CborGet(cbordoc, cborptr[:n], item)
+	}()
+	// panic invalid pointer
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		config := NewDefaultConfig()
+		_, n := config.JsonToCbor(`{"1": 10, "2": 20}`, cbordoc)
+		config.JsonPointerToCbor([]byte("/1/2"), cborptr)
+		config.CborGet(cbordoc, cborptr[:n], item)
+	}()
+}
+
 func BenchmarkCborGet(b *testing.B) {
 	config := NewDefaultConfig()
 	txt := string(testdataFile("testdata/typical.json"))
@@ -241,7 +306,6 @@ func BenchmarkCborGet(b *testing.B) {
 }
 
 func BenchmarkCborSet(b *testing.B) {
-	//config := NewDefaultConfig()
 	config := NewConfig(FloatNumber, UnicodeSpace)
 	txt := string(testdataFile("testdata/typical.json"))
 

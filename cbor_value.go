@@ -160,10 +160,6 @@ func cbor2tag(buf []byte) (interface{}, int) {
 		item, m := cbor2regexpval(buf[n:])
 		return item, n + m
 
-	case tagJsonString:
-		ln, m := cborItemLength(buf[n:])
-		return string(buf[n+m : n+m+ln]), n + m + ln
-
 	case tagJsonNumber:
 		ln, m := cborItemLength(buf[n:])
 		return string(buf[n+m : n+m+ln]), n + m + ln
@@ -324,30 +320,31 @@ func valint642cbor(item int64, buf []byte) int {
 	return valint322cbor(int32(item), buf)
 }
 
-func length2cbor(item interface{}, buf []byte) int {
-	switch v := item.(type) {
-	case uint8:
-		buf[0] = cborHdr(cborType0, cborInfo24)
-		buf[1] = v
-		return 2
-	case uint16:
-		buf[0] = cborHdr(cborType0, cborInfo25)
-		binary.BigEndian.PutUint16(buf[1:], v)
-		return 3
-	case uint32:
-		buf[0] = cborHdr(cborType0, cborInfo26)
-		binary.BigEndian.PutUint32(buf[1:], v)
-		return 5
-	case uint64:
-		buf[0] = cborHdr(cborType0, cborInfo27)
-		binary.BigEndian.PutUint64(buf[1:], v)
-		return 9
-	}
-	v := item.(int)
-	buf[0] = cborHdr(cborType0, cborInfo27)
-	binary.BigEndian.PutUint64(buf[1:], uint64(v))
-	return 9
-}
+// TODO: unused function, cleanup later.
+//func length2cbor(item interface{}, buf []byte) int {
+//	switch v := item.(type) {
+//	case uint8:
+//		buf[0] = cborHdr(cborType0, cborInfo24)
+//		buf[1] = v
+//		return 2
+//	case uint16:
+//		buf[0] = cborHdr(cborType0, cborInfo25)
+//		binary.BigEndian.PutUint16(buf[1:], v)
+//		return 3
+//	case uint32:
+//		buf[0] = cborHdr(cborType0, cborInfo26)
+//		binary.BigEndian.PutUint32(buf[1:], v)
+//		return 5
+//	case uint64:
+//		buf[0] = cborHdr(cborType0, cborInfo27)
+//		binary.BigEndian.PutUint64(buf[1:], v)
+//		return 9
+//	}
+//	v := item.(int)
+//	buf[0] = cborHdr(cborType0, cborInfo27)
+//	binary.BigEndian.PutUint64(buf[1:], uint64(v))
+//	return 9
+//}
 
 func valfloat322cbor(item float32, buf []byte) int {
 	buf[0] = cborHdr(cborType7, cborFlt32)

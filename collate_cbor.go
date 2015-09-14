@@ -35,6 +35,8 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 		// -1 is to skip terminator
 		num := denormalizeFloat(code[m:m+x-1], config.nk)
 		switch v := num.(type) {
+		case float32:
+			n += valfloat322cbor(v, out[n:])
 		case float64:
 			n += valfloat642cbor(v, out[n:])
 		case int64:
@@ -46,7 +48,12 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 		scratch := stringPool.Get().([]byte)
 		defer stringPool.Put(scratch)
 		x, y := suffixDecodeString(code[m:], scratch)
-		n := valtext2cbor(bytes2str(scratch[:y]), out[n:])
+		n += valtext2cbor(bytes2str(scratch[:y]), out[n:])
+		return m + x, n
+
+	case TypeBinary:
+		x := getDatum(code[m:])
+		n += valbytes2cbor(code[m:m+x-1], out[n:])
 		return m + x, n
 
 	case TypeArray:
@@ -239,7 +246,7 @@ func collateCborT1Info27(buf, out []byte, config *Config) (int, int) {
 	n += normalizeFloat(val, out[n:], config.nk)
 	out[n] = Terminator
 	n++
-	return 9, len(out)
+	return 9, n
 }
 
 func collateCborT2(buf, out []byte, config *Config) (int, int) {
@@ -324,6 +331,7 @@ func collateCborT4Indef(buf, out []byte, config *Config) (m int, n int) {
 	for buf[m] != brkstp {
 		x, y := cbor2collate(buf[m:], out[n__:], config)
 		m, n__ = m+x, n__+y
+		ln++
 	}
 	return
 }

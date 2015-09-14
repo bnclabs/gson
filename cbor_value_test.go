@@ -215,6 +215,16 @@ func TestCborNum(t *testing.T) {
 	}()
 }
 
+func TestCborJsonNumber(t *testing.T) {
+	buf, ref := make([]byte, 10), "10.11"
+	config := NewDefaultConfig().NumberKind(JsonNumber)
+	_, n := json2cbor(ref, buf, config)
+	val, m := cbor2value(buf[:n])
+	if n != 8 || n != m || !reflect.DeepEqual(val, ref) {
+		t.Errorf("fail code json-number: %v %v %T(%v)", n, m, val, val)
+	}
+}
+
 func TestCborFloat16(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -394,7 +404,8 @@ func TestCborMaster(t *testing.T) {
 		if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
 			t.Fatalf("error parsing %q: %v", jsonout[:q], err)
 		} else if !reflect.DeepEqual(outval, ref) {
-			t.Fatalf("expected {%T,%v}, got {%T,%v}", value, value, outval, outval)
+			fmsg := "expected {%T,%v}, got {%T,%v}"
+			t.Fatalf(fmsg, value, value, outval, outval)
 		}
 	}
 }

@@ -169,9 +169,31 @@ func TestGson2CollateMissing(t *testing.T) {
 
 func TestGson2CollateString(t *testing.T) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
-	// empty string
-	obj, ref := "", `\x06\x00\x00`
-	n := gson2collate(obj, code, config)
+	testcases := [][2]interface{}{
+		[2]interface{}{"", `\x06\x00\x00`},
+		[2]interface{}{"hello world", `\x06hello world\x00\x00`},
+		[2]interface{}{string(MissingLiteral), `\x01\x00`},
+	}
+	for _, tcase := range testcases {
+		obj, ref := tcase[0].(string), tcase[1].(string)
+		n := gson2collate(obj, code, config)
+		out := fmt.Sprintf("%q", code[:n])
+		out = out[1 : len(out)-1]
+		if out != ref {
+			t.Errorf("expected %v, got %v", ref, out)
+		}
+		val, m := collate2gson(code[:n], config)
+		if s, ok := val.(string); ok {
+			if s != obj || n != m {
+				t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
+			}
+		} else if s := string(val.(Missing)); s != obj || n != m {
+			t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
+		}
+	}
+	// missing string without doMissing configuration
+	obj, ref := string(MissingLiteral), `\x06~[]{}falsenilNA~\x00\x00`
+	n := gson2collate(obj, code, config.UseMissing(false))
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
@@ -181,39 +203,18 @@ func TestGson2CollateString(t *testing.T) {
 	if !reflect.DeepEqual(val, obj) || n != m {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
 	}
-	// normal string
-	obj, ref = "hello world", `\x06hello world\x00\x00`
-	n = gson2collate(obj, code, config)
-	out = fmt.Sprintf("%q", code[:n])
+}
+
+func TestGson2CollateBytes(t *testing.T) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	obj, ref := []byte("hello world"), `\nhello world\x00`
+	n := gson2collate(obj, code, config)
+	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != ref {
 		t.Errorf("expected %v, got %v", ref, out)
 	}
-	val, m = collate2gson(code[:n], config)
-	if !reflect.DeepEqual(val, obj) || n != m {
-		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
-	}
-	// missing string
-	obj, ref = string(MissingLiteral), `\x01\x00`
-	n = gson2collate(obj, code, config)
-	out = fmt.Sprintf("%q", code[:n])
-	out = out[1 : len(out)-1]
-	if out != ref {
-		t.Errorf("expected %v, got %v", ref, out)
-	}
-	val, m = collate2gson(code[:n], config)
-	if !reflect.DeepEqual(val, Missing(obj)) || n != m {
-		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
-	}
-	// missing string without doMissing configuration
-	obj, ref = string(MissingLiteral), `\x06~[]{}falsenilNA~\x00\x00`
-	n = gson2collate(obj, code, config.UseMissing(false))
-	out = fmt.Sprintf("%q", code[:n])
-	out = out[1 : len(out)-1]
-	if out != ref {
-		t.Errorf("expected %v, got %v", ref, out)
-	}
-	val, m = collate2gson(code[:n], config)
+	val, m := collate2gson(code[:n], config)
 	if !reflect.DeepEqual(val, obj) || n != m {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
 	}
