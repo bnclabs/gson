@@ -218,6 +218,8 @@ Notes
   the API, and subsequently handle all such panics as a single valued
   error.
 * maximum integer space shall be int64, uint64 is not supported.
+* the Config object may not be thread safe.
+
 
 for api documentation and bench marking try,
 

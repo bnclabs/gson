@@ -36,7 +36,9 @@ patch/
 - there are three or more forms of scanString() document them clearly
   along with its configuration.
 - Get() Set() Del() json-pointer operation on collated binary.
+- add Prepend() API in lookup_value.go
 - memory profile using tools/gson program for gson, cbor and collate.
+- add testcase for testdata/collate/*
 
 Action items on gson/collate:
 
