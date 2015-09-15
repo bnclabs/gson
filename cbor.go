@@ -161,8 +161,3 @@ var hdrIndefiniteBytes = cborHdr(cborType2, cborIndefiniteLength)
 var hdrIndefiniteText = cborHdr(cborType3, cborIndefiniteLength)
 var hdrIndefiniteArray = cborHdr(cborType4, cborIndefiniteLength)
 var hdrIndefiniteMap = cborHdr(cborType5, cborIndefiniteLength)
-
-var hdrBreakcodeBytes = cborHdr(cborType2, cborItemBreak)
-var hdrBreakcodeText = cborHdr(cborType3, cborItemBreak)
-var hdrBreakcodeArray = cborHdr(cborType4, cborItemBreak)
-var hdrBreakcodeMap = cborHdr(cborType5, cborItemBreak)

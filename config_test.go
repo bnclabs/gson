@@ -2,6 +2,7 @@ package gson
 
 import "testing"
 import "reflect"
+import "encoding/json"
 import "fmt"
 
 var _ = fmt.Sprintf("dummy")
@@ -107,5 +108,29 @@ func TestIndefinite(t *testing.T) {
 	mapStart(buf)
 	if config.IsIndefiniteMap(CborIndefinite(buf[0])) == false {
 		t.Errorf("failed")
+	}
+}
+
+func TestJsonToValues(t *testing.T) {
+	var s string
+	config := NewDefaultConfig().SpaceKind(AnsiSpace)
+	uni_s := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
+	inp := `"abcd"  "xyz" "10" ` + uni_s
+	if err := json.Unmarshal([]byte(uni_s), &s); err != nil {
+		t.Fatal(err)
+	}
+	ref := []interface{}{"abcd", "xyz", "10", s}
+	values := config.JsonToValues(inp)
+	if !reflect.DeepEqual(values, ref) {
+		t.Errorf("expected %v, got %v", ref, values)
+	}
+}
+
+func TestIsBreakCodes(t *testing.T) {
+	config := NewDefaultConfig()
+	out := make([]byte, 1024)
+	value2cbor([]interface{}{}, out, config)
+	if config.IsBreakstop(out[1]) == false {
+		t.Errorf("expected breakcode-array")
 	}
 }

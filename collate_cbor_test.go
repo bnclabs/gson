@@ -92,6 +92,23 @@ func TestCbor2CollateNumber(t *testing.T) {
 			t.Errorf("expected %v, got %v", refcode, seqn)
 		}
 	}
+	testcases = [][3]interface{}{
+		[3]interface{}{"-10", `\x05--78>\x00`, JsonNumber},
+	}
+	// skip collate2cbor
+	for _, tcase := range testcases {
+		inp, refcode := tcase[0].(string), tcase[1].(string)
+		t.Logf("%v", inp)
+		nk := tcase[2].(NumberKind)
+		config = config.NumberKind(nk)
+		_, n := json2cbor(inp, code, config)
+		_, n = cbor2collate(code[:n], out, config)
+		seqn := fmt.Sprintf("%q", out[:n])
+		seqn = seqn[1 : len(seqn)-1]
+		if seqn != refcode {
+			t.Errorf("expected %v, got %v", refcode, seqn)
+		}
+	}
 }
 
 func TestCbor2CollateString(t *testing.T) {
@@ -126,6 +143,19 @@ func TestCbor2CollateString(t *testing.T) {
 	if seqn != refcode {
 		t.Errorf("expected %v, got %v", refcode, seqn)
 	}
+}
+
+func TestCbor2CollateJsonString(t *testing.T) {
+	config := NewDefaultConfig().JsonString(true)
+	buf, out := make([]byte, 64), make([]byte, 64)
+
+	ref := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
+	n := tag2cbor(uint64(tagJsonString), buf)
+	_, x := json2cbor(ref, buf[n:], config)
+	n += x
+
+	cbor2collate(buf[:n], out, config)
+	//fmt.Printf("%q\n", out[:m])
 }
 
 func TestCbor2CollateBytes(t *testing.T) {
@@ -178,6 +208,21 @@ func TestCbor2CollateArray(t *testing.T) {
 	}
 	// with sort by length and length prefix
 	config = config.SortbyArrayLen(true).ContainerEncoding(LengthPrefix)
+	for _, tcase := range testcases {
+		t.Logf("%v", tcase[0])
+		inp, refcode := tcase[0].(string), tcase[2].(string)
+		_, n := json2collate(inp, coll, config)
+
+		_, n = collate2cbor(coll[:n], code, config)
+		_, n = cbor2collate(code[:n], out, config)
+		seqn := fmt.Sprintf("%q", out[:n])
+		seqn = seqn[1 : len(seqn)-1]
+		if seqn != refcode {
+			t.Errorf("expected %v, got %v", refcode, seqn)
+		}
+	}
+	// with sort by length and stream encoding
+	config = config.SortbyArrayLen(true).ContainerEncoding(Stream)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)

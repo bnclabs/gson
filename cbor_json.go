@@ -2,6 +2,7 @@ package gson
 
 import "strconv"
 import "math"
+import "unicode/utf8"
 import "encoding/binary"
 
 var nullStr = "null"
@@ -42,6 +43,9 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 		panic("cbor scanner expected false")
 
 	case '"':
+		if config.jsonString {
+			return jsonStringToCbor(txt, out)
+		}
 		n := 0
 		txt, x := scanString(txt, out[n+16:]) // 16 reserved for cbor hdr
 		n += valtext2cbor(bytes2str(out[n+16:n+16+x]), out[n:])
@@ -178,6 +182,29 @@ func jsonNumToCbor(txt string, out []byte, nk NumberKind) (string, int) {
 	}
 	n := valint642cbor(int64(num), out)
 	return txt[e:], n
+}
+
+func jsonStringToCbor(txt string, out []byte) (string, int) {
+	if len(txt) < 2 {
+		panic("cbor scanner expected string")
+	}
+
+	var scratch [10]byte
+	skipchar := false
+	for off, ch := range txt[1:] {
+		if skipchar {
+			skipchar = false
+			continue
+		} else if ch == '\\' {
+			skipchar = true
+		} else if ch == '"' {
+			x := utf8.EncodeRune(scratch[:], ch)
+			n := tag2cbor(uint64(tagJsonNumber), out)
+			n += valtext2cbor(txt[:off+x], out[n:]) // except last char
+			return txt[off+x:], n
+		}
+	}
+	panic("cbor scanner expected string")
 }
 
 //---- CBOR to JSON convertor

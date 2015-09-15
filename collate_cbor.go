@@ -456,7 +456,7 @@ func collateCborTag(buf, out []byte, config *Config) (int, int) {
 		scratch[0] = '"'
 		copy(scratch[1:], buf[m:m+ln])
 		scratch[1+ln] = '"'
-		_, y := scanString(bytes2str(scratch), utf8str)
+		_, y := scanString(bytes2str(scratch[:ln+2]), utf8str)
 		// collate golang string.
 		n := 0
 		out[n] = TypeString
@@ -473,8 +473,12 @@ func collateCborTag(buf, out []byte, config *Config) (int, int) {
 		if err != nil {
 			panic(err)
 		}
-		n := normalizeFloat(f, out, config.nk)
-		return m + ln, n
+		n := 0
+		out[n] = TypeNumber
+		n++
+		n += normalizeFloat(f, out[n:], config.nk)
+		out[n] = Terminator
+		return m + ln, n + 1
 	}
 	return m, 0 // skip this tag
 }

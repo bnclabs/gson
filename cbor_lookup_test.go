@@ -2,6 +2,7 @@ package gson
 
 import "testing"
 import "fmt"
+import "bytes"
 import "encoding/json"
 import "reflect"
 
@@ -113,6 +114,25 @@ func TestCborSet(t *testing.T) {
 		} else if ov := CborMap2golangMap(oval); !reflect.DeepEqual(ov, iref) {
 			t.Fatalf("for %v item expected %v, got %v", ptr, iref, ov)
 		}
+	}
+
+	// cbor set with empty pointer
+	cbordoc, cbordocnew = make([]byte, 1024), make([]byte, 1024)
+	cborptr = make([]byte, 1024)
+	item, itemold = make([]byte, 1024), make([]byte, 1024)
+	n = config.JsonPointerToCbor([]byte(""), cborptr)
+	cborptr = cborptr[:n]
+	_, n = config.JsonToCbor(txt, cbordoc)
+	cbordoc = cbordoc[:n]
+	txt = `{"a": 10}`
+	_, n = config.JsonToCbor(txt, item)
+	item = item[:n]
+	n, m := config.CborSet(
+		cbordoc, cborptr /*[:n]*/, item, cbordocnew, itemold)
+	if bytes.Compare(cbordocnew[:n], item) != 0 {
+		t.Errorf("expected %v, got %v", item, cbordocnew[:n])
+	} else if bytes.Compare(itemold[:m], cbordoc) != 0 {
+		t.Errorf("expected %v, got %v", cbordoc, itemold[:m])
 	}
 }
 

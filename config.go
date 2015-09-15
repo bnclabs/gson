@@ -65,6 +65,7 @@ type Config struct {
 	nk                NumberKind
 	ws                SpaceKind
 	ct                CborContainerEncoding
+	jsonString        bool
 	arrayLenPrefix    bool // first sort arrays based on its length
 	propertyLenPrefix bool // first sort properties based on length
 	doMissing         bool // handle missing values (for N1QL)
@@ -92,6 +93,7 @@ func NewDefaultConfig() *Config {
 		nk:                FloatNumber,
 		ws:                UnicodeSpace,
 		ct:                Stream,
+		jsonString:        false,
 		arrayLenPrefix:    false,
 		propertyLenPrefix: true,
 		doMissing:         true,
@@ -125,6 +127,12 @@ func (config Config) SpaceKind(ws SpaceKind) *Config {
 // ContainerEncoding for cbor.
 func (config Config) ContainerEncoding(ct CborContainerEncoding) *Config {
 	config.ct = ct
+	return &config
+}
+
+// JsonString treat json string as it is, avoid un-quoting.
+func (config Config) JsonString(what bool) *Config {
+	config.jsonString = what
 	return &config
 }
 
@@ -278,34 +286,12 @@ func (config *Config) IsIndefiniteMap(b CborIndefinite) bool {
 	return b == CborIndefinite(hdrIndefiniteMap)
 }
 
-// IsBreakcodeBytes can be used to check whether chunks of
-// cbor byte-strings are ending with the current byte.
-// Can be used by libraries that build on top of cbor.
-func (config *Config) IsBreakcodeBytes(b byte) bool {
-	return b == hdrBreakcodeBytes
-}
-
-// IsBreakcodeText can be used to check whether chunks of
-// cbor text are ending with the current byte.
-// Can be used by libraries that build on top of cbor.
-func (config *Config) IsBreakcodeText(b byte) bool {
-	return b == hdrBreakcodeText
-}
-
-// IsBreakcodeArray can be used to check whether cbor array
-// items of indefinite length are coming to an end with the
-// current byte.
-// Can be used by libraries that build on top of cbor.
-func (config *Config) IsBreakcodeArray(b byte) bool {
-	return b == hdrBreakcodeArray
-}
-
-// IsBreakcodeMap can be used to check whether cbor map items
-// of indefinite length are coming to an end with the current
-// byte.
-// Can be used by libraries that build on top of cbor.
-func (config *Config) IsBreakcodeMap(b byte) bool {
-	return b == hdrBreakcodeMap
+// IsBreakstop can be used to check whether chunks of
+// cbor bytes, or texts, or array items or map items
+// ending with the current byte. Can be used by libraries
+// that build on top of cbor.
+func (config *Config) IsBreakstop(b byte) bool {
+	return b == brkstp
 }
 
 // ValueToCbor golang data into cbor binary.
