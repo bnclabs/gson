@@ -384,14 +384,14 @@ func (config *Config) CborDelete(doc, cborptr, newdoc, deleted []byte) (int, int
 	return cborDel(doc, cborptr, newdoc, deleted)
 }
 
-// GsonToCollate encode input golang object to order preserving
+// ValueToCollate encode input golang object to order preserving
 // binary representation.
-func (config *Config) GsonToCollate(obj interface{}, code []byte) int {
+func (config *Config) ValueToCollate(obj interface{}, code []byte) int {
 	return gson2collate(obj, code, config)
 }
 
-// CollateToGson will decode collated object back to golang object.
-func (config *Config) CollateToGson(code []byte) (interface{}, int) {
+// CollateToValue will decode collated object back to golang object.
+func (config *Config) CollateToValue(code []byte) (interface{}, int) {
 	if len(code) == 0 {
 		return nil, 0
 	}

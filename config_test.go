@@ -111,6 +111,17 @@ func TestIndefinite(t *testing.T) {
 	}
 }
 
+func TestJsonToValue(t *testing.T) {
+	config := NewDefaultConfig().SpaceKind(AnsiSpace)
+	inp := `"abcd"  "xyz" "10" `
+	txt, value := config.JsonToValue(inp)
+	if ref := `  "xyz" "10" `; txt != ref {
+		t.Errorf("expected %q, got %q", ref, txt)
+	} else if !reflect.DeepEqual(value, "abcd") {
+		t.Errorf("expected %v, got %v", ref, value)
+	}
+}
+
 func TestJsonToValues(t *testing.T) {
 	var s string
 	config := NewDefaultConfig().SpaceKind(AnsiSpace)
@@ -123,6 +134,53 @@ func TestJsonToValues(t *testing.T) {
 	values := config.JsonToValues(inp)
 	if !reflect.DeepEqual(values, ref) {
 		t.Errorf("expected %v, got %v", ref, values)
+	}
+}
+
+func TestParseJsonPointer(t *testing.T) {
+	config := NewDefaultConfig()
+	segments := config.ParseJsonPointer("/a/b", []string{})
+	if ref := []string{"a", "b"}; !reflect.DeepEqual(segments, ref) {
+		t.Errorf("expected %v, got %v", ref, segments)
+	}
+}
+
+func TestToJsonPointer(t *testing.T) {
+	config := NewDefaultConfig()
+	jptr := "/a/b"
+	segments := config.ParseJsonPointer(jptr, []string{})
+	pointer := make([]byte, 1024)
+	n := config.ToJsonPointer(segments, pointer)
+	if s := string(pointer[:n]); jptr != s {
+		t.Errorf("expected %v, got %v", jptr, s)
+	}
+}
+
+func TestGsonToCollate(t *testing.T) {
+	config := NewDefaultConfig().NumberKind(IntNumber)
+	inp := map[string]interface{}{"a": 10, "b": 20}
+	ref := map[string]interface{}{"a": int64(10), "b": int64(20)}
+	code := make([]byte, 1024)
+	n := config.ValueToCollate(inp, code)
+	val, _ := config.CollateToValue(code[:n])
+	if !reflect.DeepEqual(ref, val) {
+		t.Errorf("expected %v, got %v", inp, val)
+	}
+}
+
+func TestCborToCollate(t *testing.T) {
+	config := NewDefaultConfig().NumberKind(IntNumber)
+	inp := [][2]interface{}{
+		[2]interface{}{"a", uint64(10)},
+		[2]interface{}{"b", uint64(20)}}
+	code, coll := make([]byte, 1024), make([]byte, 1024)
+	out := make([]byte, 1024)
+	n := config.ValueToCbor(inp, code)
+	_, m := config.CborToCollate(code[:n], coll)
+	_, x := config.CollateToCbor(coll[:m], out)
+	val, _ := config.CborToValue(out[:x])
+	if !reflect.DeepEqual(inp, val) {
+		t.Errorf("expected %v, got %v", inp, val)
 	}
 }
 

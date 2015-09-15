@@ -36,6 +36,15 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n++
 		return n
 
+	case int:
+		n := 0
+		code[n] = TypeNumber
+		n++
+		n += normalizeFloat(int64(value), code[n:], config.nk)
+		code[n] = Terminator
+		n++
+		return n
+
 	case Length:
 		n := 0
 		code[n] = TypeLength
