@@ -55,8 +55,7 @@ What is what
 Transforms
 ----------
 
-![value to json and vice versa]
-(https://github.com/prataprc/gson/blob/master/docs/gson.svg)
+.. |image| docs/gson.svg
 
 **value to json**
 
