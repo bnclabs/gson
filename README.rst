@@ -13,17 +13,18 @@ What is what
 * make sense only for json arrays and objects, but to any level
   of nesting.
 * json-pointers shall be unquoted before they are used for
-  accessing into json text, and after unquoting segments within
-  the pointer shall be binary compared with property keys.
+  accessing into json text (or an equivalent representation),
+  after unquoting segments within the pointer, each segment shall
+  be binary compared with property keys.
 * json-pointers can be used to access gson or cbor representation.
 
-**gson**
+**value (aka gson)**
 
 * golang object parsed from json, cbor or collate representation.
 * json arrays are represeted in golang as ``[]interface{}``.
 * json objects, aka properties, are presented in golang as
   ``map[string]interface{}``.
-* gson objects do support operations like, Get(), Set(), and
+* gson objects support operations like, Get(), Set(), and
   Delete() on individual fields located by the json-pointer.
 
 **cbor**
@@ -31,7 +32,8 @@ What is what
 * Concise Binary Object Representation, also called CBOR, RFC-7049.
 * machine friendly, designed for inter-networking of light weight
   devices, and easy to implement in many languages.
-* can be used for more than data exchange, left to user imagination.
+* can be used for more than data exchange, left to user
+  imagination :) ...
 
 **collate**
 
@@ -39,7 +41,7 @@ What is what
   JSON specification.
 * binary representation preserving the sort order.
 * transform back to original JSON from binary representation.
-* numbers can be encoded in three way as integers, or as
+* numbers can be encoded in three ways - as integers, or as
   small-decimals, or as floating point represented in exponent
   form.
 * strings are collated as it is received from the input **without
@@ -53,15 +55,23 @@ What is what
 Transforms
 ----------
 
-**json to gson**
+![value to json and vice versa]
+(https://github.com/prataprc/gson/blob/master/docs/gson.svg)
+
+**value to json**
+
+* to convert value back to json text golang's encoding/json package is
+  used.
+* `Encoder` interface{} is used to re-use o/p buffer.
+
+**json to value**
 
 * a custom parser is supplied that must be faster than encoding/json.
 * numbers can be interpreted as integer, or float64, or retained as
   string based on the configuration parameter ``NumberKind``.
 
-  a. ``StringNumber``, to retain string as JSON string type aliased
-     to ``encoding/json.Number``, a custom type defined by this package.
-     Can be used for delayed parsing.
+  a. ``JsonNumber``, to retain string as JSON string type aliased
+     to ``encoding/json.Number``.
   b. ``IntNumber``, to interpret JSON number as integer size defined
      by the platform.
   c. ``FloatNumber``, to interpret JSON number as 64-bit floating point.
@@ -70,14 +80,13 @@ Transforms
   ``SpaceKind``, as ``AnsiSpace`` that should be faster
   than ``UnicodeSpace``, while the later supports unicode whitespaces
   as well.
-* to convert gson back to json text encoding/json package golang's
-  stdlib can be used.
 
-**gson to cbor**
+**value to cbor**
 
 * ``nil``, ``true``, ``false`` golang types are encodable into cbor
   format.
-* all golang ``number`` types are encodable into cbor format.
+* all golang ``number`` types, including signed, unsigned, and
+  floating-points variants, are encodable into cbor format.
 * ``[]byte`` is encoded as cbor byte-string.
 * ``string`` is encoded as cbor text.
 * generic ``array`` is interpreted as golang ``[]interface{}`` and
@@ -92,35 +101,37 @@ Transforms
   and encoded as cbor array of 2-element item, where the first item
   is key represented as string and second item is any valid json
   value.
+* before encoding ``map[string]interface{}`` values use
+  `GolangMap2cborMap()` function to transform them to
+  ``[][2]interface{}``.
 * following golang data types are encoded using cbor-tags,
 
   a. ``time.Time`` encoded with tag-0.
-  b. ``gson/cbor.Epoch``, type supplied by cbor package, encoded
+  b. ``Epoch``, type supplied by cbor package, encoded
      with tag-1.
-  c. ``gson/cbor.EpochMicro``, type supplied by cbor package, encoded
+  c. ``EpochMicro``, type supplied by cbor package, encoded
      with tag-1.
   d. ``math/big.Int`` positive numbers are encoded with tag-2, and
      negative numbers are encoded with tag-3.
-  e. ``gson/cbor.DecimalFraction``, type supplied by cbor package,
+  e. ``DecimalFraction``, type supplied by cbor package,
      encoded with tag-4.
-  f. ``gson/cbor.BigFloat``, type supplied by cbor package, encoded
+  f. ``BigFloat``, type supplied by cbor package, encoded
      with tag-5.
-  g. ``gson/cbor.Cbor``, type supplied by cbor package, encoded with
+  g. ``Cbor``, type supplied by cbor package, encoded with
      tag-24.
   h. ``regexp.Regexp`` encoded with tag-35.
-  i. ``gson/cbor.CborPrefix``, type supplied by cbor package, encoded
+  i. ``CborPrefix``, type supplied by cbor package, encoded
      with tag-55799.
 
 * all other types shall cause a panic.
 
-**cbor to gson**
+**cbor to value**
 
-* reverse of all ``gson to cbor`` encoding, described above, are
+* reverse of all ``value to cbor`` encoding, described above, are
   supported.
 * cannot decode ``float16`` type and int64 > 9223372036854775807.
-* indefinite byte-string chunks, text chunks, array and map shall
-  be decoded outside this package using
-  ``IsIndefinite*()`` and ``IsBreakcode*()`` APIs.
+* indefinite byte-string chunks, text chunks shall be decoded outside
+  this package using ``IsIndefinite*()`` and ``IsBreakstop()`` APIs.
 
 **json to cbor**
 
@@ -173,7 +184,7 @@ Transforms
 * cbor-text with indefinite encoding are not supported.
 * simple type float16 are not supported.
 
-**gson to collate**
+**value to collate**
 
 * TBD
 
@@ -185,7 +196,7 @@ Transforms
 
 * TBD
 
-**collate to gson**
+**collate to value**
 
 * TBD
 
@@ -218,7 +229,7 @@ Notes
   the API, and subsequently handle all such panics as a single valued
   error.
 * maximum integer space shall be int64, uint64 is not supported.
-* the Config object may not be thread safe.
+* `Config` object and its APIs are neither re-entrant not thread safe.
 
 
 for api documentation and bench marking try,
