@@ -65,11 +65,11 @@ Transforms
 * a custom parser is supplied that must be faster than encoding/json.
 * numbers can be interpreted as integer, or float64, or retained as
   string based on the configuration parameter `NumberKind`.
-  *  `JsonNumber`, to retain string as JSON string type aliased
+  *  `JsonNumber` to retain number as JSON string type aliased
      to `encoding/json.Number`.
-  *  `IntNumber`, to interpret JSON number as integer size defined
-     by the platform.
-  *  `FloatNumber`, to interpret JSON number as 64-bit floating point.
+  *  `IntNumber` to interpret JSON number as integer whose size is
+     defined by the platform.
+  *  `FloatNumber` to interpret JSON number as 64-bit floating point.
 * whitespace can be interpreted, based on configuration parameter
   `SpaceKind`, as `AnsiSpace` that should be faster
   than `UnicodeSpace`, while the later supports unicode whitespaces
@@ -96,28 +96,28 @@ Transforms
   * with `Stream` option, arrays and maps are encoded using
     Indefinite and Breakstop encoding.
 * generic `property` is interpreted as golang `[][2]interface{}`
-  and encoded as cbor array of 2-element item, where the first item
+  and encoded as cbor array of 2-element array, where the first item
   is key represented as string and second item is any valid json
   value.
-* before encoding `map[string]interface{}` values use
+* before encoding `map[string]interface{}` type, use
   `GolangMap2cborMap()` function to transform them to
   `[][2]interface{}`.
 * following golang data types are encoded using cbor-tags,
   * `time.Time` encoded with tag-0.
-  * `Epoch`, type supplied by cbor package, encoded
+  * `Epoch` type supplied by cbor package, encoded
     with tag-1.
-  * `EpochMicro`, type supplied by cbor package, encoded
+  * `EpochMicro` type supplied by cbor package, encoded
     with tag-1.
   * `math/big.Int` positive numbers are encoded with tag-2, and
     negative numbers are encoded with tag-3.
-  * `DecimalFraction`, type supplied by cbor package,
+  * `DecimalFraction` type supplied by cbor package,
     encoded with tag-4.
-  * `BigFloat`, type supplied by cbor package, encoded
+  * `BigFloat` type supplied by cbor package, encoded
     with tag-5.
-  * `Cbor`, type supplied by cbor package, encoded with
+  * `Cbor` type supplied by cbor package, encoded with
     tag-24.
   * `regexp.Regexp` encoded with tag-35.
-  * `CborPrefix`, type supplied by cbor package, encoded
+  * `CborPrefix` type supplied by cbor package, encoded
     with tag-55799.
 * all other types shall cause a panic.
 
@@ -131,23 +131,22 @@ Transforms
 
 **json to cbor**
 
-* `nil`, `true`, `false` golang types are encodable into cbor
+* `null`, `true`, `false` json types are encodable into cbor
   format.
 * `number` types are encoded based on configuration parameter
   `NumberKind`, which can be one of the following.
-  * for `JsonNumber` - number is encoded as cbor-text
-    (aka cbor-String) and the whole item is tagged as
-    `tagJsonNumber` (tag-37).
-  * for `FloatNumber` - number is encoded as cbor-float64.
-  * for `FloatNumber32` - number is encoded as cbor-float32.
-  * for `IntNumber` - number is encoded as cbor-int64.
-  * for `SmartNumber` - if number is floating point then it is
-    encoded as cbor-float64, else encoded as cbor-int64.
-  * SmartNumber32 - if number is floating point then it is encoded
+  * `JsonNumber` number is encoded as cbor-text (aka cbor-String)
+    and the whole item is tagged as `tagJsonNumber` (tag-37).
+  * `FloatNumber` number is encoded as cbor-float64.
+  * `FloatNumber32` number is encoded as cbor-float32.
+  * `IntNumber` number is encoded as cbor-int64.
+  * `SmartNumber` if number is floating point then it is encoded
+    as cbor-float64, else encoded as cbor-int64.
+  * `SmartNumber32` if number is floating point then it is encoded
     as cbor-float32, else encoded as cbor-float32.
-* `string` will be parsed and encoded into utf8, and encoded as
-   cbor-text. If config.JsonString() is set, string will be
-   encoded as JSON-string and tagged as `tagJsonString` (tag-37).
+* `string` will be parsed and translated into utf8, and subsequently
+  encoded as cbor-text. If config.JsonString() is set, string will be
+  encoded simply as JSON-string and tagged as `tagJsonString` (tag-37).
 * `arrays` can be encoded in `Stream` mode, using cbor's
   indefinite-length scheme, or in `LengthPrefix` mode.
 * `properties` can be encoded in `Stream` mode, using cbor's
@@ -223,7 +222,7 @@ Notes
   the API, and subsequently handle all such panics as a single valued
   error.
 * maximum integer space shall be in int64.
-* `Config` object and its APIs are neither re-entrant not thread safe.
+* `Config` instances, and its APIs, are neither re-entrant not thread safe.
 
 **list of changes from github.com/prataprc/collatejson**
 
@@ -237,4 +236,3 @@ Notes
 * all APIs panic instead of returning an error.
 * output buffer should have its len() == cap(), so that encoder and decoder
   can avoid append and instead use buffer index.
-
