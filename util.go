@@ -24,7 +24,7 @@ func str2bytes(str string) []byte {
 }
 
 // CborMap2golangMap transforms [][2]interface{} to map[string]interface{}
-// that is required for converting golan->cbor.
+// that is required for converting golang to cbor and vice-versa.
 func CborMap2golangMap(value interface{}) interface{} {
 	switch items := value.(type) {
 	case []interface{}:
@@ -43,7 +43,7 @@ func CborMap2golangMap(value interface{}) interface{} {
 }
 
 // GolangMap2cborMap transforms map[string]interface{} to [][2]interface{}
-// that is required for converting golan->cbor.
+// that is required for converting golang to cbor and vice-versa.
 func GolangMap2cborMap(value interface{}) interface{} {
 	switch items := value.(type) {
 	case []interface{}:

@@ -1,12 +1,3 @@
-// Package also implements RFC-6901, JSON pointers.
-// Pointers themself can be encoded into cbor format and
-// vice-versa.
-//
-//   cbor-path :    | Text-chunk-start |
-//                        | tagJsonString | len | segment1 |
-//                        | tagJsonString | len | segment2 |
-//                        ...
-//                  | Break-stop |
 package gson
 
 import "strconv"

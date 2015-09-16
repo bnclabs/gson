@@ -114,11 +114,14 @@ func TestIndefinite(t *testing.T) {
 func TestJsonToValue(t *testing.T) {
 	config := NewDefaultConfig().SpaceKind(AnsiSpace)
 	inp := `"abcd"  "xyz" "10" `
+	out := make([]byte, 1024)
 	txt, value := config.JsonToValue(inp)
 	if ref := `  "xyz" "10" `; txt != ref {
 		t.Errorf("expected %q, got %q", ref, txt)
-	} else if !reflect.DeepEqual(value, "abcd") {
-		t.Errorf("expected %v, got %v", ref, value)
+	}
+	n := config.ValueToJson(value, out)
+	if s := string(out[:n]); s != `"abcd"` {
+		t.Errorf("expected %v, got %v", `"abcd"`, s)
 	}
 }
 

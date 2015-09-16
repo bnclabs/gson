@@ -495,8 +495,8 @@ func valbignum2cbor(num *big.Int, buf []byte, config *Config) int {
 func valdecimal2cbor(item interface{}, buf []byte) int {
 	n := tag2cbor(tagDecimalFraction, buf)
 	x := item.(CborDecimalFraction)
-	n += valint642cbor(x[0].(int64), buf[n:])
-	n += valint642cbor(x[1].(int64), buf[n:])
+	n += valint642cbor(x[0], buf[n:])
+	n += valint642cbor(x[1], buf[n:])
 	return n
 }
 
@@ -713,14 +713,14 @@ func cbor2decimalval(buf []byte) (interface{}, int) {
 	m, y := cbor2value(buf[x:])
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
-			return CborDecimalFraction([2]interface{}{int64(a), int64(b)}), x + y
+			return CborDecimalFraction([2]int64{int64(a), int64(b)}), x + y
 		}
-		return CborDecimalFraction([2]interface{}{int64(a), m.(int64)}), x + y
+		return CborDecimalFraction([2]int64{int64(a), m.(int64)}), x + y
 
 	} else if b, ok := m.(uint64); ok {
-		return CborDecimalFraction([2]interface{}{e.(int64), int64(b)}), x + y
+		return CborDecimalFraction([2]int64{e.(int64), int64(b)}), x + y
 	}
-	return CborDecimalFraction([2]interface{}{e.(int64), m.(int64)}), x + y
+	return CborDecimalFraction([2]int64{e.(int64), m.(int64)}), x + y
 }
 
 func cbor2bigfloatval(buf []byte) (interface{}, int) {

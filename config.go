@@ -1,3 +1,56 @@
+// Document representation, collation and transformation toolkit
+//
+// Package provides APIs to convert data representation from one format
+// to another. Supported formats are:
+//   * Json
+//   * Golang value
+//   * CBOR - Consice Binary Object Representation
+//   * collation
+//
+// Package also provides a RFC-7049 (CBOR) implementation, to encode
+// golang data into machine friendly binary format and vice-versa.
+// Following golang native types are supported:
+//   * nil, true, false.
+//   * native integer types, and its alias, of all width.
+//   * float32, float64.
+//   * slice of bytes.
+//   * native string.
+//   * slice of interface - []interface{}.
+//   * map of string to interface{} - map[string]interface{}.
+//
+// Types from golang's standard library and custom types provided
+// by this package that can be encoded using CBOR:
+//   * `CborUndefined` to encode a data-item as undefined.
+//   * `CborIndefinite` and `CborBreakStop` to encode indefinite
+//     length of bytes, string, array and map
+//
+//   * CborEpoch : in seconds since epoch.
+//   * CborEpochMicro: in micro-seconds epoch.
+//   * CborDecimalFraction: m*(10**e)
+//   * CborBigFloat: m*(2**e)
+//   * Cbor: a cbor encoded binary data item.
+//   * CborPrefix: to self indentify a binary blog as CBOR.
+//
+// Package also provides an implementation for encoding json to CBOR
+// and vice-versa:
+//   * number can be encoded as integer or float.
+//   * string is wrapped as `tagJsonString` data-item, to avoid
+//     marshalling and unmarshalling json-string to utf8.
+//   * arrays and maps are encoded using indefinite encoding.
+//   * byte-string encoding is not used.
+//
+// Package also provides a RFC-6901 (JSON-pointers) implementation.
+// Pointers themself can be encoded into cbor format and
+// vice-versa:
+//
+//   cbor-path        : text-chunk-start segments break-stop
+//   segments         : tagJsonString | len | cbor-text
+//                    | segments segment
+//   text-chunk-start : 0xdf
+//   tagJsonString    : 0x25
+//   break-stop       : 0xff
+//   len              : <encoded as cbor integer>
+//   cbor-text        : <encoded as cbor text>
 package gson
 
 import "bytes"
@@ -55,7 +108,7 @@ const (
 	Stream
 )
 
-// MaxKeys maximum number of keys allowed in a property item.
+// MaxKeys maximum number of keys allowed in a property object.
 const MaxKeys = 1000
 
 // Config and access gson functions. All APIs to gson is defined via
@@ -179,6 +232,17 @@ func (config *Config) JsonToValues(txt string) []interface{} {
 		values = append(values, tok)
 	}
 	return values
+}
+
+// ValueToJson will convert json compatible golang value into JSON string.
+// Returns the number of bytes written into `out`.
+func (config *Config) ValueToJson(value interface{}, out []byte) int {
+	config.buf.Reset()
+	if err := config.enc.Encode(value); err != nil {
+		panic(err)
+	}
+	s := config.buf.Bytes()
+	return copy(out, s[:len(s)-1]) // -1 to strip \n
 }
 
 // ParseJsonPointer follows rfc-6901 allows ~0 and ~1 escapes, property

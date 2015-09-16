@@ -52,67 +52,94 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 		return txt, n
 
 	case '[':
-		if config.ct == LengthPrefix {
-			panic("cbor scanner LengthPrefix not supported")
+		n, m, n_, n__ := 0, 0, 0, 0
+		switch config.ct {
+		case LengthPrefix:
+			n_, n__ = n+32, n+32
+		case Stream:
+			n__ += arrayStart(out[n__:])
 		}
-		n, m := 0, 0
-		n += arrayStart(out[n:])
+
+		var ln int
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("cbor scanner expected ']'")
-		} else if txt[0] == ']' {
-			n += breakStop(out[n:])
-			return txt[1:], n
-		}
-		for {
-			txt, m = json2cbor(txt, out[n:], config)
-			n += m
-			if txt = skipWS(txt, config.ws); len(txt) == 0 {
-				panic("cbor scanner expected ']'")
-			} else if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.ws)
-			} else if txt[0] == ']' {
-				break
-			} else {
-				panic("cbor scanner expected ']'")
+		} else if txt[0] != ']' {
+			for {
+				txt, m = json2cbor(txt, out[n__:], config)
+				n__ += m
+				ln++
+				if txt = skipWS(txt, config.ws); len(txt) == 0 {
+					panic("cbor scanner expected ']'")
+				} else if txt[0] == ',' {
+					txt = skipWS(txt[1:], config.ws)
+				} else if txt[0] == ']' {
+					break
+				} else {
+					panic("cbor scanner expected ']'")
+				}
 			}
 		}
-		n += breakStop(out[n:])
+		n__ += breakStop(out[n__:])
+		switch config.ct {
+		case LengthPrefix:
+			x := valuint642cbor(uint64(ln), out[n:])
+			out[n] = (out[n] & 0x1f) | cborType4 // fix type from type0->type4
+			n += x
+			n += copy(out[n:], out[n_:n__])
+		case Stream:
+			n = n__
+		}
 		return txt[1:], n
 
 	case '{':
-		if config.ct == LengthPrefix {
-			panic("cbor scanner LengthPrefix not supported")
+		n, m, n_, n__ := 0, 0, 0, 0
+		switch config.ct {
+		case LengthPrefix:
+			n_, n__ = n+32, n+32
+		case Stream:
+			n__ += mapStart(out[n__:])
 		}
-		n, m := 0, 0
-		n += mapStart(out[n:])
+
+		var ln int
 		txt = skipWS(txt[1:], config.ws)
 		if txt[0] == '}' {
-			n += breakStop(out[n:])
-			return txt[1:], n
+			// pass
 		} else if txt[0] != '"' {
 			panic("cbor scanner expected property key")
-		}
-		for {
-			txt, m = scanString(txt, out[n+16:]) // 16 reserved for cbor hdr
-			n += valtext2cbor(bytes2str(out[n+16:n+16+m]), out[n:])
+		} else {
+			for {
+				// 16 reserved for cbor hdr
+				txt, m = scanString(txt, out[n__+16:])
+				n__ += valtext2cbor(bytes2str(out[n__+16:n__+16+m]), out[n__:])
 
-			if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
-				panic("cbor scanner expected property colon")
-			}
-			txt, m = json2cbor(skipWS(txt[1:], config.ws), out[n:], config)
-			n += m
+				if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
+					panic("cbor scanner expected property colon")
+				}
+				txt, m = json2cbor(skipWS(txt[1:], config.ws), out[n__:], config)
+				n__ += m
+				ln++
 
-			if txt = skipWS(txt, config.ws); len(txt) == 0 {
-				panic("cbor scanner expected '}'")
-			} else if txt[0] == ',' {
-				txt = skipWS(txt[1:], config.ws)
-			} else if txt[0] == '}' {
-				break
-			} else {
-				panic("cbor scanner expected '}'")
+				if txt = skipWS(txt, config.ws); len(txt) == 0 {
+					panic("cbor scanner expected '}'")
+				} else if txt[0] == ',' {
+					txt = skipWS(txt[1:], config.ws)
+				} else if txt[0] == '}' {
+					break
+				} else {
+					panic("cbor scanner expected '}'")
+				}
 			}
 		}
-		n += breakStop(out[n:])
+		n__ += breakStop(out[n__:])
+		switch config.ct {
+		case LengthPrefix:
+			x := valuint642cbor(uint64(ln), out[n:])
+			out[n] = (out[n] & 0x1f) | cborType5 // fix type from type0->type5
+			n += x
+			n += copy(out[n:], out[n_:n__])
+		case Stream:
+			n = n__
+		}
 		return txt[1:], n
 
 	default:
@@ -317,7 +344,9 @@ func cbor2jsont3(buf, out []byte, config *Config) (int, int) {
 	ln, n := cborItemLength(buf)
 
 	config.buf.Reset()
-	config.enc.Encode(bytes2str(buf[n : n+ln]))
+	if err := config.enc.Encode(bytes2str(buf[n : n+ln])); err != nil {
+		panic(err)
+	}
 	s := config.buf.Bytes()
 
 	copy(out, s[:len(s)-1]) // -1 to strip \n
@@ -410,12 +439,18 @@ func tag2json(buf, out []byte, config *Config) (int, int) {
 		ln, m := cborItemLength(buf[n:])
 		n += m
 
-		config.buf.Reset()
-		config.enc.Encode(bytes2str(buf[n : n+ln]))
-		s := config.buf.Bytes()
+		x := 0
+		copy(out[x:], buf[n:n+ln])
+		x += ln
+		return n + ln, x
 
-		copy(out, s[:len(s)-1])
-		return n + ln, len(s) - 1
+		//config.buf.Reset()
+		//if err := config.enc.Encode(bytes2str(buf[n : n+ln])); err != nil {
+		//	panic(err)
+		//}
+		//s := config.buf.Bytes()
+		//copy(out, s[:len(s)-1])
+		//return n + ln, len(s) - 1
 
 	case tagJsonNumber:
 		ln, m := cborItemLength(buf[n:])

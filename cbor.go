@@ -1,38 +1,3 @@
-// Package cbor implements RFC-7049 to encode golang data into
-// binary format and vice-versa.
-//
-// Following golang native types are supported,
-//
-//   * nil, true, false.
-//   * native integer types, and its alias, of all width.
-//   * float32, float64.
-//   * slice of bytes.
-//   * native string.
-//   * slice of interface - []interface{}.
-//   * map of string to interface{} - map[string]interface{}.
-//
-// Custom types defined by this package can also be encoded using cbor.
-//
-//   * Undefined - to encode a data-item as undefined.
-//
-// Types from golang standard library and custom defined types in
-// this package that are encoded using RFC-7049 cbor-tags.
-//
-//   * Epoch : in seconds since epoch.
-//   * EpochMicro: in micro-seconds epoch.
-//   * DecimalFraction: m*(10**e)
-//   * BigFloat: m*(2**e)
-//   * Cbor: a cbor encoded binary data item.
-//   * CborPrefix: to self indentify a binary blog as cbor.
-//
-// Package also provides encoding algorithm from json to cbor
-// and vice-versa.
-//
-//   * number can be encoded as integer or float.
-//   * string is wrapped as `tagJsonString` data-item, to avoid
-//     marshalling and unmarshalling json-string to utf8.
-//   * arrays and maps are encoded using indefinite encoding.
-//   * byte-string encoding is not used.
 package gson
 
 // CborUndefined type as part of simple-type codepoint-23.
@@ -44,11 +9,11 @@ type CborIndefinite byte
 // CborBreakStop code, last-byte of stream encoded the data items.
 type CborBreakStop byte
 
-// Cbor tagged-type, byte-string of cbor data-item.
+// Cbor tagged-type, a byte-string of cbor data-item.
 type Cbor []byte
 
-// CborPrefix tagged-type, byte-string of cbor data-item, that will be
-// wrapped with a unique prefix before sending out.
+// CborPrefix tagged-type, a byte-string of cbor data-item that
+// will be wrapped with a unique prefix before sending out.
 type CborPrefix []byte
 
 // CborEpoch tagged-type, seconds since 1970-01-01T00:00Z
@@ -60,11 +25,11 @@ type CborEpoch int64
 type CborEpochMicro float64
 
 // CborDecimalFraction tagged-type, combine an integer mantissa
-// with a base-10 scaling factor, m*(10**e). As int64{e,m}.
-type CborDecimalFraction [2]interface{}
+// with a base-10 scaling factor m*(10**e), presented as [2]int64{e,m}.
+type CborDecimalFraction [2]int64
 
 // CborBigFloat tagged-type, combine an integer mantissa with a base-2
-// scaling factor, m*(2**e). As int64{e,m}.
+// scaling factor m*(2**e) - presented as int64{e,m}.
 type CborBigFloat [2]interface{}
 
 const ( // major types.
@@ -103,7 +68,7 @@ const ( // simple types for type7
 )
 
 // CborMaxSmallInt is the maximum integer value that can be
-// stored as associative value.
+// stored as associative value in CBOR.
 const CborMaxSmallInt = 23
 
 func cborMajor(b byte) byte {

@@ -635,10 +635,10 @@ func TestDecimalFraction(t *testing.T) {
 	config := NewDefaultConfig()
 	// for positive
 	refs := []CborDecimalFraction{
-		CborDecimalFraction([2]interface{}{int64(-10), int64(-23)}),
-		CborDecimalFraction([2]interface{}{int64(-10), int64(23)}),
-		CborDecimalFraction([2]interface{}{int64(10), int64(-23)}),
-		CborDecimalFraction([2]interface{}{int64(10), int64(23)}),
+		CborDecimalFraction([2]int64{int64(-10), int64(-23)}),
+		CborDecimalFraction([2]int64{int64(-10), int64(23)}),
+		CborDecimalFraction([2]int64{int64(10), int64(-23)}),
+		CborDecimalFraction([2]int64{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
 		n := config.ValueToCbor(ref, buf)

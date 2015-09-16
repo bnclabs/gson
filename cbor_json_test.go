@@ -84,7 +84,7 @@ func TestJson(t *testing.T) {
 	}
 }
 
-func TestValue2Cbor2Json(t *testing.T) {
+func TestCbor2JsonLengthPrefix(t *testing.T) {
 	testcases := []string{
 		`[null,true,false,10,"tru\"e"]`,
 		`[]`,
@@ -96,10 +96,11 @@ func TestValue2Cbor2Json(t *testing.T) {
 	config = config.ContainerEncoding(LengthPrefix)
 	for _, tcase := range testcases {
 		t.Logf("testcase - %v", tcase)
-		_, val1 := config.JsonToValue(tcase)
-		n := config.ValueToCbor(GolangMap2cborMap(val1), cborout)
+		_, n := config.JsonToCbor(tcase, cborout)
 		_, m := config.CborToJson(cborout[:n], jsonout)
-		compare_jsons(t, tcase, string(jsonout[:m]))
+		if err := compare_jsons(t, tcase, string(jsonout[:m])); err != nil {
+			t.Errorf("%v", err)
+		}
 	}
 }
 
@@ -261,16 +262,9 @@ func TestScanBadToken(t *testing.T) {
 	}
 	config := NewDefaultConfig()
 	for _, tcase := range testcases {
+		t.Logf("%v", tcase)
 		panicfn(tcase, config)
 	}
-	// test ScanLengthPrefix for array
-	config = NewConfig(FloatNumber, UnicodeSpace)
-	config = config.ContainerEncoding(LengthPrefix)
-	panicfn("[]", config)
-	// test ScanLengthPrefix for property
-	config = NewConfig(FloatNumber, UnicodeSpace)
-	config = config.ContainerEncoding(LengthPrefix)
-	panicfn("{}", config)
 }
 
 func TestFloat32(t *testing.T) {
@@ -300,11 +294,13 @@ func TestJsonString(t *testing.T) {
 
 	ref := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
 	n := tag2cbor(uint64(tagJsonString), buf)
-	_, x := json2cbor(ref, buf[n:], config)
+	x := valtext2cbor(ref, buf[n:])
 	n += x
 
 	_, m := cbor2json(buf[:n], out, config)
-	compare_jsons(t, ref, string(out[:m]))
+	if err := compare_jsons(t, ref, string(out[:m])); err != nil {
+		t.Errorf("%v", err)
+	}
 }
 
 func TestByteString(t *testing.T) {

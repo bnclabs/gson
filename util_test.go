@@ -121,17 +121,18 @@ func BenchmarkStr2Bytes(b *testing.B) {
 	}
 }
 
-func compare_jsons(t *testing.T, json1, json2 string) {
+func compare_jsons(t *testing.T, json1, json2 string) error {
 	var m1, m2 interface{}
 	err := json.Unmarshal(str2bytes(json1), &m1)
 	if err != nil {
-		t.Errorf("parsing %v: %v", json1, err)
+		return fmt.Errorf("parsing %v: %v", json1, err)
 	}
 	err = json.Unmarshal(str2bytes(json2), &m2)
 	if err != nil {
-		t.Errorf("parsing %v: %v", json2, err)
+		return fmt.Errorf("parsing %v: %v", json2, err)
 	}
 	if !reflect.DeepEqual(m1, m2) {
-		t.Errorf("expected %v, got %v", m1, m2)
+		return fmt.Errorf("expected %v, got %v", m1, m2)
 	}
+	return nil
 }
