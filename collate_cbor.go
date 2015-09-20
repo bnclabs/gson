@@ -364,6 +364,7 @@ func collateCborT4Indef(buf, out []byte, config *Config) (m int, n int) {
 		m, n__ = m+x, n__+y
 		ln++
 	}
+	m++
 	return
 }
 
@@ -425,6 +426,7 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 		m, p = m+x, p+y
 		ln++
 	}
+	m++
 	sort.Sort(refs[:ln])
 
 	if config.propertyLenPrefix {
