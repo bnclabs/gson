@@ -122,7 +122,7 @@ func jsonnum2value(txt string, nk NumberKind) (string, interface{}) {
 		if err != nil {
 			panic("gson scanner expectedJsonInteger")
 		}
-		return txt[e:], num
+		return txt[e:], int64(num)
 	}
 	// FloatNumber, or FloatNumber32, or SmartNumber, or SmartNumber32
 	// NOTE: ignore the error because we have only picked

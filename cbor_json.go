@@ -433,7 +433,7 @@ func cbor2jsont5indefinite(buf, out []byte, config *Config) (int, int) {
 
 func tag2json(buf, out []byte, config *Config) (int, int) {
 	byt := (buf[0] & 0x1f) | cborType0 // fix as positive num
-	item, n := cbor2valueM[byt](buf)
+	item, n := cbor2valueM[byt](buf, config)
 	switch item.(uint64) {
 	case tagJsonString:
 		ln, m := cborItemLength(buf[n:])

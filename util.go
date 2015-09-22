@@ -3,6 +3,7 @@ package gson
 import "reflect"
 import "unsafe"
 import "sort"
+import "encoding/json"
 import "strconv"
 
 func bytes2str(bytes []byte) string {
@@ -59,6 +60,80 @@ func GolangMap2cborMap(value interface{}) interface{} {
 		return sl
 	}
 	return value
+}
+
+func Fixtojson(config *Config, val interface{}) interface{} {
+	var err error
+	if s, ok := val.(json.Number); ok {
+		val, err = strconv.ParseFloat(string(s), 64)
+		if err != nil {
+			panic(err)
+		}
+	}
+	switch v := val.(type) {
+	case int8:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case uint8:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case int16:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case uint16:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case int32:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case uint32:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case int64:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case uint64:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case float32:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	case float64:
+		if config.nk == IntNumber {
+			return int64(v)
+		} else {
+			return float64(v)
+		}
+	default:
+	}
+	return val
 }
 
 // numbers can be encoded as integers, or as small-decimal,

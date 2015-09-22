@@ -78,7 +78,7 @@ func TestScanIntegers(t *testing.T) {
 		}
 		if remtxt, val := config.JsonToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
-		} else if v, ok := val.(int); !ok || v != int(ref.(float64)) {
+		} else if v, ok := val.(int64); !ok || v != int64(ref.(float64)) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
