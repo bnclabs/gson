@@ -54,6 +54,7 @@
 package gson
 
 import "bytes"
+import "fmt"
 import "encoding/json"
 
 // NumberKind to parse JSON numbers.
@@ -68,7 +69,7 @@ const (
 	// fall back to float64.
 	SmartNumber
 
-	// IntNumber will treat number as integer.
+	// IntNumber will treat number as int64.
 	IntNumber
 
 	// FloatNumber will treat number as float32.
@@ -370,7 +371,7 @@ func (config *Config) MapsliceToCbor(items [][2]interface{}, out []byte) int {
 
 // CborToValue cbor binary into golang data.
 func (config *Config) CborToValue(buf []byte) (interface{}, int) {
-	return cbor2value(buf)
+	return cbor2value(buf, config)
 }
 
 // JsonToCbor input JSON text to cbor binary. Returns length of
@@ -489,4 +490,56 @@ func (config *Config) CollateToCbor(code, cborout []byte) (int, int) {
 		return 0, 0
 	}
 	return collate2cbor(code, cborout, config)
+}
+
+func (config *Config) ConfigString() string {
+	return fmt.Sprintf(
+		"nk:%v, ws:%v, ct:%v, jsonString:%v, arrayLenPrefix:%v, "+
+			"propertyLenPrefix:%v, doMissing:%v, maxKeys:%v",
+		config.nk, config.ws, config.ct, config.jsonString,
+		config.arrayLenPrefix, config.propertyLenPrefix,
+		config.doMissing, config.maxKeys)
+}
+
+func (nk NumberKind) String() string {
+	switch nk {
+	case SmartNumber32:
+		return "SmartNumber32"
+	case SmartNumber:
+		return "SmartNumber"
+	case IntNumber:
+		return "IntNumber"
+	case FloatNumber32:
+		return "FloatNumber32"
+	case FloatNumber:
+		return "FloatNumber"
+	case JsonNumber:
+		return "JsonNumber"
+	case Decimal:
+		return "Decimal"
+	default:
+		panic("new number-kind")
+	}
+}
+
+func (ws SpaceKind) String() string {
+	switch ws {
+	case AnsiSpace:
+		return "AnsiSpace"
+	case UnicodeSpace:
+		return "UnicodeSpace"
+	default:
+		panic("new space-kind")
+	}
+}
+
+func (ct CborContainerEncoding) String() string {
+	switch ct {
+	case LengthPrefix:
+		return "LengthPrefix"
+	case Stream:
+		return "Stream"
+	default:
+		panic("new space-kind")
+	}
 }
