@@ -1,6 +1,7 @@
 * document lookup APIs for CBOR and GSON.
 * add testcase for testdata/collate/
 * memory profile using tools/gson program for gson, cbor and collate.
+* cbor_lookup is broken. Fix it.
 * from json->cbor support LengthPrefix encoding.
 * implement json pointer ops SET/DEL/GET/PREPEND for a JSON document.
 * implement json pointer ops SET/DEL/GET/PREPEND for a collated document.
