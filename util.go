@@ -151,14 +151,20 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 		} else {
 			return float64(v)
 		}
-	case []interface{}:
-		for i, x := range v {
-			v[i] = Fixtojson(config, x)
-		}
-		return v
 	case map[string]interface{}:
 		for key, x := range v {
 			v[key] = Fixtojson(config, x)
+		}
+		return v
+	case [][2]interface{}:
+		m := make(map[string]interface{})
+		for _, item := range v {
+			m[item[0].(string)] = Fixtojson(config, item[1])
+		}
+		return m
+	case []interface{}:
+		for i, x := range v {
+			v[i] = Fixtojson(config, x)
 		}
 		return v
 	}

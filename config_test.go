@@ -182,6 +182,7 @@ func TestCborToCollate(t *testing.T) {
 	_, m := config.CborToCollate(code[:n], coll)
 	_, x := config.CollateToCbor(coll[:m], out)
 	val, _ := config.CborToValue(out[:x])
+	val = GolangMap2cborMap(val)
 	if !reflect.DeepEqual(inp, val) {
 		t.Errorf("expected %v, got %v", inp, val)
 	}

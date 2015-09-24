@@ -64,6 +64,14 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 		n += valarray2cbor(v, out, config)
 	case [][2]interface{}:
 		n += valmap2cbor(v, out, config)
+	case map[string]interface{}:
+		var item [2]interface{}
+		n += mapStart(out[n:])
+		for key, value := range v {
+			item[0], item[1] = key, value
+			n += mapitem2cbor(item, out[n:], config)
+		}
+		n += breakStop(out[n:])
 	case json.Number:
 		_, x := json2cbor(string(v), out, config)
 		n += x
@@ -109,14 +117,14 @@ func cbor2value(buf []byte, config *Config) (interface{}, int) {
 			return arr, n + 1
 
 		case cborType5:
-			pairs := make([][2]interface{}, 0, 2)
+			mapv := make(map[string]interface{})
 			for buf[n] != brkstp {
 				key, n1 := cbor2value(buf[n:], config)
 				value, n2 := cbor2value(buf[n+n1:], config)
-				pairs = append(pairs, [2]interface{}{key, value})
+				mapv[key.(string)] = value
 				n = n + n1 + n2
 			}
-			return pairs, n + 1
+			return mapv, n + 1
 		}
 	}
 	return item, n
@@ -439,6 +447,13 @@ func mapl2cbor(items [][2]interface{}, buf []byte, config *Config) int {
 	return n
 }
 
+func mapitem2cbor(item [2]interface{}, buf []byte, config *Config) int {
+	n := 0
+	n += value2cbor(item[0], buf[n:], config)
+	n += value2cbor(item[1], buf[n:], config)
+	return n
+}
+
 func mapStart(buf []byte) int {
 	// indefinite length map
 	buf[0] = cborHdr(cborType5, byte(cborIndefiniteLength))
@@ -660,14 +675,14 @@ func cbor2valt4indefinite(buf []byte, config *Config) (interface{}, int) {
 
 func cbor2valt5(buf []byte, config *Config) (interface{}, int) {
 	ln, n := cborItemLength(buf)
-	pairs := make([][2]interface{}, ln)
+	mapv := make(map[string]interface{})
 	for i := 0; i < ln; i++ {
 		key, n1 := cbor2value(buf[n:], config)
 		value, n2 := cbor2value(buf[n+n1:], config)
-		pairs[i] = [2]interface{}{key, value}
+		mapv[key.(string)] = value
 		n = n + n1 + n2
 	}
-	return pairs, n
+	return mapv, n
 }
 
 func cbor2valt5indefinite(buf []byte, config *Config) (interface{}, int) {

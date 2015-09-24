@@ -319,10 +319,10 @@ func TestCborArray(t *testing.T) {
 	}
 }
 
-func TestCborMap(t *testing.T) {
+func TestCborMapSlice(t *testing.T) {
 	buf := make([]byte, 1024)
 	ref := [][2]interface{}{
-		[2]interface{}{10.2, "hello world"},
+		[2]interface{}{"10.2", "hello world"},
 		[2]interface{}{"hello world", 10.2},
 	}
 	// encoding use LengthPrefix
@@ -330,15 +330,42 @@ func TestCborMap(t *testing.T) {
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf, config)
-	if n != 43 || n != m || !reflect.DeepEqual(ref, val) {
-		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
+	val = GolangMap2cborMap(val)
+	if n != 39 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
 	}
 	// encoding use Stream
 	config = NewConfig(FloatNumber, UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf, config)
-	if n != 44 || n != m || !reflect.DeepEqual(ref, val) {
-		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
+	val = GolangMap2cborMap(val)
+	if n != 40 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
+	}
+}
+
+func TestCborMap(t *testing.T) {
+	buf := make([]byte, 1024)
+	ref := map[string]interface{}{
+		"10.2":        "hello world",
+		"hello world": float64(10.2),
+	}
+	// encoding use LengthPrefix
+	config := NewConfig(FloatNumber, UnicodeSpace)
+	config = config.ContainerEncoding(LengthPrefix)
+	n := value2cbor(ref, buf, config)
+	val, m := cbor2value(buf, config)
+	val = CborMap2golangMap(val)
+	if n != 40 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
+	}
+	// encoding use Stream
+	config = NewConfig(FloatNumber, UnicodeSpace)
+	n = value2cbor(ref, buf, config)
+	val, m = cbor2value(buf, config)
+	val = CborMap2golangMap(val)
+	if n != 40 || n != m || !reflect.DeepEqual(ref, val) {
+		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
 	}
 }
 
