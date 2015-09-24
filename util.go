@@ -74,60 +74,80 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 	case int8:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case uint8:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case int16:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case uint16:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case int32:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case uint32:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case int64:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case uint64:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case float32:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
 	case float64:
 		if config.nk == IntNumber {
 			return int64(v)
+		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
+			return float32(v)
 		} else {
 			return float64(v)
 		}
@@ -182,11 +202,11 @@ func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 
 	case FloatNumber32:
 		_, y := collated2Float(code, scratch[:])
-		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 32)
+		f, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
 		if err != nil {
 			panic(err)
 		}
-		return float32(res)
+		return float32(f)
 
 	case IntNumber:
 		_, y := collated2Int(code, scratch[:])

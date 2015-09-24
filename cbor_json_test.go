@@ -121,8 +121,8 @@ func TestScanNumber(t *testing.T) {
 	config = NewConfig(FloatNumber, UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
-	if s := string(out[:y]); s != "10.00000000000000000000" {
-		t.Errorf("expected %q, got %q", "10.00000000000000000000", s)
+	if s := string(out[:y]); s != "10" {
+		t.Errorf("expected %q, got %q", "10", s)
 	}
 	// test IntNumber
 	config = NewConfig(IntNumber, UnicodeSpace)
@@ -145,15 +145,15 @@ func TestScanNumber(t *testing.T) {
 	config = NewConfig(FloatNumber32, UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
-	if s := string(out[:y]); s != "10.000000" {
-		t.Errorf("expected %q, got %q", "10.000000", s)
+	if s := string(out[:y]); s != "10" {
+		t.Errorf("expected %q, got %q", "10", s)
 	}
 	// test SmartNumber32
 	config = NewConfig(SmartNumber32, UnicodeSpace)
 	_, n = config.JsonToCbor("10.2", code)
 	_, y = config.CborToJson(code[:n], out)
-	if s := string(out[:y]); s != "10.200000" {
-		t.Errorf("expected %q, got %q", "10.200000", s)
+	if s := string(out[:y]); s != "10.2" {
+		t.Errorf("expected %q, got %q", "10.2", s)
 	}
 	// test SmartNumber32 (integer)
 	config = NewConfig(SmartNumber32, UnicodeSpace)
@@ -166,8 +166,8 @@ func TestScanNumber(t *testing.T) {
 	config = NewConfig(SmartNumber, UnicodeSpace)
 	_, n = config.JsonToCbor("10.2", code)
 	_, y = config.CborToJson(code[:n], out)
-	if s := string(out[:y]); s != "10.19999999999999928946" {
-		t.Errorf("expected %q, got %q", "10.19999999999999928946", s)
+	if s := string(out[:y]); s != "10.2" {
+		t.Errorf("expected %q, got %q", "10.2", s)
 	}
 	// test SmartNumber (integer)
 	config = NewConfig(SmartNumber32, UnicodeSpace)

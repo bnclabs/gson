@@ -17,7 +17,7 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 	}
 
 	if numCheck[txt[0]] == 1 {
-		return jsonNumToCbor(txt, out, config.nk)
+		return jsonNumToCbor(txt, out, config)
 	}
 
 	switch txt[0] {
@@ -147,14 +147,14 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 	}
 }
 
-func jsonNumToCbor(txt string, out []byte, nk NumberKind) (string, int) {
+func jsonNumToCbor(txt string, out []byte, config *Config) (string, int) {
 	s, e, l, flt := 0, 1, len(txt), false
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
 			flt = flt || fltCheck[txt[e]] == 1 // detected as float
 		}
 	}
-	switch nk {
+	switch config.nk {
 	case JsonNumber:
 		n := tag2cbor(uint64(tagJsonNumber), out)
 		n += valtext2cbor(txt[s:e], out[n:])
@@ -169,7 +169,15 @@ func jsonNumToCbor(txt string, out []byte, nk NumberKind) (string, int) {
 		return txt[e:], n
 
 	case IntNumber:
-		if flt {
+		if flt && config.strict == false { // try parsing it as float
+			num, err := strconv.ParseFloat(string(txt[s:e]), 64)
+			if err != nil { // once parsing logic is bullet proof remove this
+				panic(err)
+			}
+			n := valfloat642cbor(num, out)
+			return txt[e:], n
+
+		} else if flt {
 			panic("cbor scanner expected integer")
 		}
 		num, err := strconv.Atoi(txt[s:e])
@@ -180,16 +188,16 @@ func jsonNumToCbor(txt string, out []byte, nk NumberKind) (string, int) {
 		return txt[e:], n
 
 	case FloatNumber32:
-		num, err := strconv.ParseFloat(string(txt[s:e]), 32)
+		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
 		if err != nil { // once parsing logic is bullet proof remove this
 			panic(err)
 		}
-		n := valfloat322cbor(float32(num), out)
+		n := valfloat322cbor(float32(f), out)
 		return txt[e:], n
 	}
 	// SmartNumber
-	if flt && nk == SmartNumber32 {
-		f, err := strconv.ParseFloat(string(txt[s:e]), 32)
+	if flt && config.nk == SmartNumber32 {
+		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
 		if err != nil { // once parsing logic is bullet proof remove this
 			panic(err)
 		}
@@ -263,14 +271,14 @@ func cbor2jsontrue(buf, out []byte, config *Config) (int, int) {
 func cbor2jsonfloat32(buf, out []byte, config *Config) (int, int) {
 	item, n := uint64(binary.BigEndian.Uint32(buf[1:])), 5
 	f := math.Float32frombits(uint32(item))
-	out = strconv.AppendFloat(out[:0], float64(f), 'f', 6, 32)
+	out = strconv.AppendFloat(out[:0], float64(f), 'f', -1, 32)
 	return n, len(out)
 }
 
 func cbor2jsonfloat64(buf, out []byte, config *Config) (int, int) {
 	item, n := uint64(binary.BigEndian.Uint64(buf[1:])), 9
 	f := math.Float64frombits(item)
-	out = strconv.AppendFloat(out[:0], f, 'f', 20, 64)
+	out = strconv.AppendFloat(out[:0], f, 'f', -1, 64)
 	return n, len(out)
 }
 

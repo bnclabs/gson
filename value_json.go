@@ -119,10 +119,11 @@ func jsonnum2value(txt string, config *Config) (string, interface{}) {
 
 	case IntNumber:
 		num, err := strconv.Atoi(txt[s:e])
-		if err != nil {
+		if err == nil {
+			return txt[e:], int64(num)
+		} else if config.strict {
 			panic("gson scanner expectedJsonInteger")
 		}
-		return txt[e:], int64(num)
 	}
 	// FloatNumber, or FloatNumber32, or SmartNumber, or SmartNumber32
 	// NOTE: ignore the error because we have only picked

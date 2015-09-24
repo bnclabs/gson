@@ -126,6 +126,10 @@ type Config struct {
 	enc               *json.Encoder
 	buf               *bytes.Buffer
 	maxKeys           int
+	// if `strict` is false then configurations with IntNumber
+	// will parse floating numbers and then convert it to int64.
+	// else will panic when detecting floating numbers.
+	strict bool
 	//-- unicode
 	//backwards        bool
 	//hiraganaQ        bool
@@ -152,6 +156,7 @@ func NewDefaultConfig() *Config {
 		propertyLenPrefix: true,
 		doMissing:         true,
 		maxKeys:           MaxKeys,
+		strict:            true,
 	}
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // TODO: no magic num.
 	config.enc = json.NewEncoder(config.buf)
@@ -202,8 +207,7 @@ func (config Config) SortbyPropertyLen(what bool) *Config {
 	return &config
 }
 
-// UseMissing shall interpret special string MissingLiteral and
-// collate them as TypeMissing.
+// UseMissing set or reset TypeMissing collation.
 func (config Config) UseMissing(what bool) *Config {
 	config.doMissing = what
 	return &config
@@ -212,6 +216,12 @@ func (config Config) UseMissing(what bool) *Config {
 // SetMaxkeys will set the maximum number of keys allowed in property item.
 func (config Config) SetMaxkeys(n int) *Config {
 	config.maxKeys = n
+	return &config
+}
+
+// Strict will set or reset the strict transforms.
+func (config Config) Strict(what bool) *Config {
+	config.strict = what
 	return &config
 }
 
