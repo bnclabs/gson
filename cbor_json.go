@@ -79,7 +79,6 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 				}
 			}
 		}
-		n__ += breakStop(out[n__:])
 		switch config.ct {
 		case LengthPrefix:
 			x := valuint642cbor(uint64(ln), out[n:])
@@ -87,6 +86,7 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 			n += x
 			n += copy(out[n:], out[n_:n__])
 		case Stream:
+			n__ += breakStop(out[n__:])
 			n = n__
 		}
 		return txt[1:], n
@@ -130,7 +130,6 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 				}
 			}
 		}
-		n__ += breakStop(out[n__:])
 		switch config.ct {
 		case LengthPrefix:
 			x := valuint642cbor(uint64(ln), out[n:])
@@ -138,6 +137,7 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 			n += x
 			n += copy(out[n:], out[n_:n__])
 		case Stream:
+			n__ += breakStop(out[n__:])
 			n = n__
 		}
 		return txt[1:], n
