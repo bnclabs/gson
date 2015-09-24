@@ -15,7 +15,7 @@ func json2value(txt string, config *Config) (string, interface{}) {
 	}
 
 	if digitCheck[txt[0]] == 1 {
-		return jsonnum2value(txt, config.nk)
+		return jsonnum2value(txt, config)
 	}
 
 	switch txt[0] {
@@ -106,14 +106,14 @@ func json2value(txt string, config *Config) (string, interface{}) {
 	panic("gson scanner expectedToken")
 }
 
-func jsonnum2value(txt string, nk NumberKind) (string, interface{}) {
+func jsonnum2value(txt string, config *Config) (string, interface{}) {
 	s, e, l := 0, 1, len(txt)
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
 		}
 	}
 
-	switch nk {
+	switch config.nk {
 	case JsonNumber:
 		return txt[e:], json.Number(txt[s:e])
 

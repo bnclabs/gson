@@ -184,10 +184,11 @@ func TestCodeJSON(t *testing.T) {
 }
 
 func BenchmarkScanNumFlt(b *testing.B) {
+	config := NewDefaultConfig().NumberKind(FloatNumber)
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		jsonnum2value(in, FloatNumber)
+		jsonnum2value(in, config)
 	}
 }
 
@@ -201,10 +202,11 @@ func BenchmarkUnmarshalFlt(b *testing.B) {
 }
 
 func BenchmarkScanNumJsonNum(b *testing.B) {
+	config := NewDefaultConfig().NumberKind(JsonNumber)
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		jsonnum2value(in, JsonNumber)
+		jsonnum2value(in, config)
 	}
 }
 
