@@ -151,7 +151,16 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 		} else {
 			return float64(v)
 		}
-	default:
+	case []interface{}:
+		for i, x := range v {
+			v[i] = Fixtojson(config, x)
+		}
+		return v
+	case map[string]interface{}:
+		for key, x := range v {
+			v[key] = Fixtojson(config, x)
+		}
+		return v
 	}
 	return val
 }
