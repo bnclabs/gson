@@ -22,7 +22,7 @@ func TestCborNil(t *testing.T) {
 
 	if n := value2cbor(nil, buf, config); n != 1 {
 		t.Errorf("fail value2nil nil: %v want 1", n)
-	} else if item, m := cbor2value(buf); m != 1 {
+	} else if item, m := cbor2value(buf, config); m != 1 {
 		t.Errorf("fail cbor2value on nil len: %v want 1", m)
 	} else if item != nil {
 		t.Errorf("fail cbor2value on nil: %x", item)
@@ -35,7 +35,7 @@ func TestCborTrue(t *testing.T) {
 
 	if n := value2cbor(true, buf, config); n != 1 {
 		t.Errorf("fail value2cbor true: %v want 1", n)
-	} else if item, m := cbor2value(buf); m != 1 {
+	} else if item, m := cbor2value(buf, config); m != 1 {
 		t.Errorf("fail cbor2value on true len: %v want 1", m)
 	} else if item.(bool) != true {
 		t.Errorf("fail cbor2value on true: %v", item)
@@ -48,7 +48,7 @@ func TestCborFalse(t *testing.T) {
 
 	if n := value2cbor(false, buf, config); n != 1 {
 		t.Errorf("fail value2cbor false: %v want 1", n)
-	} else if item, m := cbor2value(buf); m != 1 {
+	} else if item, m := cbor2value(buf, config); m != 1 {
 		t.Errorf("fail cbor2value on false len: %v want 1", m)
 	} else if item.(bool) != false {
 		t.Errorf("fail cbor2value on false: %v", item)
@@ -56,10 +56,11 @@ func TestCborFalse(t *testing.T) {
 }
 
 func TestCborUint8(t *testing.T) {
+	config := NewDefaultConfig()
 	buf := make([]byte, 20)
 	for i := uint16(0); i <= 255; i++ {
 		n := valuint82cbor(uint8(i), buf)
-		val, m := cbor2value(buf)
+		val, m := cbor2value(buf, config)
 		if i < 24 && n != 1 {
 			t.Errorf("fail code uint8(%v) < 24, got %v", i, n)
 		} else if i > 24 && n != 2 {
@@ -72,10 +73,11 @@ func TestCborUint8(t *testing.T) {
 }
 
 func TestCborInt8(t *testing.T) {
+	config := NewDefaultConfig()
 	buf := make([]byte, 20)
 	for i := int16(-128); i <= 127; i++ {
 		n := valint82cbor(int8(i), buf)
-		val, m := cbor2value(buf)
+		val, m := cbor2value(buf, config)
 		if -23 <= i && i <= 23 && n != 1 {
 			t.Errorf("fail code int8(%v), expected 1 got %v", i, n)
 		} else if -23 > i && i > 23 && n != 2 {
@@ -194,7 +196,7 @@ func TestCborNum(t *testing.T) {
 	}
 	for _, test := range tests {
 		n := value2cbor(test[0], buf, config)
-		val, m := cbor2value(buf)
+		val, m := cbor2value(buf, config)
 		//t.Logf("executing test case %v", test)
 		if n != m || !reflect.DeepEqual(val, test[1]) {
 			t.Errorf(
@@ -211,7 +213,7 @@ func TestCborNum(t *testing.T) {
 		}()
 		value2cbor(uint64(9223372036854775808), buf, config)
 		buf[0] = (buf[0] & 0x1f) | cborType1 // fix as negative integer
-		cbor2value(buf)
+		cbor2value(buf, config)
 	}()
 }
 
@@ -219,19 +221,20 @@ func TestCborJsonNumber(t *testing.T) {
 	buf, ref := make([]byte, 10), "10.11"
 	config := NewDefaultConfig().NumberKind(JsonNumber)
 	_, n := json2cbor(ref, buf, config)
-	val, m := cbor2value(buf[:n])
-	if n != 8 || n != m || !reflect.DeepEqual(val, ref) {
+	val, m := cbor2value(buf[:n], config)
+	if n != 8 || n != m || !reflect.DeepEqual(string(val.(json.Number)), ref) {
 		t.Errorf("fail code json-number: %v %v %T(%v)", n, m, val, val)
 	}
 }
 
 func TestCborFloat16(t *testing.T) {
+	config := NewDefaultConfig()
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("expected panic while decoding float16")
 		}
 	}()
-	cbor2value([]byte{0xf9, 0, 0, 0, 0})
+	cbor2value([]byte{0xf9, 0, 0, 0, 0}, config)
 }
 
 func TestCborFloat32(t *testing.T) {
@@ -239,7 +242,7 @@ func TestCborFloat32(t *testing.T) {
 	config := NewDefaultConfig()
 	n := value2cbor(ref, buf, config)
 	t.Logf("%v", buf)
-	val, m := cbor2value(buf)
+	val, m := cbor2value(buf, config)
 	if n != 5 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code float32: %v %v %T(%v)", n, m, val, val)
 	}
@@ -249,7 +252,7 @@ func TestCborFloat64(t *testing.T) {
 	buf, ref := make([]byte, 10), float64(10.11)
 	config := NewDefaultConfig()
 	n := value2cbor(ref, buf, config)
-	val, m := cbor2value(buf)
+	val, m := cbor2value(buf, config)
 	if n != 9 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code float32: %v %v %T(%v)", n, m, val, val)
 	}
@@ -262,14 +265,14 @@ func TestCborBytes(t *testing.T) {
 		ref[i] = uint8(i)
 	}
 	n := value2cbor(ref, buf, config)
-	val, m := cbor2value(buf)
+	val, m := cbor2value(buf, config)
 	if n != 102 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code bytes: %v %v %T(%v)", n, m, val, val)
 	}
 	// test byte-start
 	if n := bytesStart(buf); n != 1 {
 		t.Errorf("fail code bytes-start len: %v wanted 1", n)
-	} else if val, m := cbor2value(buf); m != n {
+	} else if val, m := cbor2value(buf, config); m != n {
 		t.Errorf("fail code bytes-start size: %v wanted %v", m, n)
 	} else if !reflect.DeepEqual(val, CborIndefinite(0x5f)) {
 		t.Errorf("fail code bytes-start: %v wanted 0x5f", buf[0])
@@ -280,7 +283,7 @@ func TestCborText(t *testing.T) {
 	buf, ref := make([]byte, 200), "hello world"
 	config := NewDefaultConfig()
 	n := value2cbor(ref, buf, config)
-	val, m := cbor2value(buf)
+	val, m := cbor2value(buf, config)
 	if n != 12 || n != m || !reflect.DeepEqual(val, ref) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
@@ -288,7 +291,7 @@ func TestCborText(t *testing.T) {
 	// test text-start
 	if n := textStart(buf); n != 1 {
 		t.Errorf("fail code text-start len: %v wanted 1", n)
-	} else if val, m := cbor2value(buf); m != n {
+	} else if val, m := cbor2value(buf, config); m != n {
 		t.Errorf("fail code text-start size: %v wanted %v", m, n)
 	} else if !reflect.DeepEqual(val, CborIndefinite(0x7f)) {
 		t.Errorf("fail code text-start: %x wanted 0x7f", buf[0])
@@ -303,14 +306,14 @@ func TestCborArray(t *testing.T) {
 	config := NewConfig(FloatNumber, UnicodeSpace)
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
-	val, m := cbor2value(buf)
+	val, m := cbor2value(buf, config)
 	if n != 22 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// encoding use Stream
 	config = NewConfig(FloatNumber, UnicodeSpace)
 	n = value2cbor(ref, buf, config)
-	val, m = cbor2value(buf)
+	val, m = cbor2value(buf, config)
 	if n != 23 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
@@ -326,14 +329,14 @@ func TestCborMap(t *testing.T) {
 	config := NewConfig(FloatNumber, UnicodeSpace)
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
-	val, m := cbor2value(buf)
+	val, m := cbor2value(buf, config)
 	if n != 43 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// encoding use Stream
 	config = NewConfig(FloatNumber, UnicodeSpace)
 	n = value2cbor(ref, buf, config)
-	val, m = cbor2value(buf)
+	val, m = cbor2value(buf, config)
 	if n != 44 || n != m || !reflect.DeepEqual(ref, val) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
@@ -341,9 +344,10 @@ func TestCborMap(t *testing.T) {
 
 func TestCborBreakStop(t *testing.T) {
 	buf := make([]byte, 10)
+	config := NewDefaultConfig()
 	if n := breakStop(buf); n != 1 {
 		t.Errorf("fail code text-start len: %v wanted 1", n)
-	} else if val, m := cbor2value(buf); m != n {
+	} else if val, m := cbor2value(buf, config); m != n {
 		t.Errorf("fail code text-start: %v wanted %v", m, n)
 	} else if !reflect.DeepEqual(val, CborBreakStop(0xff)) {
 		t.Errorf("fail code text-start: %x wanted 0xff", buf[0])
@@ -352,10 +356,10 @@ func TestCborBreakStop(t *testing.T) {
 
 func TestCborUndefined(t *testing.T) {
 	buf := make([]byte, 10)
-
+	config := NewDefaultConfig()
 	if n := valundefined2cbor(buf); n != 1 {
 		t.Errorf("fail value2cbor undefined: %v want 1", n)
-	} else if item, m := cbor2value(buf); m != 1 {
+	} else if item, m := cbor2value(buf, config); m != 1 {
 		t.Errorf("fail cbor2value on undefined len: %v want 1", m)
 	} else if item.(CborUndefined) != CborUndefined(cborSimpleUndefined) {
 		t.Errorf("fail cbor2value on undefined: %T %v", item, item)
@@ -363,12 +367,13 @@ func TestCborUndefined(t *testing.T) {
 }
 
 func TestCborReserved(t *testing.T) {
+	config := NewDefaultConfig()
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("expected panic while decoding reserved")
 		}
 	}()
-	cbor2value([]byte{cborHdr(cborType0, 28)})
+	cbor2value([]byte{cborHdr(cborType0, 28)}, config)
 }
 
 func TestCborMaster(t *testing.T) {
@@ -744,7 +749,7 @@ func BenchmarkCbor2ValNull(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(nil, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -762,7 +767,7 @@ func BenchmarkCbor2ValTrue(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(true, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -780,7 +785,7 @@ func BenchmarkCbor2ValFalse(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(false, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -798,7 +803,7 @@ func BenchmarkCbor2ValUint8(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(uint8(255), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -816,7 +821,7 @@ func BenchmarkCbor2ValInt8(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(int8(-128), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -834,7 +839,7 @@ func BenchmarkCbor2ValUint16(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(uint16(65535), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -852,7 +857,7 @@ func BenchmarkCbor2ValInt16(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(int16(-32768), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -870,7 +875,7 @@ func BenchmarkCbor2ValUint32(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(uint32(4294967295), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -888,7 +893,7 @@ func BenchmarkCbor2ValInt32(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(int32(-2147483648), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -906,7 +911,7 @@ func BenchmarkCbor2ValUint64(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(uint64(18446744073709551615), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -924,7 +929,7 @@ func BenchmarkCbor2ValInt64(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(int64(-2147483648), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -942,7 +947,7 @@ func BenchmarkCbor2ValFlt32(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(float32(10.2), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -960,7 +965,7 @@ func BenchmarkCbor2ValFlt64(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(float64(10.2), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -978,7 +983,7 @@ func BenchmarkCbor2ValBytes(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor([]byte("hello world"), buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -996,7 +1001,7 @@ func BenchmarkCbor2ValText(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor("hello world", buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -1014,7 +1019,7 @@ func BenchmarkCbor2ValArr0(b *testing.B) {
 	config := NewDefaultConfig()
 	n := value2cbor(arr, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -1033,7 +1038,7 @@ func BenchmarkCbor2ValArr5(b *testing.B) {
 	arr := []interface{}{5, 5.0, "hello world", true, nil}
 	n := value2cbor(arr, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -1052,7 +1057,7 @@ func BenchmarkCbor2ValMap0(b *testing.B) {
 	m := make([][2]interface{}, 0)
 	n := value2cbor(m, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
@@ -1079,7 +1084,7 @@ func BenchmarkCbor2ValMap5(b *testing.B) {
 	}
 	n := value2cbor(m, buf, config)
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n])
+		cbor2value(buf[:n], config)
 	}
 }
 
