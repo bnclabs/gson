@@ -173,18 +173,19 @@ func TestGsonToCollate(t *testing.T) {
 
 func TestCborToCollate(t *testing.T) {
 	config := NewDefaultConfig().NumberKind(IntNumber)
-	inp := [][2]interface{}{
+	ref := [][2]interface{}{
 		[2]interface{}{"a", uint64(10)},
-		[2]interface{}{"b", uint64(20)}}
+		[2]interface{}{"b", uint64(20)},
+	}
+	refm := CborMap2golangMap(ref)
 	code, coll := make([]byte, 1024), make([]byte, 1024)
 	out := make([]byte, 1024)
-	n := config.ValueToCbor(inp, code)
+	n := config.ValueToCbor(ref, code)
 	_, m := config.CborToCollate(code[:n], coll)
 	_, x := config.CollateToCbor(coll[:m], out)
 	val, _ := config.CborToValue(out[:x])
-	val = GolangMap2cborMap(val)
-	if !reflect.DeepEqual(inp, val) {
-		t.Errorf("expected %v, got %v", inp, val)
+	if !reflect.DeepEqual(refm, val) {
+		t.Errorf("expected %v, got %v", refm, val)
 	}
 }
 

@@ -325,22 +325,21 @@ func TestCborMapSlice(t *testing.T) {
 		[2]interface{}{"10.2", "hello world"},
 		[2]interface{}{"hello world", 10.2},
 	}
+	refm := CborMap2golangMap(ref)
 	// encoding use LengthPrefix
 	config := NewConfig(FloatNumber, UnicodeSpace)
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf, config)
-	val = GolangMap2cborMap(val)
-	if n != 39 || n != m || !reflect.DeepEqual(ref, val) {
-		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
+	if n != 39 || n != m || !reflect.DeepEqual(refm, val) {
+		t.Errorf("fail code text: %v %v %v %v", n, m, refm, val)
 	}
 	// encoding use Stream
 	config = NewConfig(FloatNumber, UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf, config)
-	val = GolangMap2cborMap(val)
-	if n != 40 || n != m || !reflect.DeepEqual(ref, val) {
-		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
+	if n != 40 || n != m || !reflect.DeepEqual(refm, val) {
+		t.Errorf("fail code text: %v %v %v %v", n, m, refm, val)
 	}
 }
 
