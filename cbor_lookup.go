@@ -21,7 +21,7 @@ func cborPartial(part, doc []byte) (start, end int, key bool) {
 	var err error
 	var index int
 	mjr, n := cborContainerLen(doc)
-	//fmt.Println("partial", string(part), len(doc), n, doc)
+	//fmt.Println("partial", string(part), part, len(doc), n, doc, mjr)
 	if mjr == cborType4 { // array
 		if index, err = strconv.Atoi(bytes2str(part)); err != nil {
 			panic("cbor pointer segment lookup invalidArrayOffset")
@@ -39,7 +39,7 @@ func cborPartial(part, doc []byte) (start, end int, key bool) {
 		n += m
 		m = cborItemsEnd(doc[n:])    // key
 		p := cborItemsEnd(doc[n+m:]) // value
-		//fmt.Println("partial-map",n,n+m,n+m+p,doc[n+m:n+m+p],string(part),found)
+		//fmt.Println("partial-map", n, n+m, n+m+p, doc[n+m:n+m+p], string(part), found)
 		return n, n + m + p, found
 	}
 	panic("cbor pointer segment lookup invalidPointer")
@@ -64,6 +64,7 @@ func cborLookup(cborptr, doc []byte) (start, end int, key bool) {
 		i += j + ln
 		start += n
 		end = start + (m - n)
+		//fmt.Println("lookup", i, cborptr[i] == brkstp, start, n, m, k, keyln)
 		if i >= len(cborptr) || cborptr[i] == brkstp {
 			break
 		}
@@ -107,7 +108,7 @@ func cborMapIndex(buf []byte, part []byte) (int, bool) {
 		ln, j := cborItemLength(buf[n:])
 		n += j
 		m := n + ln
-		//fmt.Println("mapIndex", n, m, string(buf[n:m]), start, part)
+		//fmt.Println("mapIndex-", n, m, string(buf[n:m]), start, part)
 		if bytes.Compare(part, buf[n:m]) == 0 {
 			return start, true
 		}
@@ -132,7 +133,7 @@ func cborItemsEnd(buf []byte) int {
 
 	} else if mjr == cborType4 { // array item
 		_, n := cborContainerLen(buf)
-		//fmt.Println("itemIndex-arr", size, n)
+		//fmt.Println("itemIndex-arr", n, buf[n] == brkstp)
 		if buf[n] == brkstp {
 			return n + 1
 		}
@@ -141,7 +142,7 @@ func cborItemsEnd(buf []byte) int {
 
 	} else if mjr == cborType5 { // map item
 		_, n := cborContainerLen(buf)
-		//fmt.Println("itemIndex-map", size, n)
+		//fmt.Println("itemIndex-map", n)
 		for n < len(buf) {
 			if buf[n] == brkstp {
 				return n + 1
@@ -161,7 +162,6 @@ func cborItemsEnd(buf []byte) int {
 		}
 		panic("cbor pointer lookup invalidDocument")
 	}
-	//fmt.Println(buf)
 	panic("cbor pointer lookup invalidDocument")
 }
 
@@ -196,6 +196,7 @@ func cborSet(doc, cborptr, item, newdoc, old []byte) (int, int) {
 
 func cborPrepend(doc, cborptr, item, newdoc []byte, config *Config) int {
 	n, _, key := cborLookup(cborptr, doc)
+	//fmt.Println(n, key)
 	if key { // n points to {key,value} pair
 		n += cborSkipkey(doc[n:])
 	}

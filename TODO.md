@@ -1,6 +1,5 @@
 * document lookup APIs for CBOR and GSON.
 * memory profile using tools/gson program for gson, cbor and collate.
-* cbor_lookup is broken. Fix it.
 * remove magic numbers.
 * from json->cbor support LengthPrefix encoding.
 * support for cbor tags: tagBase64URL, tagBase64, tagBase16

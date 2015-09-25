@@ -163,7 +163,7 @@ func TestCborPrepend(t *testing.T) {
 	copy(cbordoc, cbordocnew[:n])
 
 	// prepend "/dict/c" 30.0
-	t.Logf(`prepend "/dict/c" 30.0`)
+	t.Logf(`prepend "/dict/c" 30`)
 	config.JsonPointerToCbor([]byte("/dict"), cborptr)
 	m = config.MapsliceToCbor(
 		[][2]interface{}{[2]interface{}{"c", 30}}, item)
@@ -290,8 +290,8 @@ func TestCborLookups(t *testing.T) {
 		}()
 		config := NewDefaultConfig()
 		_, n := config.JsonToCbor(`{"1": 10, "2": 20}`, cbordoc)
-		config.JsonPointerToCbor([]byte("/3"), cborptr)
-		config.CborGet(cbordoc, cborptr[:n], item)
+		m := config.JsonPointerToCbor([]byte("/3"), cborptr)
+		config.CborGet(cbordoc[:n], cborptr[:m], item)
 	}()
 	// panic invalid pointer
 	func() {
@@ -302,8 +302,8 @@ func TestCborLookups(t *testing.T) {
 		}()
 		config := NewDefaultConfig()
 		_, n := config.JsonToCbor(`{"1": 10, "2": 20}`, cbordoc)
-		config.JsonPointerToCbor([]byte("/1/2"), cborptr)
-		config.CborGet(cbordoc, cborptr[:n], item)
+		m := config.JsonPointerToCbor([]byte("/1/2"), cborptr)
+		config.CborGet(cbordoc[:n], cborptr[:m], item)
 	}()
 }
 
