@@ -17,6 +17,8 @@ What is what
   after unquoting segments within the pointer, each segment shall
   be binary compared with property keys.
 * json-pointers can be used to access gson or cbor representation.
+* documents encoded in cbor format using LengthPrefix are not
+  supported by lookup APIs.
 
 **value (aka gson)**
 
