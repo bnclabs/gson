@@ -1,3 +1,5 @@
+//  Copyright (c) 2015 Couchbase, Inc.
+
 package gson
 
 import "compress/gzip"

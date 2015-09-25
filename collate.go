@@ -1,3 +1,5 @@
+//  Copyright (c) 2015 Couchbase, Inc.
+
 package gson
 
 // Collation order for supported types, to change the order set these
@@ -26,7 +28,7 @@ type Missing string
 
 // MissingLiteral is special string to denote missing item:
 //	IMPORTANT: we are assuming that MissingLiteral will not occur in
-// 	the keyspace.
+//	the keyspace.
 const MissingLiteral = Missing("~[]{}falsenilNA~")
 
 // Equal checks wether n is MissingLiteral

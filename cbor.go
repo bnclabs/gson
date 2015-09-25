@@ -1,3 +1,5 @@
+//  Copyright (c) 2015 Couchbase, Inc.
+
 package gson
 
 // CborUndefined type as part of simple-type codepoint-23.

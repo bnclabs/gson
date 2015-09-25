@@ -1,3 +1,5 @@
+//  Copyright (c) 2015 Couchbase, Inc.
+
 // Document representation, collation and transformation toolkit
 //
 // Package provides APIs to convert data representation from one format
