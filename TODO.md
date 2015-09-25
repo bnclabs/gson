@@ -1,3 +1,5 @@
+* create benchmarks for collate to json, collate to cbor, cbor to collate
+  transformations.
 * document lookup APIs for CBOR and GSON.
 * memory profile using tools/gson program for gson, cbor and collate.
 * remove magic numbers.

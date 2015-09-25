@@ -77,6 +77,28 @@ Transforms
   than `UnicodeSpace`, while the later supports unicode whitespaces
   as well.
 
+```text
+    BenchmarkScanNumFlt     10000000         139 ns/op    64.50 MB/s           8 B/op        1 allocs/op
+    BenchmarkScanNumJsonNum 20000000         101 ns/op    88.66 MB/s          16 B/op        1 allocs/op
+    BenchmarkScanString     10000000         136 ns/op   233.62 MB/s           0 B/op        0 allocs/op
+    BenchmarkJson2ValArr5    1000000        1048 ns/op    28.61 MB/s         719 B/op        8 allocs/op
+    BenchmarkJson2ValMap5     500000        3210 ns/op    19.31 MB/s        5170 B/op       14 allocs/op
+    BenchmarkJson2ValTyp       50000       25399 ns/op    57.29 MB/s       17886 B/op      127 allocs/op
+    BenchmarkJson2ValCgz          30    40470953 ns/op    47.95 MB/s    11606452 B/op   244295 allocs/op
+```
+
+as compared to using encoding/json for the same data sample:
+
+```text
+    BenchmarkUnmarshalFlt    1000000        1445 ns/op    6.23 MB/s        264 B/op        3 allocs/op
+    BenchmarkUnmarshalNum    1000000        1473 ns/op    6.11 MB/s        264 B/op        3 allocs/op
+    BenchmarkUnmarshalStr    1000000        2056 ns/op   15.56 MB/s        336 B/op        4 allocs/op
+    BenchmarkUnmarshalArr5    300000        3706 ns/op    8.09 MB/s        320 B/op       10 allocs/op
+    BenchmarkUnmarshalMap5    200000       10198 ns/op    6.08 MB/s        976 B/op       41 allocs/op
+    BenchmarkUnmarshalTyp      20000       72231 ns/op   20.14 MB/s       6544 B/op      248 allocs/op
+    BenchmarkUnmarshalCgz         20    71343632 ns/op   27.20 MB/s    8352375 B/op   284017 allocs/op
+```
+
 **value to json**
 
 * to convert value back to json text golang's encoding/json package is
@@ -123,6 +145,21 @@ Transforms
     with tag-55799.
 * all other types shall cause a panic.
 
+```text
+    BenchmarkVal2CborNull   200000000    9.67 ns/op  0 B/op  0 allocs/op
+    BenchmarkVal2CborTrue   100000000   20.6 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborFalse  100000000   21.3 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborUint64 50000000    27.8 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborInt64  50000000    28.0 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborFlt32  100000000   22.4 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborFlt64  50000000    26.9 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborBytes  50000000    39.4 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborText   30000000    45.8 ns/op   0 B/op  0 allocs/op
+    BenchmarkVal2CborArr5   10000000   194 ns/op     0 B/op  0 allocs/op
+    BenchmarkVal2CborMap5    3000000   455 ns/op     0 B/op  0 allocs/op
+```
+
+
 **cbor to value**
 
 * reverse of all `value to cbor` encoding, described above, are
@@ -130,6 +167,20 @@ Transforms
 * cannot decode `float16` type and int64 > 9223372036854775807.
 * indefinite byte-string chunks, text chunks shall be decoded outside
   this package using `IsIndefinite*()` and `IsBreakstop()` APIs.
+
+```text
+    BenchmarkCbor2ValNull   30000000     44.6 ns/op    0 B/op    0 allocs/op
+    BenchmarkCbor2ValTrue   20000000     70.3 ns/op    1 B/op    1 allocs/op
+    BenchmarkCbor2ValFalse  20000000     78.7 ns/op    1 B/op    1 allocs/op
+    BenchmarkCbor2ValUint64 20000000     99.9 ns/op    8 B/op    1 allocs/op
+    BenchmarkCbor2ValInt64  20000000     95.0 ns/op    8 B/op    1 allocs/op
+    BenchmarkCbor2ValFlt32  20000000     93.5 ns/op    4 B/op    1 allocs/op
+    BenchmarkCbor2ValFlt64  20000000    109 ns/op      8 B/op    1 allocs/op
+    BenchmarkCbor2ValBytes   5000000    277 ns/op     48 B/op    2 allocs/op
+    BenchmarkCbor2ValText   10000000    230 ns/op     32 B/op    2 allocs/op
+    BenchmarkCbor2ValArr5    1000000   1535 ns/op    304 B/op   10 allocs/op
+    BenchmarkCbor2ValMap5     500000   3071 ns/op    496 B/op   18 allocs/op
+```
 
 **json to cbor**
 
@@ -154,6 +205,16 @@ Transforms
 * `properties` can be encoded in `Stream` mode, using cbor's
   indefinite-length scheme, or in `LengthPrefix` mode.
 
+```text
+    BenchmarkJson2CborNull  50000000    32.3 ns/op  123.71 MB/s  0 B/op  0 allocs/op
+    BenchmarkJson2CborInt   20000000   119 ns/op     75.55 MB/s  0 B/op  0 allocs/op
+    BenchmarkJson2CborFlt   10000000   129 ns/op     77.27 MB/s  0 B/op  0 allocs/op
+    BenchmarkJson2CborBool  50000000    32.8 ns/op  152.23 MB/s  0 B/op  0 allocs/op
+    BenchmarkJson2CborStr    5000000   254 ns/op    149.15 MB/s  0 B/op  0 allocs/op
+    BenchmarkJson2CborArr    3000000   469 ns/op     63.86 MB/s  0 B/op  0 allocs/op
+    BenchmarkJson2CborMap    1000000  1276 ns/op     48.57 MB/s  0 B/op  0 allocs/op
+```
+
 **cbor to json**
 
 * `nil`, `true`, `false` cbor types are transformed back to
@@ -174,6 +235,16 @@ Transforms
 * cbor-text with indefinite encoding are not supported.
 * simple type float16 are not supported.
 
+```text
+    BenchmarkCbor2JsonNull  30000000    46.1 ns/op   21.69 MB/s     0 B/op    0 allocs/op
+    BenchmarkCbor2JsonInt   10000000   194 ns/op     46.16 MB/s     0 B/op    0 allocs/op
+    BenchmarkCbor2JsonFlt    5000000   279 ns/op     32.22 MB/s     0 B/op    0 allocs/op
+    BenchmarkCbor2JsonBool  30000000    52.5 ns/op   19.04 MB/s     0 B/op    0 allocs/op
+    BenchmarkCbor2JsonStr    2000000   846 ns/op     39.00 MB/s    24 B/op    2 allocs/op
+    BenchmarkCbor2JsonArr    1000000  1148 ns/op     17.41 MB/s    24 B/op    2 allocs/op
+    BenchmarkCbor2JsonMap     300000  5185 ns/op     10.22 MB/s   168 B/op   14 allocs/op
+```
+
 **value to collate**
 
 * `nil`, `true`, `false`, `float64`, `int64`, `int`, `Missing`,
@@ -186,6 +257,34 @@ Transforms
   small-decimal ( -1 >= num <= 1 ).
 * if string value is MissingLiteral, it shall be collated as
   missing.
+
+```text
+    BenchmarkGsonCollNil    200000000     11.6 ns/op     0 B/op  0 allocs/op
+    BenchmarkGsonCollTrue   100000000     20.4 ns/op     0 B/op  0 allocs/op
+    BenchmarkGsonCollFalse  100000000     21.7 ns/op     0 B/op  0 allocs/op
+    BenchmarkGsonCollF64     2000000     815 ns/op       0 B/op  0 allocs/op
+    BenchmarkGsonCollI64     3000000     510 ns/op       0 B/op  0 allocs/op
+    BenchmarkGsonCollStr    30000000      54.7 ns/op     0 B/op  0 allocs/op
+    BenchmarkGsonCollArr     2000000     809 ns/op       0 B/op  0 allocs/op
+    BenchmarkGsonCollMap      500000    2929 ns/op     163 B/op  9 allocs/op
+```
+
+**collate to value**
+
+* `Missing`, `null`, `true`, `false`, `floating-point`, `small-decimal`,
+  `integer`, `string`, `[]byte` (aka binary), `array`, `object` types
+  from its collated from can be converted back to value.
+
+```text
+    BenchmarkCollGsonNil    100000000    11.4 ns/op      0 B/op   0 allocs/op
+    BenchmarkCollGsonTrue    50000000     39.8 ns/op     1 B/op   1 allocs/op
+    BenchmarkCollGsonFalse   50000000     40.0 ns/op     1 B/op   1 allocs/op
+    BenchmarkCollGsonF64      5000000    376 ns/op       8 B/op   1 allocs/op
+    BenchmarkCollGsonI64      5000000    275 ns/op       8 B/op   1 allocs/op
+    BenchmarkCollGsonStr      5000000    254 ns/op      32 B/op   2 allocs/op
+    BenchmarkCollGsonArr      1000000   1147 ns/op     208 B/op   7 allocs/op
+    BenchmarkCollGsonMap       500000   3060 ns/op     480 B/op  17 allocs/op
+```
 
 **json to collate**
 
@@ -201,6 +300,17 @@ Transforms
   missing.
 * all other `string` value will be encoded into utf8 format before
   collating it.
+
+```text
+    BenchmarkJsonCollNil    50000000     37.9 ns/op   0 B/op    0 allocs/op
+    BenchmarkJsonCollTrue   50000000     38.3 ns/op   0 B/op    0 allocs/op
+    BenchmarkJsonCollFalse  30000000     39.0 ns/op   0 B/op    0 allocs/op
+    BenchmarkJsonCollF64     1000000   1074 ns/op     8 B/op    1 allocs/op
+    BenchmarkJsonCollI64     2000000    695 ns/op     8 B/op    1 allocs/op
+    BenchmarkJsonCollStr     5000000    311 ns/op    32 B/op    1 allocs/op
+    BenchmarkJsonCollArr     1000000   1629 ns/op    42 B/op    2 allocs/op
+    BenchmarkJsonCollMap      300000   3912 ns/op   620 B/op   12 allocs/op
+```
 
 **cbor to collate**
 
