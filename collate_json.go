@@ -204,9 +204,10 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		return n + x, m + y
 
 	case TypeString:
-		scratch := stringPool.Get().([]byte)
-		defer stringPool.Put(scratch)
-		x, y := suffixDecodeString(code[n:], scratch)
+		block := stringPool.Get()
+		scratch := block.([]byte)
+		defer stringPool.Put(block)
+		x, y := suffixDecodeString(code[n:], scratch[:])
 		config.buf.Reset()
 		if err := config.enc.Encode(bytes2str(scratch[:y])); err != nil {
 			panic(err)
