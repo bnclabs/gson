@@ -339,14 +339,14 @@ func TestGson2CollateMap(t *testing.T) {
 	}
 }
 
-func BenchmarkGsonCollNil(b *testing.B) {
+func BenchmarkVal2CollNil(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		gson2collate(nil, code, config)
 	}
 }
 
-func BenchmarkCollGsonNil(b *testing.B) {
+func BenchmarkColl2ValNil(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(nil, code, config)
 	for i := 0; i < b.N; i++ {
@@ -354,7 +354,7 @@ func BenchmarkCollGsonNil(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollTrue(b *testing.B) {
+func BenchmarkVal2CollTrue(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}(true)
 	for i := 0; i < b.N; i++ {
@@ -362,7 +362,7 @@ func BenchmarkGsonCollTrue(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonTrue(b *testing.B) {
+func BenchmarkColl2ValTrue(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(interface{}(true), code, config)
 	for i := 0; i < b.N; i++ {
@@ -370,7 +370,7 @@ func BenchmarkCollGsonTrue(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollFalse(b *testing.B) {
+func BenchmarkVal2CollFalse(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}(false)
 	for i := 0; i < b.N; i++ {
@@ -378,7 +378,7 @@ func BenchmarkGsonCollFalse(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonFalse(b *testing.B) {
+func BenchmarkColl2ValFalse(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(interface{}(false), code, config)
 	for i := 0; i < b.N; i++ {
@@ -386,7 +386,7 @@ func BenchmarkCollGsonFalse(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollF64(b *testing.B) {
+func BenchmarkVal2CollF64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}(float64(10.121312213123123))
 	for i := 0; i < b.N; i++ {
@@ -394,7 +394,7 @@ func BenchmarkGsonCollF64(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonF64(b *testing.B) {
+func BenchmarkColl2ValF64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(float64(10.121312213123123), code, config)
 	for i := 0; i < b.N; i++ {
@@ -402,7 +402,7 @@ func BenchmarkCollGsonF64(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollI64(b *testing.B) {
+func BenchmarkVal2CollI64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}(int64(123456789))
 	for i := 0; i < b.N; i++ {
@@ -410,7 +410,7 @@ func BenchmarkGsonCollI64(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonI64(b *testing.B) {
+func BenchmarkColl2ValI64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(int64(123456789), code, config)
 	for i := 0; i < b.N; i++ {
@@ -418,7 +418,7 @@ func BenchmarkCollGsonI64(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollMiss(b *testing.B) {
+func BenchmarkVal2CollMiss(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}(MissingLiteral)
 	for i := 0; i < b.N; i++ {
@@ -426,7 +426,7 @@ func BenchmarkGsonCollMiss(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonMiss(b *testing.B) {
+func BenchmarkColl2ValMiss(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(MissingLiteral, code, config)
 	for i := 0; i < b.N; i++ {
@@ -434,7 +434,7 @@ func BenchmarkCollGsonMiss(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollStr(b *testing.B) {
+func BenchmarkVal2CollStr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}("hello world")
 	for i := 0; i < b.N; i++ {
@@ -442,7 +442,7 @@ func BenchmarkGsonCollStr(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonStr(b *testing.B) {
+func BenchmarkColl2ValStr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate("hello world", code, config)
 	for i := 0; i < b.N; i++ {
@@ -450,7 +450,7 @@ func BenchmarkCollGsonStr(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollArr(b *testing.B) {
+func BenchmarkVal2CollArr(b *testing.B) {
 	arr := []interface{}{nil, true, false, "hello world", 10.23122312}
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	val := interface{}(arr)
@@ -459,7 +459,7 @@ func BenchmarkGsonCollArr(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonArr(b *testing.B) {
+func BenchmarkColl2ValArr(b *testing.B) {
 	arr := []interface{}{nil, true, false, "hello world", 10.23122312}
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := gson2collate(arr, code, config)
@@ -468,7 +468,7 @@ func BenchmarkCollGsonArr(b *testing.B) {
 	}
 }
 
-func BenchmarkGsonCollMap(b *testing.B) {
+func BenchmarkVal2CollMap(b *testing.B) {
 	obj := map[string]interface{}{
 		"key1": nil, "key2": true, "key3": false, "key4": "hello world",
 		"key5": 10.23122312,
@@ -480,7 +480,7 @@ func BenchmarkGsonCollMap(b *testing.B) {
 	}
 }
 
-func BenchmarkCollGsonMap(b *testing.B) {
+func BenchmarkColl2ValMap(b *testing.B) {
 	obj := map[string]interface{}{
 		"key1": nil, "key2": true, "key3": false, "key4": "hello world",
 		"key5": 10.23122312,

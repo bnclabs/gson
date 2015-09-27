@@ -304,14 +304,14 @@ func TestJson2CollateMap(t *testing.T) {
 	}
 }
 
-func BenchmarkJsonCollNil(b *testing.B) {
+func BenchmarkJson2CollNil(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		json2collate("null", code, config)
 	}
 }
 
-func BenchmarkCollJsonNil(b *testing.B) {
+func BenchmarkColl2JsonNil(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	_, n := json2collate("null", code, config)
@@ -320,14 +320,14 @@ func BenchmarkCollJsonNil(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollTrue(b *testing.B) {
+func BenchmarkJson2CollTrue(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		json2collate("true", code, config)
 	}
 }
 
-func BenchmarkCollJsonTrue(b *testing.B) {
+func BenchmarkColl2JsonTrue(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	_, n := json2collate("true", code, config)
@@ -336,14 +336,14 @@ func BenchmarkCollJsonTrue(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollFalse(b *testing.B) {
+func BenchmarkJson2CollFalse(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		json2collate("false", code, config)
 	}
 }
 
-func BenchmarkCollJsonFalse(b *testing.B) {
+func BenchmarkColl2JsonFalse(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	_, n := json2collate("false", code, config)
@@ -352,14 +352,14 @@ func BenchmarkCollJsonFalse(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollF64(b *testing.B) {
+func BenchmarkJson2CollF64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		json2collate("10.121312213123123", code, config)
 	}
 }
 
-func BenchmarkCollJsonF64(b *testing.B) {
+func BenchmarkColl2JsonF64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	_, n := json2collate("10.121312213123123", code, config)
@@ -368,14 +368,14 @@ func BenchmarkCollJsonF64(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollI64(b *testing.B) {
+func BenchmarkJson2CollI64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		json2collate("123456789", code, config)
 	}
 }
 
-func BenchmarkCollJsonI64(b *testing.B) {
+func BenchmarkColl2JsonI64(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	_, n := json2collate("123456789", code, config)
@@ -384,7 +384,7 @@ func BenchmarkCollJsonI64(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollMiss(b *testing.B) {
+func BenchmarkJson2CollMiss(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
 	for i := 0; i < b.N; i++ {
@@ -392,7 +392,7 @@ func BenchmarkJsonCollMiss(b *testing.B) {
 	}
 }
 
-func BenchmarkCollJsonMiss(b *testing.B) {
+func BenchmarkColl2JsonMiss(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
@@ -402,14 +402,14 @@ func BenchmarkCollJsonMiss(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollStr(b *testing.B) {
+func BenchmarkJson2CollStr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	for i := 0; i < b.N; i++ {
 		json2collate(`"hello world"`, code, config)
 	}
 }
 
-func BenchmarkCollJsonStr(b *testing.B) {
+func BenchmarkColl2JsonStr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	_, n := json2collate(`"hello world"`, code, config)
@@ -418,7 +418,7 @@ func BenchmarkCollJsonStr(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollArr(b *testing.B) {
+func BenchmarkJson2CollArr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	inp := `[null,true,false,"hello world",10.23122312]`
 	for i := 0; i < b.N; i++ {
@@ -426,7 +426,7 @@ func BenchmarkJsonCollArr(b *testing.B) {
 	}
 }
 
-func BenchmarkCollJsonArr(b *testing.B) {
+func BenchmarkColl2JsonArr(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	inp := `[null,true,false,"hello world",10.23122312]`
@@ -436,7 +436,7 @@ func BenchmarkCollJsonArr(b *testing.B) {
 	}
 }
 
-func BenchmarkJsonCollMap(b *testing.B) {
+func BenchmarkJson2CollMap(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig().SetMaxkeys(10)
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
@@ -445,7 +445,7 @@ func BenchmarkJsonCollMap(b *testing.B) {
 	}
 }
 
-func BenchmarkCollJsonMap(b *testing.B) {
+func BenchmarkColl2JsonMap(b *testing.B) {
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	txt := make([]byte, 1024)
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +

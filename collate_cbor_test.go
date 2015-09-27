@@ -291,154 +291,171 @@ func TestCbor2CollateMap(t *testing.T) {
 	}
 }
 
-//func BenchmarkJsonCollNil(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        json2collate("null", code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonNil(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    _, n := json2collate("null", code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollTrue(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        json2collate("true", code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonTrue(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    _, n := json2collate("true", code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollFalse(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        json2collate("false", code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonFalse(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    _, n := json2collate("false", code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollF64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        json2collate("10.121312213123123", code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonF64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    _, n := json2collate("10.121312213123123", code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollI64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        json2collate("123456789", code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonI64(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    _, n := json2collate("123456789", code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollMiss(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    inp := fmt.Sprintf(`"%s"`, MissingLiteral)
-//    for i := 0; i < b.N; i++ {
-//        json2collate(inp, code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonMiss(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    inp := fmt.Sprintf(`"%s"`, MissingLiteral)
-//    _, n := json2collate(inp, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollStr(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    for i := 0; i < b.N; i++ {
-//        json2collate(`"hello world"`, code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonStr(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    _, n := json2collate(`"hello world"`, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollArr(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    inp := `[null,true,false,"hello world",10.23122312]`
-//    for i := 0; i < b.N; i++ {
-//        json2collate(inp, code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonArr(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    inp := `[null,true,false,"hello world",10.23122312]`
-//    _, n := json2collate(inp, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
-//
-//func BenchmarkJsonCollMap(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig().SetMaxkeys(10)
-//    inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
-//        `"key5":10.23122312}`
-//    for i := 0; i < b.N; i++ {
-//        json2collate(inp, code, config)
-//    }
-//}
-//
-//func BenchmarkCollJsonMap(b *testing.B) {
-//    code, config := make([]byte, 1024), NewDefaultConfig()
-//    txt := make([]byte, 1024)
-//    inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
-//        `"key5":10.23122312}`
-//    _, n := json2collate(inp, code, config)
-//    for i := 0; i < b.N; i++ {
-//        collate2json(code[:n], txt, config)
-//    }
-//}
+func BenchmarkCbor2CollNil(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor("null", cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborNil(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate("null", code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollTrue(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor("true", cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborTrue(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate("true", code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollFalse(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor("false", cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborFalse(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate("false", code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollF64(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor("10.121312213123123", cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborF64(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate("10.121312213123123", code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollI64(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor("123456789", cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborI64(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate("123456789", code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollMiss(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor(fmt.Sprintf(`"%s"`, MissingLiteral), cborin)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborMiss(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate(fmt.Sprintf(`"%s"`, MissingLiteral), code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollStr(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	_, n := config.JsonToCbor(`"hello world"`, cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborStr(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	n := config.JsonToCollate(`"hello world"`, code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollArr(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	inp := `[null,true,false,"hello world",10.23122312]`
+	_, n := config.JsonToCbor(inp, cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborArr(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	inp := `[null,true,false,"hello world",10.23122312]`
+	n := config.JsonToCollate(inp, code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}
+
+func BenchmarkCbor2CollMap(b *testing.B) {
+	cborin := make([]byte, 1024)
+	code, config := make([]byte, 1024), NewDefaultConfig().SetMaxkeys(10)
+	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
+		`"key5":10.23122312}`
+	_, n := config.JsonToCbor(inp, cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborMap(b *testing.B) {
+	code, config := make([]byte, 1024), NewDefaultConfig()
+	cborout := make([]byte, 1024)
+	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
+		`"key5":10.23122312}`
+	n := config.JsonToCollate(inp, code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}

@@ -185,12 +185,12 @@ func TestCodeJSON(t *testing.T) {
 	}
 }
 
-func BenchmarkScanNumFlt(b *testing.B) {
+func BenchmarkJson2ValFlt(b *testing.B) {
 	config := NewDefaultConfig().NumberKind(FloatNumber)
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		jsonnum2value(in, config)
+		config.JsonToValue(in)
 	}
 }
 
@@ -203,12 +203,12 @@ func BenchmarkUnmarshalFlt(b *testing.B) {
 	}
 }
 
-func BenchmarkScanNumJsonNum(b *testing.B) {
+func BenchmarkJson2ValJsn(b *testing.B) {
 	config := NewDefaultConfig().NumberKind(JsonNumber)
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		jsonnum2value(in, config)
+		config.JsonToValue(in)
 	}
 }
 
@@ -221,12 +221,12 @@ func BenchmarkUnmarshalNum(b *testing.B) {
 	}
 }
 
-func BenchmarkScanString(b *testing.B) {
+func BenchmarkJson2ValString(b *testing.B) {
+	config := NewDefaultConfig()
 	in := `"汉语 / 漢語; Hàn\b \tyǔ "`
-	scratch := make([]byte, 1024)
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
-		scanString(in, scratch)
+		config.JsonToValue(in)
 	}
 }
 
