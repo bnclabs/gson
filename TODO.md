@@ -1,7 +1,5 @@
-* create benchmarks for collate to json, collate to cbor, cbor to collate
-  transformations.
-* document lookup APIs for CBOR and GSON.
 * memory profile using tools/gson program for gson, cbor and collate.
+* document lookup APIs for CBOR and GSON.
 * remove magic numbers.
 * from json->cbor support LengthPrefix encoding.
 * support for cbor tags: tagBase64URL, tagBase64, tagBase16
