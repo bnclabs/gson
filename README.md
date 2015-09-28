@@ -389,3 +389,8 @@ Notes
 * all APIs panic instead of returning an error.
 * output buffer should have its len() == cap(), so that encoder and decoder
   can avoid append and instead use buffer index.
+
+License
+-------
+
+Copyright (c) 2015 Couchbase, Inc.
