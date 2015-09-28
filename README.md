@@ -7,19 +7,6 @@ What is what
 * fast becoming the internet standard for data exchange.
 * human readable format, not so friendly for machine representation.
 
-**json-pointer**
-
-* url like field locator within a json object, RFC-6901.
-* make sense only for json arrays and objects, but to any level
-  of nesting.
-* json-pointers shall be unquoted before they are used for
-  accessing into json text (or an equivalent representation),
-  after unquoting segments within the pointer, each segment shall
-  be binary compared with property keys.
-* json-pointers can be used to access gson or cbor representation.
-* documents encoded in cbor format using LengthPrefix are not
-  supported by lookup APIs.
-
 **value (aka gson)**
 
 * golang object parsed from json, cbor or collate representation.
@@ -58,6 +45,19 @@ What is what
   before they are compared with property's value.
 * per couchbase-N1QL requirement: collation of missing type, a
   unit type, is also supported.
+
+**json-pointer**
+
+* url like field locator within a json object, RFC-6901.
+* make sense only for json arrays and objects, but to any level
+  of nesting.
+* json-pointers shall be unquoted before they are used for
+  accessing into json text (or an equivalent representation),
+  after unquoting segments within the pointer, each segment shall
+  be binary compared with property keys.
+* json-pointers can be used to access gson or cbor representation.
+* documents encoded in cbor format using LengthPrefix are not
+  supported by lookup APIs.
 
 Transforms
 ----------
