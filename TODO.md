@@ -1,6 +1,7 @@
 * memory profile using tools/gson program for gson, cbor and collate.
 * document lookup APIs for CBOR and GSON.
 * remove magic numbers.
+* validate collation.
 * from json->cbor support LengthPrefix encoding.
 * support for cbor tags: tagBase64URL, tagBase64, tagBase16
 * make cbor date-time parsing format configurable for tagDateTime.
