@@ -62,6 +62,8 @@ What is what
 Transforms
 ----------
 
+![transforms](docs/transforms.png)
+
 **json to value**
 
 * a custom parser is supplied that must be faster than encoding/json.
