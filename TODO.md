@@ -1,6 +1,3 @@
-* memory profile using tools/gson program for gson, cbor and collate.
-* document lookup APIs for CBOR and GSON.
-* remove magic numbers.
 * validate collation.
 * from json->cbor support LengthPrefix encoding.
 * support for cbor tags: tagBase64URL, tagBase64, tagBase16
@@ -15,6 +12,8 @@
   their priority in the Unicode collation.
 * create a new directory examples_len/ that contains the sorted list of json
   items without using `lenprefix`
+
+* document lookup APIs for CBOR and GSON.
 
 planned features:
 

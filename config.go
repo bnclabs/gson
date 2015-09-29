@@ -162,7 +162,7 @@ func NewDefaultConfig() *Config {
 		maxKeys:           MaxKeys,
 		strict:            true,
 	}
-	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // TODO: no magic num.
+	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
 	config.enc = json.NewEncoder(config.buf)
 	strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
