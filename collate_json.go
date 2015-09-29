@@ -92,8 +92,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		}
 		if config.arrayLenPrefix {
 			n += gson2collate(Length(ln), code[n:], config)
-			copy(code[n:], code[n_:n__])
-			n += (n__ - n_)
+			n += copy(code[n:], code[n_:n__])
 		} else {
 			n = n__
 		}
@@ -151,8 +150,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		for j := 0; j < ln; j++ {
 			kv := refs[j]
 			n += gson2collate(kv.key, code[n:], config) // encode key
-			copy(code[n:], kv.code)
-			n += len(kv.code)
+			n += copy(code[n:], kv.code)
 		}
 		code[n] = Terminator
 		n++
