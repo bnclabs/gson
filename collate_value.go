@@ -123,8 +123,8 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 			n += gson2collate(Length(len(value)), code[n:], config)
 		}
 
-		keys := keysPool.Get().([]string)
-		defer keysPool.Put(keys[:0])
+		keys := config.pools.keysPool.Get().([]string)
+		defer config.pools.keysPool.Put(keys[:0])
 		for _, key := range sortProps(value, keys) {
 			n += gson2collate(key, code[n:], config)        // encode key
 			n += gson2collate(value[key], code[n:], config) // encode value

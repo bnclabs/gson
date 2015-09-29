@@ -40,8 +40,8 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		panic("gson scanner expectedFalse")
 
 	case '"':
-		scratch := stringPool.Get().([]byte)
-		defer stringPool.Put(scratch)
+		scratch := config.pools.stringPool.Get().([]byte)
+		defer config.pools.stringPool.Put(scratch)
 		remtxt, n := scanString(txt, scratch)
 		value := string(scratch[:n]) // this will copy the content.
 		return remtxt, value
@@ -82,8 +82,8 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		var n int
 
 		m := make(map[string]interface{})
-		scratch := stringPool.Get().([]byte)
-		defer stringPool.Put(scratch)
+		scratch := config.pools.stringPool.Get().([]byte)
+		defer config.pools.stringPool.Put(scratch)
 		for {
 			txt, n = scanString(txt, scratch) // empty string is also valid key
 			key := string(scratch[:n])

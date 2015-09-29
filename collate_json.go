@@ -46,8 +46,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		panic("collate scanner expectedFalse")
 
 	case '"':
-		scratch := stringPool.Get().([]byte)
-		defer stringPool.Put(scratch)
+		scratch := config.pools.stringPool.Get().([]byte)
+		defer config.pools.stringPool.Put(scratch)
 
 		txt, p := scanString(txt, scratch)
 		if config.doMissing && MissingLiteral.Equal(bytes2str(scratch[:p])) {
@@ -106,11 +106,10 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		code[n] = TypeObj
 		n++
 
-		pool := getJsonKeyPool(config.maxKeys)
-		altcode, p := pool.codepool.Get().([]byte), 0
-		defer pool.codepool.Put(altcode)
-		refs, ln := pool.keypool.Get().(kvrefs), 0
-		defer pool.keypool.Put(refs)
+		altcode, p := config.pools.codepool.Get().([]byte), 0
+		defer config.pools.codepool.Put(altcode)
+		refs, ln := config.pools.keypool.Get().(kvrefs), 0
+		defer config.pools.keypool.Put(refs)
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("collate scanner expectedCloseobject")
@@ -202,9 +201,9 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		return n + x, m + y
 
 	case TypeString:
-		block := stringPool.Get()
+		block := config.pools.stringPool.Get()
 		scratch := block.([]byte)
-		defer stringPool.Put(block)
+		defer config.pools.stringPool.Put(block)
 		x, y := suffixDecodeString(code[n:], scratch[:])
 		config.buf.Reset()
 		if err := config.enc.Encode(bytes2str(scratch[:y])); err != nil {
