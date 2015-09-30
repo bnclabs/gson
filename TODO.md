@@ -1,19 +1,13 @@
 * validate collation.
 * from json->cbor support LengthPrefix encoding.
-* support for cbor tags: tagBase64URL, tagBase64, tagBase16
-* make cbor date-time parsing format configurable for tagDateTime.
-* implement json pointer ops SET/DEL/GET/PREPEND for a JSON document.
-* implement json pointer ops SET/DEL/GET/PREPEND for a collated document.
 * implement json pointer op PREPEND for a gson document.
-* utf8 collation.
-* The CouchDB collation spec uses Unicode collation, and strangely enough
-  the collation order for ASCII characters is not the same as ASCII order. I
-  solved this by creating a mapping table that converts the bytes 0-127 into
-  their priority in the Unicode collation.
 * create a new directory examples_len/ that contains the sorted list of json
   items without using `lenprefix`
+* make cbor date-time parsing format configurable for tagDateTime.
 
 * document lookup APIs for CBOR and GSON.
+* support for cbor tags: tagBase64URL, tagBase64, tagBase16
+* utf8 collation.
 
 planned features:
 
