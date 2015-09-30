@@ -75,7 +75,7 @@ func scanString(txt string, out []byte) (string, int) {
 	}
 
 	if txt[e] == '"' { // done we have nothing to unquote
-		return txt[e+1:], copy(out, str2bytes(txt[1:e]))
+		return txt[e+1:], copy(out, txt[1:e])
 	}
 
 	oute := copy(out, txt[1:e]) // copy so far

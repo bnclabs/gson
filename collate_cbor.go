@@ -395,7 +395,7 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 	sort.Sort(refs[:ln])
 	for i := 0; i < ln; i++ {
 		kv := refs[i]
-		copy(out[n:], str2bytes(kv.key))
+		copy(out[n:], kv.key)
 		n += len(kv.key)
 		copy(out[n:], kv.code)
 		n += len(kv.code)
@@ -434,7 +434,7 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	}
 	for i := 0; i < ln; i++ {
 		kv := refs[i]
-		copy(out[n:], str2bytes(kv.key))
+		copy(out[n:], kv.key)
 		n += len(kv.key)
 		copy(out[n:], kv.code)
 		n += len(kv.code)

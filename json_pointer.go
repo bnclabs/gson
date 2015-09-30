@@ -99,7 +99,7 @@ func allpaths(doc interface{}, pointers []string, prefix []byte) []string {
 			for key, val := range v {
 				prefix = prefix[:n]
 				prefix = append(prefix, '/')
-				prefix = append(prefix, str2bytes(escapeJp(key))...)
+				prefix = append(prefix, escapeJp(key)...)
 				pointers = append(pointers, string(prefix)) // new allocation
 				pointers = allpaths(val, pointers, prefix)
 			}
@@ -112,7 +112,7 @@ func allpaths(doc interface{}, pointers []string, prefix []byte) []string {
 				prefix = prefix[:n]
 				key, val := pairs[0].(string), pairs[1]
 				prefix = append(prefix, '/')
-				prefix = append(prefix, str2bytes(escapeJp(key))...)
+				prefix = append(prefix, escapeJp(key)...)
 				pointers = append(pointers, string(prefix)) // new allocation
 				pointers = allpaths(val, pointers, prefix)
 			}
