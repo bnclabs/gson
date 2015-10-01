@@ -117,7 +117,9 @@ func jsonnum2value(txt string, config *Config) (string, interface{}) {
 
 	switch config.nk {
 	case JsonNumber:
-		return txt[e:], json.Number(txt[s:e])
+		bs := make([]byte, len(txt[s:e]))
+		copy(bs, txt[s:e])
+		return txt[e:], json.Number(string(bs))
 
 	case IntNumber:
 		num, err := strconv.Atoi(txt[s:e])
