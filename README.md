@@ -321,14 +321,14 @@ BenchmarkJson2CollMap	  500000   3550 ns/op   620 B/op   12 allocs/op
   types are converted back to json.
 
 ```text
-BenchmarkColl2JsonNil	30000000     46.5 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2JsonTrue	30000000     46.0 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2JsonFalse	30000000     47.6 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2JsonF64	 5000000    333 ns/op      0 B/op    0 allocs/op
-BenchmarkColl2JsonI64	 5000000    286 ns/op      0 B/op    0 allocs/op
-BenchmarkColl2JsonStr	 1000000   1871 ns/op     25 B/op    2 allocs/op
-BenchmarkColl2JsonArr	  500000   2480 ns/op     26 B/op    2 allocs/op
-BenchmarkColl2JsonMap	  100000  12468 ns/op    165 B/op   12 allocs/op
+BenchmarkColl2JsonNil   100000000   16.3 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2JsonTrue  100000000   17.5 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2JsonFalse 100000000   18.1 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2JsonF64   10000000   123 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonI64   20000000   104 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonStr    2000000   660 ns/op      24 B/op    2 allocs/op
+BenchmarkColl2JsonArr    2000000   903 ns/op      24 B/op    2 allocs/op
+BenchmarkColl2JsonMap     300000  4395 ns/op     151 B/op   12 allocs/op
 ```
 
 **cbor to collate**
@@ -340,14 +340,15 @@ BenchmarkColl2JsonMap	  100000  12468 ns/op    165 B/op   12 allocs/op
 * LengthPrefix and Stream encoding for array and maps are supported.
 
 ```text
-BenchmarkCbor2CollNil	20000000    102 ns/op    0 B/op   0 allocs/op
-BenchmarkCbor2CollTrue	20000000    102 ns/op    0 B/op   0 allocs/op
-BenchmarkCbor2CollFalse	20000000    112 ns/op    0 B/op   0 allocs/op
-BenchmarkCbor2CollF64	 1000000   2459 ns/op    8 B/op   1 allocs/op
-BenchmarkCbor2CollI64	 1000000   1617 ns/op    8 B/op   1 allocs/op
-BenchmarkCbor2CollStr	10000000    190 ns/op    0 B/op   0 allocs/op
-BenchmarkCbor2CollArr	  500000   3438 ns/op    8 B/op   1 allocs/op
-BenchmarkCbor2CollMap	  200000   7442 ns/op  112 B/op   5 allocs/op
+BenchmarkCbor2CollNil   30000000     40.4 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2CollTrue  30000000     39.1 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2CollFalse 50000000     38.5 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2CollF64    2000000    844 ns/op      8 B/op  1 allocs/op
+BenchmarkCbor2CollI64    3000000    523 ns/op      8 B/op  1 allocs/op
+BenchmarkCbor2CollMiss  30000000     58.9 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2CollStr   20000000     67.1 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2CollArr    1000000   1209 ns/op      8 B/op  1 allocs/op
+BenchmarkCbor2CollMap    1000000   2269 ns/op     49 B/op  3 allocs/op
 ```
 
 **collate to cbor**
@@ -357,14 +358,15 @@ BenchmarkCbor2CollMap	  200000   7442 ns/op  112 B/op   5 allocs/op
   from its collated from can be converted back to cbor.
 
 ```text
-BenchmarkColl2CborNil	30000000     56.8 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborTrue	20000000     59.4 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborFalse	20000000     59.9 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborF64	 1000000   1063 ns/op      8 B/op    1 allocs/op
-BenchmarkColl2CborI64	 2000000    778 ns/op      8 B/op    1 allocs/op
-BenchmarkColl2CborStr	 2000000    786 ns/op     32 B/op    1 allocs/op
-BenchmarkColl2CborArr	 1000000   1936 ns/op     42 B/op    2 allocs/op
-BenchmarkColl2CborMap	  200000   6467 ns/op    210 B/op    7 allocs/op
+BenchmarkColl2CborNil   100000000    20.3 ns/op    0 B/op    0 allocs/op
+BenchmarkColl2CborTrue  100000000    20.7 ns/op    0 B/op    0 allocs/op
+BenchmarkColl2CborFalse 100000000    21.4 ns/op    0 B/op    0 allocs/op
+BenchmarkColl2CborF64    5000000    364 ns/op      8 B/op    1 allocs/op
+BenchmarkColl2CborI64    5000000    268 ns/op      8 B/op    1 allocs/op
+BenchmarkColl2CborMiss  30000000     43.6 ns/op    0 B/op    0 allocs/op
+BenchmarkColl2CborStr   10000000    215 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2CborArr    2000000    620 ns/op     22 B/op    1 allocs/op
+BenchmarkColl2CborMap    1000000   1838 ns/op     23 B/op    1 allocs/op
 ```
 
 Notes
