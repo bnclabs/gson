@@ -47,8 +47,9 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 		return m + x, n
 
 	case TypeString:
-		scratch := config.pools.stringPool.Get().([]byte)
-		defer config.pools.stringPool.Put(scratch)
+		poolstr := config.pools.stringPool.Get()
+		defer config.pools.stringPool.Put(poolstr)
+		scratch := poolstr.([]byte)
 		x, y := suffixDecodeString(code[m:], scratch)
 		n += valtext2cbor(bytes2str(scratch[:y]), out[n:])
 		return m + x, n
@@ -379,10 +380,12 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 		n += collateCborLength(ln, out[n:], config)
 	}
 
-	altcode, p := config.pools.codepool.Get().([]byte), 0
-	defer config.pools.codepool.Put(altcode)
-	refs := config.pools.keypool.Get().(kvrefs)
-	defer config.pools.keypool.Put(refs)
+	poolobj1, p := config.pools.codepool.Get(), 0
+	altcode := poolobj1.([]byte)
+	defer config.pools.codepool.Put(poolobj1)
+	poolobj2 := config.pools.keypool.Get()
+	refs := poolobj2.(kvrefs)
+	defer config.pools.keypool.Put(poolobj2)
 
 	for i := 0; i < ln; i++ {
 		x, y := cbor2collate(buf[m:], altcode[p:], config) // key
@@ -411,10 +414,12 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	out[n] = TypeObj
 	n++
 
-	altcode, p := config.pools.codepool.Get().([]byte), 0
-	defer config.pools.codepool.Put(altcode)
-	refs := config.pools.keypool.Get().(kvrefs)
-	defer config.pools.keypool.Put(refs)
+	poolobj1, p := config.pools.codepool.Get(), 0
+	altcode := poolobj1.([]byte)
+	defer config.pools.codepool.Put(poolobj1)
+	poolobj2 := config.pools.keypool.Get()
+	refs := poolobj2.(kvrefs)
+	defer config.pools.keypool.Put(poolobj2)
 
 	m = 1
 	for buf[m] != brkstp {
@@ -451,10 +456,13 @@ func collateCborTag(buf, out []byte, config *Config) (int, int) {
 		ln, x := cborItemLength(buf[m:])
 		m += x
 		// copy the JSON string into scratch buffer.
-		scratch := config.pools.stringPool.Get().([]byte)
-		utf8str := config.pools.stringPool.Get().([]byte)
-		defer config.pools.stringPool.Put(scratch)
-		defer config.pools.stringPool.Put(utf8str)
+		poolstr1 := config.pools.stringPool.Get()
+		scratch := poolstr1.([]byte)
+		poolstr2 := config.pools.stringPool.Get()
+		utf8str := poolstr2.([]byte)
+		defer config.pools.stringPool.Put(poolstr1)
+		defer config.pools.stringPool.Put(poolstr2)
+
 		scratch[0] = '"'
 		copy(scratch[1:], buf[m:m+ln])
 		scratch[1+ln] = '"'
