@@ -319,6 +319,82 @@ func BenchmarkUnmarshalCgz(b *testing.B) {
 	}
 }
 
+func BenchmarkVal2JsonFlt(b *testing.B) {
+	config := NewDefaultConfig().NumberKind(FloatNumber)
+	out := make([]byte, 1024)
+	var n int
+	val := interface{}(100000.23)
+	for i := 0; i < b.N; i++ {
+		n = config.ValueToJson(val, out)
+	}
+	b.SetBytes(int64(n))
+}
+
+func BenchmarkVal2JsonString(b *testing.B) {
+	config := NewDefaultConfig()
+	out := make([]byte, 1024)
+	val := interface{}(`"汉语 / 漢語; Hàn\b \tyǔ "`)
+	var n int
+	for i := 0; i < b.N; i++ {
+		n = config.ValueToJson(val, out)
+	}
+	b.SetBytes(int64(n))
+}
+
+func BenchmarkVal2JsonArr5(b *testing.B) {
+	config := NewConfig(FloatNumber, AnsiSpace)
+	out := make([]byte, 1024)
+	val := []interface{}{nil, true, false, 10, "tru\"e"}
+	var n int
+	for i := 0; i < b.N; i++ {
+		n = config.ValueToJson(val, out)
+	}
+	b.SetBytes(int64(n))
+}
+
+func BenchmarkVal2JsonMap5(b *testing.B) {
+	val := map[string]interface{}{
+		"a": nil, "b": true, "c": false, "d\"": -10E-1, "e": "tru\"e",
+	}
+	config := NewConfig(FloatNumber, AnsiSpace)
+	out := make([]byte, 1024)
+	var n int
+	for i := 0; i < b.N; i++ {
+		n = config.ValueToJson(val, out)
+	}
+	b.SetBytes(int64(n))
+}
+
+func BenchmarkVal2JsonTyp(b *testing.B) {
+	txt := bytes2str(testdataFile("testdata/typical.json"))
+	config := NewConfig(FloatNumber, AnsiSpace)
+	out := make([]byte, 1024*1024)
+	_, val := config.JsonToValue(txt)
+	b.ResetTimer()
+	var n int
+	for i := 0; i < b.N; i++ {
+		n = config.ValueToJson(val, out)
+	}
+	b.SetBytes(int64(n))
+}
+
+func BenchmarkVal2JsonCgz(b *testing.B) {
+	if testing.Short() {
+		b.Skip("skipping code.json.gz")
+	}
+
+	txt := bytes2str(testdataFile("testdata/code.json.gz"))
+	config := NewConfig(FloatNumber, AnsiSpace)
+	_, val := config.JsonToValue(txt)
+	out := make([]byte, 1024)
+	b.ResetTimer()
+	var n int
+	for i := 0; i < b.N; i++ {
+		n = config.ValueToJson(val, out)
+	}
+	b.SetBytes(int64(n))
+}
+
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
 	if err != nil {

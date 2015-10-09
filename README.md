@@ -107,6 +107,15 @@ BenchmarkUnmarshalCgz         20    67563437 ns/op   28.72 MB/s    8352376 B/op 
   used.
 * `Encoder` interface{} is used to re-use o/p buffer.
 
+```
+BenchmarkVal2JsonFlt     3000000        561 ns/op   16.02 MB/s         8 B/op        1 allocs/op
+BenchmarkVal2JsonString  2000000        631 ns/op   60.20 MB/s         8 B/op        1 allocs/op
+BenchmarkVal2JsonArr5    1000000       1470 ns/op   19.72 MB/s        72 B/op        6 allocs/op
+BenchmarkVal2JsonMap5     300000       5025 ns/op   10.15 MB/s       601 B/op       23 allocs/op
+BenchmarkVal2JsonTyp       50000      30180 ns/op   39.33 MB/s      3488 B/op      141 allocs/op
+BenchmarkVal2JsonCgz          20   78874374 ns/op    0.01 MB/s  10595485 B/op   409806 allocs/op
+```
+
 **value to cbor**
 
 * `nil`, `true`, `false` golang types are encodable into cbor
