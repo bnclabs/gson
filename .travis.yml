@@ -1,7 +1,9 @@
 language: go
 
+sudo: false
+
 go:
-  - tip
+  - 1.4
 
 before_install:
   - go get github.com/axw/gocov/gocov
@@ -9,4 +11,6 @@ before_install:
   - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 
 script:
+  - go get ./...
+  - go test ./...
   - $HOME/gopath/bin/goveralls -service=travis-ci
