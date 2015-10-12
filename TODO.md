@@ -1,3 +1,4 @@
+* integrate CBOR test vector with gson.
 * validate collation.
 * from json->cbor support LengthPrefix encoding.
 * implement json pointer op PREPEND for a gson document.
