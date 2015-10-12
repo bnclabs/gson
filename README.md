@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.svg?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
+
 What is what
 ------------
 
