@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/prataprc/gson.svg)](https://travis-ci.org/prataprc/gson)
 [![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.svg?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
 
 What is what
