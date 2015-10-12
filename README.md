@@ -8,7 +8,8 @@ What is what
 
 **json**
 
-* Java Script Object Notation, also called JSON, RFC-7159.
+* Java Script Object Notation, also called [JSON](http://www.json.org/),
+  [RFC-7159](https://tools.ietf.org/html/rfc7159).
 * fast becoming the internet standard for data exchange.
 * human readable format, not so friendly for machine representation.
 
@@ -23,7 +24,8 @@ What is what
 
 **cbor**
 
-* Concise Binary Object Representation, also called CBOR, RFC-7049.
+* Concise Binary Object Representation, also called [CBOR](http://cbor.io/),
+  [RFC-7049](https://tools.ietf.org/html/rfc7049).
 * machine friendly, designed for inter-networking of light weight
   devices, and easy to implement in many languages.
 * can be used for more than data exchange, left to user
@@ -53,7 +55,8 @@ What is what
 
 **json-pointer**
 
-* url like field locator within a json object, RFC-6901.
+* url like field locator within a json object,
+  [RFC-6901](https://tools.ietf.org/html/rfc6901).
 * make sense only for json arrays and objects, but to any level
   of nesting.
 * json-pointers shall be unquoted before they are used for
