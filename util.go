@@ -267,7 +267,7 @@ func sortProps(props map[string]interface{}, keys []string) []string {
 		keys = append(keys, k)
 	}
 	ss := sort.StringSlice(keys)
-	ss.Sort()
+	sort.Sort(ss)
 	return keys
 }
 

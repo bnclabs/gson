@@ -279,14 +279,15 @@ BenchmarkCbor2JsonTyp     200000  7081 ns/op     154.77 MB/s    0 B/op    0 allo
   missing.
 
 ```text
-BenchmarkVal2CollNil	200000000      8.30 ns/op    0 B/op	 0 allocs/op
-BenchmarkVal2CollTrue	100000000     18.9 ns/op     0 B/op	 0 allocs/op
-BenchmarkVal2CollFalse	100000000     19.8 ns/op     0 B/op	 0 allocs/op
-BenchmarkVal2CollF64	 2000000     750 ns/op	     0 B/op	 0 allocs/op
-BenchmarkVal2CollI64	 3000000     475 ns/op	     0 B/op	 0 allocs/op
-BenchmarkVal2CollStr	30000000      47.2 ns/op     0 B/op	 0 allocs/op
-BenchmarkVal2CollArr	 2000000     802 ns/op       0 B/op	 0 allocs/op
-BenchmarkVal2CollMap	  500000    2688 ns/op     163 B/op	 9 allocs/op
+BenchmarkVal2CollNil    100000000      10.9 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CollTrue   100000000      21.6 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CollFalse  100000000      22.7 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CollF64     2000000      713 ns/op       0 B/op  0 allocs/op
+BenchmarkVal2CollI64     3000000      453 ns/op       0 B/op  0 allocs/op
+BenchmarkVal2CollStr    30000000       52.1 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CollArr     2000000      770 ns/op       0 B/op  0 allocs/op
+BenchmarkVal2CollMap     1000000     1817 ns/op      32 B/op  1 allocs/op
+BenchmarkVal2CollTyp      100000    12212 ns/op     102 B/op  3 allocs/op
 ```
 
 **collate to value**
@@ -296,15 +297,15 @@ BenchmarkVal2CollMap	  500000    2688 ns/op     163 B/op	 9 allocs/op
   from its collated from can be converted back to value.
 
 ```text
-BenchmarkColl2ValNil	200000000      9.26 ns/op    0 B/op   0 allocs/op
-BenchmarkColl2ValTrue	50000000      38.0 ns/op     1 B/op   1 allocs/op
-BenchmarkColl2ValFalse	50000000      38.4 ns/op     1 B/op   1 allocs/op
-BenchmarkColl2ValF64	 5000000     348 ns/op       8 B/op   1 allocs/op
-BenchmarkColl2ValI64	 5000000     247 ns/op       8 B/op   1 allocs/op
-BenchmarkColl2ValMiss	20000000      88.6 ns/op    16 B/op   1 allocs/op
-BenchmarkColl2ValStr	10000000     234 ns/op      32 B/op   2 allocs/op
-BenchmarkColl2ValArr	 1000000    1070 ns/op     208 B/op   7 allocs/op
-BenchmarkColl2ValMap	  500000    2704 ns/op     480 B/op  17 allocs/op
+BenchmarkColl2ValNil    100000000     15.4 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2ValTrue   30000000      41.8 ns/op      1 B/op    1 allocs/op
+BenchmarkColl2ValFalse  30000000      41.6 ns/op      1 B/op    1 allocs/op
+BenchmarkColl2ValF64     5000000     347 ns/op        8 B/op    1 allocs/op
+BenchmarkColl2ValI64     5000000     252 ns/op        8 B/op    1 allocs/op
+BenchmarkColl2ValStr    10000000     211 ns/op       32 B/op    2 allocs/op
+BenchmarkColl2ValArr     2000000     944 ns/op      208 B/op    7 allocs/op
+BenchmarkColl2ValMap      500000    2463 ns/op      480 B/op   17 allocs/op
+BenchmarkColl2ValTyp       50000   28111 ns/op     8007 B/op  133 allocs/op
 ```
 
 **json to collate**

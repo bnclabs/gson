@@ -88,17 +88,18 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		panic("collate missing not configured")
 
 	case string:
-		if config.doMissing && MissingLiteral.Equal(value) {
-			code[0], code[1] = TypeMissing, Terminator
-			return 2
-		}
-		n := 0
-		code[n] = TypeString
-		n++
-		n += suffixEncodeString(str2bytes(value), code[n:])
-		code[n] = Terminator
-		n++
-		return n
+		return collateString(value, code, config)
+		//if config.doMissing && MissingLiteral.Equal(value) {
+		//	code[0], code[1] = TypeMissing, Terminator
+		//	return 2
+		//}
+		//n := 0
+		//code[n] = TypeString
+		//n++
+		//n += suffixEncodeString(str2bytes(value), code[n:])
+		//code[n] = Terminator
+		//n++
+		//return n
 
 	case []byte:
 		n := 0
@@ -132,10 +133,11 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 			n += collateLength(len(value), code[n:])
 		}
 
-		keys := config.pools.keysPool.Get().([]string)
-		defer config.pools.keysPool.Put(keys[:0])
+		poolobj := config.pools.keysPool.Get()
+		keys := poolobj.([]string)
+		defer config.pools.keysPool.Put(poolobj)
 		for _, key := range sortProps(value, keys) {
-			n += gson2collate(key, code[n:], config)        // encode key
+			n += collateString(key, code[n:], config)       // encode key
 			n += gson2collate(value[key], code[n:], config) // encode value
 		}
 		code[n] = Terminator
@@ -252,6 +254,19 @@ func collateLength(length int, code []byte) (n int) {
 	n++
 	bs := strconv.AppendInt(num[:0], int64(length), 10)
 	n += collateInt(bs, code[n:])
+	code[n] = Terminator
+	n++
+	return n
+}
+
+func collateString(str string, code []byte, config *Config) (n int) {
+	if config.doMissing && MissingLiteral.Equal(str) {
+		code[0], code[1] = TypeMissing, Terminator
+		return 2
+	}
+	code[n] = TypeString
+	n++
+	n += suffixEncodeString(str2bytes(str), code[n:])
 	code[n] = Terminator
 	n++
 	return n

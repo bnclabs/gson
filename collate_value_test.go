@@ -139,21 +139,6 @@ func TestGson2CollateNumber(t *testing.T) {
 	}()
 }
 
-func TestGson2CollateLength(t *testing.T) {
-	obj, ref := Length(10), `\a>>210\x00`
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	n := config.ValueToCollate(obj, code)
-	out := fmt.Sprintf("%q", code[:n])
-	out = out[1 : len(out)-1]
-	if out != ref {
-		t.Errorf("expected %v, got %v", ref, out)
-	}
-	val, m := config.CollateToValue(code[:n])
-	if !reflect.DeepEqual(val, obj) || n != m {
-		t.Errorf("expected {%v,%v}, got {%v,%v}", obj, n, val, m)
-	}
-}
-
 func TestGson2CollateMissing(t *testing.T) {
 	obj, ref := MissingLiteral, `\x01\x00`
 	code, config := make([]byte, 1024), NewDefaultConfig()
@@ -490,6 +475,26 @@ func BenchmarkColl2ValMap(b *testing.B) {
 	}
 	code, config := make([]byte, 1024), NewDefaultConfig()
 	n := config.ValueToCollate(obj, code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToValue(code[:n])
+	}
+}
+
+func BenchmarkVal2CollTyp(b *testing.B) {
+	txt := string(testdataFile("testdata/typical.json"))
+	code, config := make([]byte, 10*1024), NewDefaultConfig()
+	_, obj := config.JsonToValue(txt)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.ValueToCollate(obj, code)
+	}
+}
+
+func BenchmarkColl2ValTyp(b *testing.B) {
+	txt := string(testdataFile("testdata/typical.json"))
+	code, config := make([]byte, 10*1024), NewDefaultConfig()
+	n := config.JsonToCollate(txt, code)
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config.CollateToValue(code[:n])
 	}
