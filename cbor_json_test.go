@@ -447,6 +447,7 @@ func BenchmarkJson2CborMap(b *testing.B) {
 		config.JsonToCbor(in, out)
 	}
 }
+
 func BenchmarkCbor2JsonMap(b *testing.B) {
 	buf, out := make([]byte, 1024), make([]byte, 1024)
 	in := `{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`
@@ -456,4 +457,27 @@ func BenchmarkCbor2JsonMap(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		config.CborToJson(buf[:n], out)
 	}
+}
+
+func BenchmarkJson2CborTyp(b *testing.B) {
+	out := make([]byte, 10*1024)
+	in := string(testdataFile("testdata/typical.json"))
+	config := NewDefaultConfig()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.JsonToCbor(in, out)
+	}
+	b.SetBytes(int64(len(in)))
+}
+
+func BenchmarkCbor2JsonTyp(b *testing.B) {
+	buf, out := make([]byte, 10*1024), make([]byte, 10*1024)
+	in := string(testdataFile("testdata/typical.json"))
+	config := NewDefaultConfig()
+	_, n := config.JsonToCbor(in, buf)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		config.CborToJson(buf[:n], out)
+	}
+	b.SetBytes(int64(n))
 }

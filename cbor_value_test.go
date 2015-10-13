@@ -1116,6 +1116,27 @@ func BenchmarkCbor2ValMap5(b *testing.B) {
 	}
 }
 
+func BenchmarkVal2CborTyp(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("testdata/typical.json"))
+	buf := make([]byte, 10*1024)
+	_, val := config.JsonToValue(txt)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		value2cbor(val, buf, config)
+	}
+}
+
+func BenchmarkCbor2ValTyp(b *testing.B) {
+	config := NewDefaultConfig()
+	txt := string(testdataFile("testdata/typical.json"))
+	buf := make([]byte, 10*1024)
+	_, n := config.JsonToCbor(txt, buf)
+	for i := 0; i < b.N; i++ {
+		cbor2value(buf[:n], config)
+	}
+}
+
 func fixFloats(val interface{}) interface{} {
 	switch v := val.(type) {
 	case float64:
