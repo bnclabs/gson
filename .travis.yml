@@ -14,5 +14,8 @@ script:
   - go get ./...
   - go test ./...
   - $HOME/gopath/bin/goveralls -service=travis-ci
-  - tools/collate_validate/check.sh
-  - tools/validate/check.sh
+  - cd tools/collate_validate
+  - ./check.sh
+  - cd ../../tools/validate
+  - ./check.sh
+  - cd ../..
