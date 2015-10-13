@@ -455,3 +455,23 @@ func BenchmarkColl2JsonMap(b *testing.B) {
 		collate2json(code[:n], txt, config)
 	}
 }
+
+func BenchmarkJson2CollTyp(b *testing.B) {
+	code, config := make([]byte, 10*1024), NewDefaultConfig().SetMaxkeys(10)
+	txt := string(testdataFile("testdata/typical.json"))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		json2collate(txt, code, config)
+	}
+}
+
+func BenchmarkColl2JsonTyp(b *testing.B) {
+	code, config := make([]byte, 10*1024), NewDefaultConfig()
+	out := make([]byte, 10*1024)
+	txt := string(testdataFile("testdata/typical.json"))
+	_, n := json2collate(txt, code, config)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		collate2json(code[:n], out, config)
+	}
+}

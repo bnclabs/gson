@@ -459,3 +459,23 @@ func BenchmarkColl2CborMap(b *testing.B) {
 		config.CollateToCbor(code[:n], cborout)
 	}
 }
+
+func BenchmarkCbor2CollTyp(b *testing.B) {
+	cborin := make([]byte, 10*1024)
+	code, config := make([]byte, 10*1024), NewDefaultConfig().SetMaxkeys(10)
+	txt := string(testdataFile("testdata/typical.json"))
+	_, n := config.JsonToCbor(txt, cborin)
+	for i := 0; i < b.N; i++ {
+		config.CborToCollate(cborin[:n], code)
+	}
+}
+
+func BenchmarkColl2CborTyp(b *testing.B) {
+	code, config := make([]byte, 10*1024), NewDefaultConfig()
+	cborout := make([]byte, 10*1024)
+	txt := string(testdataFile("testdata/typical.json"))
+	n := config.JsonToCollate(txt, code)
+	for i := 0; i < b.N; i++ {
+		config.CollateToCbor(code[:n], cborout)
+	}
+}

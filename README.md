@@ -332,6 +332,7 @@ BenchmarkJson2CollI64	 2000000    638 ns/op     8 B/op    1 allocs/op
 BenchmarkJson2CollStr	 5000000    293 ns/op    32 B/op    1 allocs/op
 BenchmarkJson2CollArr	 1000000   1562 ns/op    42 B/op    2 allocs/op
 BenchmarkJson2CollMap	  500000   3550 ns/op   620 B/op   12 allocs/op
+BenchmarkJson2CollTyp      50000  27891 ns/op  5380 B/op   70 allocs/op
 ```
 
 **collate to json**
@@ -340,14 +341,15 @@ BenchmarkJson2CollMap	  500000   3550 ns/op   620 B/op   12 allocs/op
   types are converted back to json.
 
 ```text
-BenchmarkColl2JsonNil   100000000   16.3 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2JsonTrue  100000000   17.5 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2JsonFalse 100000000   18.1 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2JsonF64   10000000   123 ns/op       0 B/op    0 allocs/op
-BenchmarkColl2JsonI64   20000000   104 ns/op       0 B/op    0 allocs/op
-BenchmarkColl2JsonStr    2000000   660 ns/op      24 B/op    2 allocs/op
-BenchmarkColl2JsonArr    2000000   903 ns/op      24 B/op    2 allocs/op
-BenchmarkColl2JsonMap     300000  4395 ns/op     151 B/op   12 allocs/op
+BenchmarkColl2JsonNil   100000000     16.3 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2JsonTrue  100000000     17.5 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2JsonFalse 100000000     18.1 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2JsonF64   10000000     123 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonI64   20000000     104 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonStr    2000000     660 ns/op      24 B/op    2 allocs/op
+BenchmarkColl2JsonArr    2000000     903 ns/op      24 B/op    2 allocs/op
+BenchmarkColl2JsonMap     300000    4395 ns/op     151 B/op   12 allocs/op
+BenchmarkColl2JsonTyp      30000   41649 ns/op    1344 B/op  112 allocs/op
 ```
 
 **cbor to collate**
@@ -368,6 +370,7 @@ BenchmarkCbor2CollMiss  30000000     58.9 ns/op    0 B/op  0 allocs/op
 BenchmarkCbor2CollStr   20000000     67.1 ns/op    0 B/op  0 allocs/op
 BenchmarkCbor2CollArr    1000000   1209 ns/op      8 B/op  1 allocs/op
 BenchmarkCbor2CollMap    1000000   2269 ns/op     49 B/op  3 allocs/op
+BenchmarkCbor2CollTyp     100000  14241 ns/op    367 B/op 11 allocs/op
 ```
 
 **collate to cbor**
@@ -386,6 +389,7 @@ BenchmarkColl2CborMiss  30000000     43.6 ns/op    0 B/op    0 allocs/op
 BenchmarkColl2CborStr   10000000    215 ns/op      0 B/op    0 allocs/op
 BenchmarkColl2CborArr    2000000    620 ns/op     22 B/op    1 allocs/op
 BenchmarkColl2CborMap    1000000   1838 ns/op     23 B/op    1 allocs/op
+BenchmarkColl2CborTyp     100000  16425 ns/op    167 B/op    5 allocs/op
 ```
 
 Notes
