@@ -94,7 +94,6 @@ BenchmarkJson2ValString  3000000         467 ns/op    68.52 MB/s          80 B/o
 BenchmarkJson2ValArr5    1000000        1013 ns/op    29.60 MB/s         719 B/op        8 allocs/op
 BenchmarkJson2ValMap5     500000        2998 ns/op    20.67 MB/s        5166 B/op       14 allocs/op
 BenchmarkJson2ValTyp       50000       24049 ns/op    60.50 MB/s       17613 B/op      127 allocs/op
-BenchmarkJson2ValCgz          30    38367445 ns/op    50.58 MB/s    11501591 B/op   244295 allocs/op
 ```
 
 as compared to using encoding/json for the same data sample:
@@ -106,7 +105,6 @@ BenchmarkUnmarshalStr    1000000        1939 ns/op   16.50 MB/s        336 B/op 
 BenchmarkUnmarshalArr5    500000        3329 ns/op    9.01 MB/s        320 B/op       10 allocs/op
 BenchmarkUnmarshalMap5    200000        8715 ns/op    7.11 MB/s        976 B/op       41 allocs/op
 BenchmarkUnmarshalTyp      20000       66649 ns/op   21.83 MB/s       6544 B/op      248 allocs/op
-BenchmarkUnmarshalCgz         20    67563437 ns/op   28.72 MB/s    8352376 B/op   284017 allocs/op
 ```
 
 **value to json**
@@ -121,7 +119,6 @@ BenchmarkVal2JsonString  2000000        631 ns/op   60.20 MB/s         8 B/op   
 BenchmarkVal2JsonArr5    1000000       1470 ns/op   19.72 MB/s        72 B/op        6 allocs/op
 BenchmarkVal2JsonMap5     300000       5025 ns/op   10.15 MB/s       601 B/op       23 allocs/op
 BenchmarkVal2JsonTyp       50000      30180 ns/op   39.33 MB/s      3488 B/op      141 allocs/op
-BenchmarkVal2JsonCgz          20   78874374 ns/op    0.01 MB/s  10595485 B/op   409806 allocs/op
 ```
 
 **value to cbor**
@@ -176,6 +173,7 @@ BenchmarkVal2CborBytes  50000000    34.7 ns/op   0 B/op  0 allocs/op
 BenchmarkVal2CborText   30000000    42.5 ns/op   0 B/op  0 allocs/op
 BenchmarkVal2CborArr5   10000000   175 ns/op     0 B/op  0 allocs/op
 BenchmarkVal2CborMap5    3000000   414 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborTyp      500000  3941 ns/op     0 B/op  0 allocs/op
 ```
 
 
@@ -199,6 +197,7 @@ BenchmarkCbor2ValBytes	 5000000    248 ns/op	  48 B/op	 2 allocs/op
 BenchmarkCbor2ValText	10000000    217 ns/op	  32 B/op	 2 allocs/op
 BenchmarkCbor2ValArr5	 1000000   1400 ns/op	 304 B/op	10 allocs/op
 BenchmarkCbor2ValMap5	  500000   2850 ns/op	 496 B/op	18 allocs/op
+BenchmarkCbor2ValTyp       50000  25685 ns/op   7783 B/op  140 allocs/op
 ```
 
 **json to cbor**
@@ -225,13 +224,14 @@ BenchmarkCbor2ValMap5	  500000   2850 ns/op	 496 B/op	18 allocs/op
   indefinite-length scheme, or in `LengthPrefix` mode.
 
 ```text
-BenchmarkJson2CborNull	50000000    29.6 ns/op  135.22 MB/s	 0 B/op  0 allocs/op
-BenchmarkJson2CborInt	20000000   112 ns/op     80.22 MB/s	 0 B/op  0 allocs/op
-BenchmarkJson2CborFlt	10000000   123 ns/op     81.12 MB/s	 0 B/op  0 allocs/op
-BenchmarkJson2CborBool	50000000    30.0 ns/op  166.90 MB/s	 0 B/op  0 allocs/op
-BenchmarkJson2CborStr	 5000000   239 ns/op    158.51 MB/s	 0 B/op  0 allocs/op
-BenchmarkJson2CborArr	 3000000   427 ns/op     70.19 MB/s	 0 B/op  0 allocs/op
-BenchmarkJson2CborMap	 1000000  1169 ns/op     53.00 MB/s	 0 B/op  0 allocs/op
+BenchmarkJson2CborNull	50000000     29.6 ns/op  135.22 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborInt	20000000    112 ns/op     80.22 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborFlt	10000000    123 ns/op     81.12 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborBool	50000000     30.0 ns/op  166.90 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborStr	 5000000    239 ns/op    158.51 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborArr	 3000000    427 ns/op     70.19 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborMap	 1000000   1169 ns/op     53.00 MB/s   0 B/op  0 allocs/op
+BenchmarkJson2CborTyp     200000  10136 ns/op    143.54 MB/s   0 B/op  0 allocs/op
 ```
 
 **cbor to json**
@@ -255,13 +255,14 @@ BenchmarkJson2CborMap	 1000000  1169 ns/op     53.00 MB/s	 0 B/op  0 allocs/op
 * simple type float16 are not supported.
 
 ```text
-BenchmarkCbor2JsonNull	30000000    44.9 ns/op	 22.29 MB/s     0 B/op	  0 allocs/op
-BenchmarkCbor2JsonInt	10000000   172 ns/op	 52.28 MB/s     0 B/op	  0 allocs/op
-BenchmarkCbor2JsonFlt	 5000000   258 ns/op	 34.80 MB/s     0 B/op	  0 allocs/op
-BenchmarkCbor2JsonBool	30000000    48.6 ns/op	 20.56 MB/s     0 B/op	  0 allocs/op
-BenchmarkCbor2JsonStr	 2000000   803 ns/op	 41.07 MB/s    24 B/op	  2 allocs/op
-BenchmarkCbor2JsonArr	 2000000  1008 ns/op	 19.82 MB/s    24 B/op	  2 allocs/op
-BenchmarkCbor2JsonMap	  300000  4801 ns/op	 11.04 MB/s   168 B/op	 14 allocs/op
+BenchmarkCbor2JsonNull  30000000    44.2 ns/op    22.63 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonInt   10000000   170 ns/op      52.69 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonFlt    5000000   256 ns/op      35.03 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonBool  30000000    44.3 ns/op    22.59 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonStr   10000000   217 ns/op     151.53 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonArr    5000000   401 ns/op      49.87 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonMap    1000000  1034 ns/op      51.24 MB/s    0 B/op    0 allocs/op
+BenchmarkCbor2JsonTyp     200000  7081 ns/op     154.77 MB/s    0 B/op    0 allocs/op
 ```
 
 **value to collate**

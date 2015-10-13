@@ -1,3 +1,4 @@
+* encodeString() make it default and also provide Golang complaint version.
 * integrate CBOR test vector with gson.
 * validate collation.
 * from json->cbor support LengthPrefix encoding.
