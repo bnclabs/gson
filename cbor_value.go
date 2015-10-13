@@ -67,11 +67,10 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 	case [][2]interface{}:
 		n += valmap2cbor(v, out, config)
 	case map[string]interface{}:
-		var item [2]interface{}
 		n += mapStart(out[n:])
 		for key, value := range v {
-			item[0], item[1] = key, value
-			n += mapitem2cbor(item, out[n:], config)
+			n += valtext2cbor(key, out[n:])
+			n += value2cbor(value, out[n:], config)
 		}
 		n += breakStop(out[n:])
 	case json.Number:
