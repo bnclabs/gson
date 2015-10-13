@@ -80,15 +80,6 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n++
 		return n
 
-	case Length:
-		n := 0
-		code[n] = TypeLength
-		n++
-		n += normalizeFloat(int64(value), code[n:], IntNumber)
-		code[n] = Terminator
-		n++
-		return n
-
 	case Missing:
 		if config.doMissing && MissingLiteral.Equal(string(value)) {
 			code[0], code[1] = TypeMissing, Terminator
@@ -124,7 +115,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		code[n] = TypeArray
 		n++
 		if config.arrayLenPrefix {
-			n += gson2collate(Length(len(value)), code[n:], config)
+			n += collateLength(len(value), code[n:])
 		}
 		for _, val := range value {
 			n += gson2collate(val, code[n:], config)
@@ -138,7 +129,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		code[n] = TypeObj
 		n++
 		if config.propertyLenPrefix {
-			n += gson2collate(Length(len(value)), code[n:], config)
+			n += collateLength(len(value), code[n:])
 		}
 
 		keys := config.pools.keysPool.Get().([]string)
@@ -173,15 +164,6 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 
 	case TypeFalse:
 		return false, 2
-
-	case TypeLength:
-		m := getDatum(code[n:])
-		_, y := collated2Int(code[n:n+m-1], scratch[:]) // -1 to skip terminator
-		length, err := strconv.Atoi(bytes2str(scratch[:y]))
-		if err != nil {
-			panic(err)
-		}
-		return Length(length), n + m
 
 	case TypeNumber:
 		m := getDatum(code[n:])
@@ -262,4 +244,15 @@ func getDatum(code []byte) int {
 		}
 	}
 	panic("collate decode terminator not found")
+}
+
+func collateLength(length int, code []byte) (n int) {
+	var num [64]byte
+	code[n] = TypeLength
+	n++
+	bs := strconv.AppendInt(num[:0], int64(length), 10)
+	n += collateInt(bs, code[n:])
+	code[n] = Terminator
+	n++
+	return n
 }

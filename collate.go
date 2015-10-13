@@ -18,10 +18,6 @@ var (
 	TypeBinary  byte = 10
 )
 
-// Length is an internal type used for prefixing collated arrays
-// and properties with number of items.
-type Length int64
-
 // Missing denotes a special type for an item that evaluates
 // to _nothing_, used for collation.
 type Missing string

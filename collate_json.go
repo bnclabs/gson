@@ -91,7 +91,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 			}
 		}
 		if config.arrayLenPrefix {
-			n += gson2collate(Length(ln), code[n:], config)
+			n += collateLength(ln, code[n:])
 			n += copy(code[n:], code[n_:n__])
 		} else {
 			n = n__
@@ -144,7 +144,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 			sort.Sort(refs[:ln])
 		}
 		if config.propertyLenPrefix {
-			n += gson2collate(Length(ln), code[n:], config)
+			n += collateLength(ln, code[n:])
 		}
 		for j := 0; j < ln; j++ {
 			kv := refs[j]
