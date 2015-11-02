@@ -95,7 +95,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 		}
 	}
 	testcases = [][3]interface{}{
-		[3]interface{}{"-10", `\x05--78>\x00`, JsonNumber},
+		[3]interface{}{"-10", `\x05--78>\x00`, JSONNumber},
 	}
 	// skip collate2cbor
 	for _, tcase := range testcases {

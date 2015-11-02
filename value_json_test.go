@@ -84,7 +84,7 @@ func TestScanIntegers(t *testing.T) {
 			t.Errorf("%q int should be parsed to %T %v", test, val, ref)
 		}
 
-		config = NewConfig(JsonNumber, AnsiSpace)
+		config = NewConfig(JSONNumber, AnsiSpace)
 		if remtxt, val := config.JsonToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
@@ -119,7 +119,7 @@ func TestScanIntegers(t *testing.T) {
 			}
 		}()
 
-		config = NewConfig(JsonNumber, AnsiSpace)
+		config = NewConfig(JSONNumber, AnsiSpace)
 		if remtxt, val := config.JsonToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
@@ -130,7 +130,7 @@ func TestScanIntegers(t *testing.T) {
 
 func TestScanMalformed(t *testing.T) {
 	config := NewConfig(IntNumber, AnsiSpace)
-	for _, tcase := range scan_invalid {
+	for _, tcase := range scaninvalid {
 		func() {
 			defer func() {
 				if r := recover(); r == nil {
@@ -146,7 +146,7 @@ func TestScanMalformed(t *testing.T) {
 func TestScanValues(t *testing.T) {
 	var ref interface{}
 
-	testcases := append(scan_valid, []string{
+	testcases := append(scanvalid, []string{
 		string(mapValue),
 		string(allValueIndent),
 		string(allValueCompact),
@@ -204,7 +204,7 @@ func BenchmarkUnmarshalFlt(b *testing.B) {
 }
 
 func BenchmarkJson2ValJsn(b *testing.B) {
-	config := NewDefaultConfig().NumberKind(JsonNumber)
+	config := NewDefaultConfig().NumberKind(JSONNumber)
 	in := "100000.23"
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -423,8 +423,8 @@ func testdataFile(filename string) []byte {
 
 var allValueIndent, allValueCompact, pallValueIndent, pallValueCompact []byte
 var mapValue []byte
-var scan_valid []string
-var scan_invalid []string
+var scanvalid []string
+var scaninvalid []string
 
 func init() {
 	var value interface{}
@@ -459,33 +459,33 @@ func init() {
 		panic(err)
 	}
 
-	scan_valid_b, err := ioutil.ReadFile("testdata/scan_valid")
+	scanvalidb, err := ioutil.ReadFile("testdata/scan_valid")
 	if err != nil {
 		panic(err)
 	}
-	scan_valid = []string{}
-	for _, s := range strings.Split(string(scan_valid_b), "\n") {
+	scanvalid = []string{}
+	for _, s := range strings.Split(string(scanvalidb), "\n") {
 		if strings.Trim(s, " ") != "" {
-			scan_valid = append(scan_valid, s)
+			scanvalid = append(scanvalid, s)
 		}
 	}
-	scan_valid = append(scan_valid, []string{
+	scanvalid = append(scanvalid, []string{
 		"\"hello\xffworld\"",
 		"\"hello\xc2\xc2world\"",
 		"\"hello\xc2\xffworld\"",
 		"\"hello\xed\xa0\x80\xed\xb0\x80world\""}...)
 
-	scan_invalid_b, err := ioutil.ReadFile("testdata/scan_invalid")
+	scaninvalidb, err := ioutil.ReadFile("testdata/scan_invalid")
 	if err != nil {
 		panic(err)
 	}
-	scan_invalid = []string{}
-	for _, s := range strings.Split(string(scan_invalid_b), "\n") {
+	scaninvalid = []string{}
+	for _, s := range strings.Split(string(scaninvalidb), "\n") {
 		if strings.Trim(s, " ") != "" {
-			scan_invalid = append(scan_invalid, s)
+			scaninvalid = append(scaninvalid, s)
 		}
 	}
-	scan_invalid = append(scan_invalid, []string{
+	scaninvalid = append(scaninvalid, []string{
 		"\xed\xa0\x80", // RuneError
 		"\xed\xbf\xbf", // RuneError
 		// raw value errors

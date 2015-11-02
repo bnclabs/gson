@@ -1,6 +1,7 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// Json representation, collation and transformation toolkit
+// Package Gson provides a toolkit for JSON representation, collation
+// and transformation.
 //
 // Package provides APIs to convert data representation from one format
 // to another. Supported formats are:
@@ -77,14 +78,14 @@ const (
 	// IntNumber will treat number as int64.
 	IntNumber
 
-	// FloatNumber will treat number as float32.
+	// FloatNumber32 will treat number as float32.
 	FloatNumber32
 
 	// FloatNumber will treat number as float64.
 	FloatNumber
 
-	// JsonNumber will store number in JSON encoding.
-	JsonNumber
+	// JSONNumber will store number in JSON encoding.
+	JSONNumber
 
 	// Decimal to collate input numbers as N, where -1 < N < 1
 	Decimal
@@ -521,8 +522,8 @@ func (nk NumberKind) String() string {
 		return "FloatNumber32"
 	case FloatNumber:
 		return "FloatNumber"
-	case JsonNumber:
-		return "JsonNumber"
+	case JSONNumber:
+		return "JSONNumber"
 	case Decimal:
 		return "Decimal"
 	default:

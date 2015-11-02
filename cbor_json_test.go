@@ -108,8 +108,8 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 
 func TestScanNumber(t *testing.T) {
 	code, out := make([]byte, 1024), make([]byte, 1024)
-	// test JsonNumber
-	config := NewConfig(JsonNumber, UnicodeSpace)
+	// test JSONNumber
+	config := NewConfig(JSONNumber, UnicodeSpace)
 	ref := []byte{216, 38, 98, 49, 48}
 	_, n := config.JsonToCbor("10", code)
 	if bytes.Compare(code[:n], ref) != 0 {

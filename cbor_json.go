@@ -157,7 +157,7 @@ func jsonNumToCbor(txt string, out []byte, config *Config) (string, int) {
 		}
 	}
 	switch config.nk {
-	case JsonNumber:
+	case JSONNumber:
 		n := tag2cbor(uint64(tagJsonNumber), out)
 		n += valtext2cbor(txt[s:e], out[n:])
 		return txt[e:], n

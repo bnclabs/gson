@@ -76,7 +76,7 @@ Transforms
 * a custom parser is supplied that must be faster than encoding/json.
 * numbers can be interpreted as integer, or float64, or retained as
   string based on the configuration parameter `NumberKind`.
-  *  `JsonNumber` to retain number as JSON string type aliased
+  *  `JSONNumber` to retain number as JSON string type aliased
      to `encoding/json.Number`.
   *  `IntNumber` to interpret JSON number as integer whose size is
      defined by the platform.
@@ -205,7 +205,7 @@ BenchmarkCbor2ValTyp       50000  25685 ns/op   7783 B/op  140 allocs/op
   format.
 * `number` types are encoded based on configuration parameter
   `NumberKind`, which can be one of the following.
-  * `JsonNumber` number is encoded as cbor-text (aka cbor-String)
+  * `JSONNumber` number is encoded as cbor-text (aka cbor-String)
     and the whole item is tagged as `tagJsonNumber` (tag-37).
   * `FloatNumber` number is encoded as cbor-float64.
   * `FloatNumber32` number is encoded as cbor-float32.
@@ -271,7 +271,7 @@ BenchmarkCbor2JsonTyp     200000  7081 ns/op     154.77 MB/s    0 B/op    0 allo
 * `nil`, `true`, `false`, `float64`, `int64`, `int`, `Missing`,
   `string`, `[]byte`, `[]interface{}`, `map[string]interface{}`
   types are supported for collation.
-* if configured as `JsonNumber`, `FloatNumber`, `FloatNumber32`
+* if configured as `JSONNumber`, `FloatNumber`, `FloatNumber32`
   number will be collated as floating point.
 * if configured as `IntNumber` number will be collated as integer.
 * if configured as `Decimal` number will be collated as
@@ -314,7 +314,7 @@ BenchmarkColl2ValTyp       50000   28111 ns/op     8007 B/op  133 allocs/op
 * `null`, `true`, `false`, `number`, `string`, `array`, `object`
   types are supported for collation.
 * `number` is parsed as float64 and collated based on configuration:
-  * if configured as `JsonNumber`, `FloatNumber`, `FloatNumber32`
+  * if configured as `JSONNumber`, `FloatNumber`, `FloatNumber32`
     number will be collated as floating point.
   * if configured as `IntNumber` number will be collated as integer.
   * if configured as `Decimal` number will be collated as

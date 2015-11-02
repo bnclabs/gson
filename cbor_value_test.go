@@ -221,7 +221,7 @@ func TestCborNum(t *testing.T) {
 
 func TestCborJsonNumber(t *testing.T) {
 	buf, ref := make([]byte, 10), "10.11"
-	config := NewDefaultConfig().NumberKind(JsonNumber)
+	config := NewDefaultConfig().NumberKind(JSONNumber)
 	_, n := json2cbor(ref, buf, config)
 	val, m := cbor2value(buf[:n], config)
 	if n != 8 || n != m || !reflect.DeepEqual(string(val.(json.Number)), ref) {
@@ -407,7 +407,7 @@ func TestCborReserved(t *testing.T) {
 func TestCborMaster(t *testing.T) {
 	var outval, ref interface{}
 
-	testcases := append(scan_valid, []string{
+	testcases := append(scanvalid, []string{
 		string(mapValue),
 		string(allValueIndent),
 		string(allValueCompact),
@@ -482,7 +482,7 @@ func TestCborSmartnum(t *testing.T) {
 func TestCborMalformed(t *testing.T) {
 	config := NewConfig(IntNumber, AnsiSpace)
 	out := make([]byte, 1024)
-	for _, tcase := range scan_invalid {
+	for _, tcase := range scaninvalid {
 		func() {
 			defer func() {
 				if r := recover(); r == nil {
