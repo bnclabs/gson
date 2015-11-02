@@ -123,7 +123,7 @@ func TestScanIntegers(t *testing.T) {
 		if remtxt, val := config.JsonToValue(test); remtxt != "" {
 			t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 		} else if v, ok := val.(json.Number); !ok || string(v) != test {
-			t.Errorf("%q should be parsed as String-number")
+			t.Errorf("should be parsed as String-number")
 		}
 	}
 }
@@ -181,7 +181,7 @@ func TestCodeJSON(t *testing.T) {
 	if remtxt, val := config.JsonToValue(string(data)); remtxt != "" {
 		t.Errorf("remaining text after parsing should be empty, %q", remtxt)
 	} else if reflect.DeepEqual(val, ref) == false {
-		t.Error("codeJSON parsing failed with reference: %v", ref)
+		t.Errorf("codeJSON parsing failed with reference: %v", ref)
 	}
 }
 

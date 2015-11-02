@@ -299,7 +299,7 @@ func TestJson2CollateMap(t *testing.T) {
 		}
 		_, y := collate2json(code[:n], txt, config)
 		if s := string(txt[:y]); s != reftxt {
-			t.Errorf("expected {%v,%v}, got {%v,%v}", reftxt, s)
+			t.Errorf("expected %v, got %v", reftxt, s)
 		}
 	}
 }
