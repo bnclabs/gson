@@ -353,8 +353,8 @@ func cbor2jsont1info27(buf, out []byte, config *Config) (int, int) {
 func cbor2jsont3(buf, out []byte, config *Config) (int, int) {
 	ln, n := cborItemLength(buf)
 
-	// TODO: To make it golang complaint comment out the following line
-	// and un-comment the next 6 lines.
+	// TODO: To make it complaint with golang's stdlib, comment out
+	// the following line and un-comment the next 6 lines.
 	out1, err := encodeString(buf[n:n+ln], out[:0])
 	if err != nil {
 		panic(err)

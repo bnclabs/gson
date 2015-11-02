@@ -219,8 +219,10 @@ BenchmarkCbor2ValTyp       50000  25685 ns/op   7783 B/op  140 allocs/op
   encoded simply as JSON-string and tagged as `tagJsonString` (tag-37).
 * `arrays` can be encoded in `Stream` mode, using cbor's
   indefinite-length scheme, or in `LengthPrefix` mode.
-* `properties` can be encoded in `Stream` mode, using cbor's
-  indefinite-length scheme, or in `LengthPrefix` mode.
+* `properties` can be encoded either using cbor's indefinite-length
+   scheme (`Stream`), or using cbor's `LengthPrefix`.
+* `property-keys` are always interpreted as string and encoded as 
+   utf8 cbor-text.
 
 ```text
 BenchmarkJson2CborNull	50000000     29.6 ns/op  135.22 MB/s   0 B/op  0 allocs/op

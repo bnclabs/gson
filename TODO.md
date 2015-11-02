@@ -1,15 +1,28 @@
-* encodeString() make it default and also provide Golang complaint version.
-* integrate CBOR test vector with gson.
-* validate collation.
-* from json->cbor support LengthPrefix encoding.
-* implement json pointer op PREPEND for a gson document.
-* create a new directory examples_len/ that contains the sorted list of json
-  items without using `lenprefix`
-* make cbor date-time parsing format configurable for tagDateTime.
+* improve code documentation and README.
 
-* document lookup APIs for CBOR and GSON.
+CBOR:
+
+* integrate CBOR test vector with gson.
+* from json to cbor support LengthPrefix encoding.
+* make cbor date-time parsing format configurable for tagDateTime.
+* in transforming cbor to json, encodeString() optimized version of golang's
+  encoding/json library is used (contributed by Sarath). keep it in sync with
+  upstream (golang's stdlib).
 * support for cbor tags: tagBase64URL, tagBase64, tagBase16
-* utf8 collation.
+
+Collate:
+
+* create a new directory testdata/collate_len/ that contains the sorted list of json
+  items without using `lenprefix`
+* utf8 collation for strings.
+
+JsonPointer for Value:
+
+* implement json pointer op PREPEND.
+
+JsonPointer for CBOR:
+
+* document lookup APIs for CBOR.
 
 planned features:
 

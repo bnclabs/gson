@@ -14,13 +14,17 @@ type mempools struct {
 	codepool *sync.Pool
 }
 
-func newMempool(strlen, numkeys, itemlen, ptrlen int) mempools {
+func newMempool(strlen, numkeys, itemlen, jptrlen int) mempools {
+	// strlen:  maximum length a string value can take in the JSON document.
+	// numkeys: maximum number of keys that a property obj. can have.
+	// itemlen: maximum length a collated value can take.
+	// jptrlen: maximum length a json-pointer can take.
 	m := mempools{}
 	m.prefixPool = &sync.Pool{
-		New: func() interface{} { return make([]byte, 0, ptrlen) },
+		New: func() interface{} { return make([]byte, 0, jptrlen) },
 	}
 	m.segmentsPool = &sync.Pool{
-		New: func() interface{} { return make([]string, 0, ptrlen) },
+		New: func() interface{} { return make([]string, 0, jptrlen) },
 	}
 	m.stringPool = &sync.Pool{
 		New: func() interface{} { return make([]byte, strlen) },

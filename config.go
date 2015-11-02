@@ -1,6 +1,6 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// Document representation, collation and transformation toolkit
+// Json representation, collation and transformation toolkit
 //
 // Package provides APIs to convert data representation from one format
 // to another. Supported formats are:
@@ -8,6 +8,8 @@
 //   * Golang value
 //   * CBOR - Consice Binary Object Representation
 //   * collation
+//
+// CBOR:
 //
 // Package also provides a RFC-7049 (CBOR) implementation, to encode
 // golang data into machine friendly binary format and vice-versa.
@@ -22,11 +24,10 @@
 //
 // Types from golang's standard library and custom types provided
 // by this package that can be encoded using CBOR:
-//   * `CborUndefined` to encode a data-item as undefined.
-//   * `CborIndefinite` and `CborBreakStop` to encode indefinite
+//   * CborUndefined: to encode a data-item as undefined.
+//   * CborIndefinite: and `CborBreakStop` to encode indefinite
 //     length of bytes, string, array and map
-//
-//   * CborEpoch : in seconds since epoch.
+//   * CborEpoch: in seconds since epoch.
 //   * CborEpochMicro: in micro-seconds epoch.
 //   * CborDecimalFraction: m*(10**e)
 //   * CborBigFloat: m*(2**e)
@@ -41,13 +42,15 @@
 //   * arrays and maps are encoded using indefinite encoding.
 //   * byte-string encoding is not used.
 //
+// Json-Pointer:
+//
 // Package also provides a RFC-6901 (JSON-pointers) implementation.
 // Pointers themself can be encoded into cbor format and
 // vice-versa:
 //
 //   cbor-path        : text-chunk-start segments break-stop
-//   segments         : tagJsonString | len | cbor-text
-//                    | segments segment
+//   segments         : tagJsonString len cbor-text
+//                    | segments tagJsonString len cbor-text
 //   text-chunk-start : 0xdf
 //   tagJsonString    : 0x25
 //   break-stop       : 0xff
@@ -146,10 +149,8 @@ type Config struct {
 	//language          language.Tag
 }
 
-// NewDefaultConfig returns a new configuration with default values.
-// NumberKind: FloatNumber
-// SpaceKind: UnicodeSpace
-// CborContainerEncoding: Stream
+// NewDefaultConfig returns a new configuration with default settings:
+// {FloatNumber, UnicodeSpace, Stream}
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:                FloatNumber,
@@ -162,14 +163,16 @@ func NewDefaultConfig() *Config {
 		maxKeys:           MaxKeys,
 		strict:            true,
 	}
+
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
 	config.enc = json.NewEncoder(config.buf)
+
 	strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
+
 	return config
 }
 
-// NewConfig returns a new configuration.
 func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 	config := NewDefaultConfig()
 	config.nk = nk
@@ -177,19 +180,16 @@ func NewConfig(nk NumberKind, ws SpaceKind) *Config {
 	return config
 }
 
-// NumberKind representation for number types.
 func (config Config) NumberKind(nk NumberKind) *Config {
 	config.nk = nk
 	return &config
 }
 
-// SpaceKind representation for interpreting whitespace.
 func (config Config) SpaceKind(ws SpaceKind) *Config {
 	config.ws = ws
 	return &config
 }
 
-// ContainerEncoding for cbor.
 func (config Config) ContainerEncoding(ct CborContainerEncoding) *Config {
 	config.ct = ct
 	return &config
@@ -391,19 +391,14 @@ func (config *Config) MapsliceToCbor(items [][2]interface{}, out []byte) int {
 	return mapl2cbor(items, out, config)
 }
 
-// CborToValue cbor binary into golang data.
 func (config *Config) CborToValue(buf []byte) (interface{}, int) {
 	return cbor2value(buf, config)
 }
 
-// JsonToCbor input JSON text to cbor binary. Returns length of
-// `out`.
 func (config *Config) JsonToCbor(txt string, out []byte) (string, int) {
 	return json2cbor(txt, out, config)
 }
 
-// CborToJson converts CBOR binary data-item into JSON. Returns
-// length of `out`.
 func (config *Config) CborToJson(in, out []byte) (int, int) {
 	return cbor2json(in, out, config)
 }
@@ -471,13 +466,10 @@ func (config *Config) CborDelete(doc, cborptr, newdoc, deleted []byte) (int, int
 	return cborDel(doc, cborptr, newdoc, deleted)
 }
 
-// ValueToCollate encode input golang object to order preserving
-// binary representation.
 func (config *Config) ValueToCollate(obj interface{}, code []byte) int {
 	return gson2collate(obj, code, config)
 }
 
-// CollateToValue will decode collated object back to golang object.
 func (config *Config) CollateToValue(code []byte) (interface{}, int) {
 	if len(code) == 0 {
 		return nil, 0
@@ -485,14 +477,11 @@ func (config *Config) CollateToValue(code []byte) (interface{}, int) {
 	return collate2gson(code, config)
 }
 
-// JsonToCollate encode input json text into order preserving
-// binary representation.
 func (config *Config) JsonToCollate(text string, code []byte) int {
 	_, n := json2collate(text, code, config)
 	return n
 }
 
-// CollateToJson will decode collated text back to JSON.
 func (config *Config) CollateToJson(code, text []byte) (int, int) {
 	if len(code) == 0 {
 		return 0, 0
@@ -500,13 +489,10 @@ func (config *Config) CollateToJson(code, text []byte) (int, int) {
 	return collate2json(code, text, config)
 }
 
-// CborToCollate encode input cbor encoded item into order preserving
-// binary representation.
 func (config *Config) CborToCollate(cborin, code []byte) (int, int) {
 	return cbor2collate(cborin, code, config)
 }
 
-// CollateToCbor will decode collated item back to Cbor format.
 func (config *Config) CollateToCbor(code, cborout []byte) (int, int) {
 	if len(code) == 0 {
 		return 0, 0
