@@ -82,21 +82,21 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 	// tagged encoding
 	case time.Time: // tag-0
 		n += valtime2cbor(v, out, config)
-	case CborEpoch: // tag-1
+	case CborTagEpoch: // tag-1
 		n += valtime2cbor(v, out, config)
-	case CborEpochMicro: // tag-1
+	case CborTagEpochMicro: // tag-1
 		n += valtime2cbor(v, out, config)
 	case *big.Int: // tag-2 (positive) or tag-3 (negative)
 		n += valbignum2cbor(v, out, config)
-	case CborDecimalFraction: // tag-4
+	case CborTagFraction: // tag-4
 		n += valdecimal2cbor(v, out)
-	case CborBigFloat: // tag-5
+	case CborTagFloat: // tag-5
 		n += valbigfloat2cbor(v, out)
 	case Cbor: // tag-24
 		n += valcbor2cbor(v, out)
 	case *regexp.Regexp: // tag-35
 		n += valregexp2cbor(v, out)
-	case CborPrefix: // tag-55799
+	case CborTagPrefix: // tag-55799
 		n += valcborprefix2cbor(v, out)
 	default:
 		panic(fmt.Errorf("cbor encode unknownType %T", v))
@@ -491,10 +491,10 @@ func valtime2cbor(dt interface{}, buf []byte, config *Config) int {
 		n += tag2cbor(tagDateTime, buf)
 		// TODO: make rfc3339 as config.
 		n += value2cbor(v.Format(time.RFC3339), buf[n:], config)
-	case CborEpoch:
+	case CborTagEpoch:
 		n += tag2cbor(tagEpoch, buf)
 		n += value2cbor(int64(v), buf[n:], config)
-	case CborEpochMicro:
+	case CborTagEpochMicro:
 		n += tag2cbor(tagEpoch, buf)
 		n += value2cbor(float64(v), buf[n:], config)
 	}
@@ -515,7 +515,7 @@ func valbignum2cbor(num *big.Int, buf []byte, config *Config) int {
 
 func valdecimal2cbor(item interface{}, buf []byte) int {
 	n := tag2cbor(tagDecimalFraction, buf)
-	x := item.(CborDecimalFraction)
+	x := item.(CborTagFraction)
 	n += valint642cbor(x[0], buf[n:])
 	n += valint642cbor(x[1], buf[n:])
 	return n
@@ -523,9 +523,9 @@ func valdecimal2cbor(item interface{}, buf []byte) int {
 
 func valbigfloat2cbor(item interface{}, buf []byte) int {
 	n := tag2cbor(tagBigFloat, buf)
-	x := item.(CborBigFloat)
-	n += valint642cbor(x[0].(int64), buf[n:])
-	n += valint642cbor(x[1].(int64), buf[n:])
+	x := item.(CborTagFloat)
+	n += valint642cbor(x[0], buf[n:])
+	n += valint642cbor(x[1], buf[n:])
 	return n
 }
 
@@ -713,11 +713,11 @@ func cbor2epochval(buf []byte, config *Config) (interface{}, int) {
 	item, n := cbor2value(buf, config)
 	switch v := item.(type) {
 	case int64:
-		return CborEpoch(v), n
+		return CborTagEpoch(v), n
 	case uint64:
-		return CborEpoch(v), n
+		return CborTagEpoch(v), n
 	case float64:
-		return CborEpochMicro(v), n
+		return CborTagEpochMicro(v), n
 	}
 	fmsg := "cbor2bignumval(): neither int64 nor float64: %T"
 	panic(fmt.Errorf(fmsg, item))
@@ -734,14 +734,14 @@ func cbor2decimalval(buf []byte, config *Config) (interface{}, int) {
 	m, y := cbor2value(buf[x:], config)
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
-			return CborDecimalFraction([2]int64{int64(a), int64(b)}), x + y
+			return CborTagFraction([2]int64{int64(a), int64(b)}), x + y
 		}
-		return CborDecimalFraction([2]int64{int64(a), m.(int64)}), x + y
+		return CborTagFraction([2]int64{int64(a), m.(int64)}), x + y
 
 	} else if b, ok := m.(uint64); ok {
-		return CborDecimalFraction([2]int64{e.(int64), int64(b)}), x + y
+		return CborTagFraction([2]int64{e.(int64), int64(b)}), x + y
 	}
-	return CborDecimalFraction([2]int64{e.(int64), m.(int64)}), x + y
+	return CborTagFraction([2]int64{e.(int64), m.(int64)}), x + y
 }
 
 func cbor2bigfloatval(buf []byte, config *Config) (interface{}, int) {
@@ -749,14 +749,14 @@ func cbor2bigfloatval(buf []byte, config *Config) (interface{}, int) {
 	m, y := cbor2value(buf[x:], config)
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
-			return CborBigFloat([2]interface{}{int64(a), int64(b)}), x + y
+			return CborTagFloat([2]int64{int64(a), int64(b)}), x + y
 		}
-		return CborBigFloat([2]interface{}{int64(a), m.(int64)}), x + y
+		return CborTagFloat([2]int64{int64(a), m.(int64)}), x + y
 
 	} else if b, ok := m.(uint64); ok {
-		return CborBigFloat([2]interface{}{e.(int64), int64(b)}), x + y
+		return CborTagFloat([2]int64{e.(int64), int64(b)}), x + y
 	}
-	return CborBigFloat([2]interface{}{e.(int64), m.(int64)}), x + y
+	return CborTagFloat([2]int64{e.(int64), m.(int64)}), x + y
 }
 
 func cbor2cborval(buf []byte, config *Config) (interface{}, int) {
@@ -776,7 +776,7 @@ func cbor2regexpval(buf []byte, config *Config) (interface{}, int) {
 
 func cbor2cborprefixval(buf []byte, config *Config) (interface{}, int) {
 	item, n := cbor2value(buf, config)
-	return CborPrefix(item.([]byte)), n
+	return CborTagPrefix(item.([]byte)), n
 }
 
 func init() {

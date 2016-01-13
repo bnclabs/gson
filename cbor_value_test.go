@@ -587,13 +587,13 @@ func TestDateTime(t *testing.T) {
 	}()
 }
 
-func TestEpoch(t *testing.T) {
+func TestTagEpoch(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 
 	// positive and negative epoch
 	for _, val := range [2]int64{1000000, -100000} {
-		ref := CborEpoch(val)
+		ref := CborTagEpoch(val)
 		n := config.ValueToCbor(ref, buf)
 		item, m := config.CborToValue(buf[:n])
 		if n != 6 || n != m {
@@ -627,12 +627,12 @@ func TestEpoch(t *testing.T) {
 	}()
 }
 
-func TestEpochMicro(t *testing.T) {
+func TestTagEpochMicro(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	// positive and negative epoch in uS.
 	for _, val := range [2]float64{1000000.123456, -100000.123456} {
-		ref := CborEpochMicro(val)
+		ref := CborTagEpochMicro(val)
 		n := config.ValueToCbor(ref, buf)
 		item, m := config.CborToValue(buf[:n])
 		if n != 10 || n != m {
@@ -667,11 +667,11 @@ func TestDecimalFraction(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	// for positive
-	refs := []CborDecimalFraction{
-		CborDecimalFraction([2]int64{int64(-10), int64(-23)}),
-		CborDecimalFraction([2]int64{int64(-10), int64(23)}),
-		CborDecimalFraction([2]int64{int64(10), int64(-23)}),
-		CborDecimalFraction([2]int64{int64(10), int64(23)}),
+	refs := []CborTagFraction{
+		CborTagFraction([2]int64{int64(-10), int64(-23)}),
+		CborTagFraction([2]int64{int64(-10), int64(23)}),
+		CborTagFraction([2]int64{int64(10), int64(-23)}),
+		CborTagFraction([2]int64{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
 		n := config.ValueToCbor(ref, buf)
@@ -688,11 +688,11 @@ func TestDecimalFraction(t *testing.T) {
 func TestBigFloat(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	refs := []CborBigFloat{
-		CborBigFloat([2]interface{}{int64(-10), int64(-23)}),
-		CborBigFloat([2]interface{}{int64(-10), int64(23)}),
-		CborBigFloat([2]interface{}{int64(10), int64(-23)}),
-		CborBigFloat([2]interface{}{int64(10), int64(23)}),
+	refs := []CborTagFloat{
+		CborTagFloat([2]int64{int64(-10), int64(-23)}),
+		CborTagFloat([2]int64{int64(-10), int64(23)}),
+		CborTagFloat([2]int64{int64(10), int64(-23)}),
+		CborTagFloat([2]int64{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
 		n := config.ValueToCbor(ref, buf)
@@ -748,10 +748,10 @@ func TestRegexp(t *testing.T) {
 	}()
 }
 
-func TestCborPrefix(t *testing.T) {
+func TestCborTagPrefix(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	ref := CborPrefix([]byte("hello world"))
+	ref := CborTagPrefix([]byte("hello world"))
 	n := config.ValueToCbor(ref, buf)
 	item, m := config.CborToValue(buf[:n])
 	if n != 15 || n != m {

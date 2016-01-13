@@ -25,15 +25,15 @@
 //
 // Types from golang's standard library and custom types provided
 // by this package that can be encoded using CBOR:
+//   * Cbor: a cbor encoded binary data item.
 //   * CborUndefined: to encode a data-item as undefined.
 //   * CborIndefinite: and `CborBreakStop` to encode indefinite
 //     length of bytes, string, array and map
-//   * CborEpoch: in seconds since epoch.
-//   * CborEpochMicro: in micro-seconds epoch.
-//   * CborDecimalFraction: m*(10**e)
-//   * CborBigFloat: m*(2**e)
-//   * Cbor: a cbor encoded binary data item.
-//   * CborPrefix: to self indentify a binary blog as CBOR.
+//   * CborTagEpoch: in seconds since epoch.
+//   * CborTagEpochMicro: in micro-seconds epoch.
+//   * CborTagFraction: m*(10**e)
+//   * CborTagFloat: m*(2**e)
+//   * CborTagPrefix: to self indentify a binary blog as CBOR.
 //
 // Package also provides an implementation for encoding json to CBOR
 // and vice-versa:

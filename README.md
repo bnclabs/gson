@@ -156,7 +156,7 @@ BenchmarkVal2JsonTyp       50000      30180 ns/op   39.33 MB/s      3488 B/op   
   * `Cbor` type supplied by cbor package, encoded with
     tag-24.
   * `regexp.Regexp` encoded with tag-35.
-  * `CborPrefix` type supplied by cbor package, encoded
+  * `CborTagPrefix` type supplied by cbor package, encoded
     with tag-55799.
 * all other types shall cause a panic.
 

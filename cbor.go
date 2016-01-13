@@ -2,39 +2,7 @@
 
 package gson
 
-// CborUndefined type as part of simple-type codepoint-23.
-type CborUndefined byte
-
-// CborIndefinite code, first-byte of stream encoded data items.
-type CborIndefinite byte
-
-// CborBreakStop code, last-byte of stream encoded the data items.
-type CborBreakStop byte
-
-// Cbor tagged-type, a byte-string of cbor data-item.
-type Cbor []byte
-
-// CborPrefix tagged-type, a byte-string of cbor data-item that
-// will be wrapped with a unique prefix before sending out.
-type CborPrefix []byte
-
-// CborEpoch tagged-type, seconds since 1970-01-01T00:00Z
-// in UTC time.
-type CborEpoch int64
-
-// CborEpochMicro tagged-type, float64 since 1970-01-01T00:00Z
-// in UTC time.
-type CborEpochMicro float64
-
-// CborDecimalFraction tagged-type, combine an integer mantissa
-// with a base-10 scaling factor m*(10**e), presented as [2]int64{e,m}.
-type CborDecimalFraction [2]int64
-
-// CborBigFloat tagged-type, combine an integer mantissa with a base-2
-// scaling factor m*(2**e) - presented as int64{e,m}.
-type CborBigFloat [2]interface{}
-
-const ( // major types.
+const ( // major types (3 most significant bits in the first byte)
 	cborType0 byte = iota << 5 // unsigned integer
 	cborType1                  // negative integer
 	cborType2                  // byte string
@@ -45,17 +13,24 @@ const ( // major types.
 	cborType7                  // floating-point, simple-types and break-stop
 )
 
-const ( // associated information for type0 and type1.
+// CborMaxSmallInt maximum integer value that can be stored as associative value
+// for cborType0 or cborType1.
+const CborMaxSmallInt = 23
+
+const ( // for cborType0 cborType1 (5 least significant bits in the first byte)
 	// 0..23 actual value
 	cborInfo24 byte = iota + 24 // followed by 1-byte data-item
 	cborInfo25                  // followed by 2-byte data-item
 	cborInfo26                  // followed by 4-byte data-item
 	cborInfo27                  // followed by 8-byte data-item
 	// 28..30 reserved
-	cborIndefiniteLength = 31 // for byte-string, string, arr, map
+	cborIndefiniteLength = 31 // for cborType2/cborType3/cborType4/cborType5
 )
 
-const ( // simple types for type7
+// CborIndefinite code, {cborType2,Type3,Type4,Type5}/cborIndefiniteLength
+type CborIndefinite byte
+
+const ( // simple types for cborType7
 	// 0..19 unassigned
 	cborSimpleTypeFalse byte = iota + 20 // encodes nil type
 	cborSimpleTypeTrue
@@ -69,21 +44,11 @@ const ( // simple types for type7
 	cborItemBreak = 31 // stop-code for indefinite-length items
 )
 
-// CborMaxSmallInt is the maximum integer value that can be
-// stored as associative value in CBOR.
-const CborMaxSmallInt = 23
+// CborUndefined simple type, cborType7/cborSimpleUndefined
+type CborUndefined byte
 
-func cborMajor(b byte) byte {
-	return b & 0xe0
-}
-
-func cborInfo(b byte) byte {
-	return b & 0x1f
-}
-
-func cborHdr(major, info byte) byte {
-	return (major & 0xe0) | (info & 0x1f)
-}
+// CborBreakStop code, cborType7/cborItemBreak
+type CborBreakStop byte
 
 const ( // pre-defined tag values
 	tagDateTime        = iota // datetime as utf-8 string
@@ -122,9 +87,43 @@ const ( // pre-defined tag values
 	// unassigned 55800..
 )
 
+// CborTagEpoch, codepoint-1, followed by int64 of seconds since
+// 1970-01-01T00:00Z in UTC time.
+type CborTagEpoch int64
+
+// CborTagEpochMicro, codepoint-1, followed by float64 of seconds/us since
+// 1970-01-01T00:00Z in UTC time.
+type CborTagEpochMicro float64
+
+// CborTagFraction, codepoint-4, followed by [2]int64{e,m} => m*(10**e).
+type CborTagFraction [2]int64
+
+// CborTagFloat codepoint-5, followed by [2]int64{e,m} => m*(2**e).
+type CborTagFloat [2]int64
+
+// CborTagPrefix, codepoint-5579, followed by byte-string.
+type CborTagPrefix []byte
+
 var brkstp byte = cborHdr(cborType7, cborItemBreak)
 
 var hdrIndefiniteBytes = cborHdr(cborType2, cborIndefiniteLength)
 var hdrIndefiniteText = cborHdr(cborType3, cborIndefiniteLength)
 var hdrIndefiniteArray = cborHdr(cborType4, cborIndefiniteLength)
 var hdrIndefiniteMap = cborHdr(cborType5, cborIndefiniteLength)
+
+// Cbor encoded bytes.
+type Cbor []byte
+
+//---- help functions.
+
+func cborMajor(b byte) byte {
+	return b & 0xe0
+}
+
+func cborInfo(b byte) byte {
+	return b & 0x1f
+}
+
+func cborHdr(major, info byte) byte {
+	return (major & 0xe0) | (info & 0x1f)
+}
