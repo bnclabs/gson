@@ -12,12 +12,6 @@ import "math/big"
 
 var _ = fmt.Sprintf("dummy")
 
-func TestCborMajor(t *testing.T) {
-	if typ := cborMajor(0xff); typ != 0xe0 {
-		t.Errorf("fail major() got %v wanted 0xe0", typ)
-	}
-}
-
 func TestCborNil(t *testing.T) {
 	buf := make([]byte, 10)
 	config := NewDefaultConfig()
@@ -709,7 +703,7 @@ func TestBigFloat(t *testing.T) {
 func TestCbor(t *testing.T) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	ref := Cbor([]byte("hello world"))
+	ref := CborBytes([]byte("hello world"))
 	n := config.ValueToCbor(ref, buf)
 	item, m := config.CborToValue(buf[:n])
 	if n != 14 || n != m {

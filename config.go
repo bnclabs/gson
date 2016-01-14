@@ -25,7 +25,7 @@
 //
 // Types from golang's standard library and custom types provided
 // by this package that can be encoded using CBOR:
-//   * Cbor: a cbor encoded binary data item.
+//   * CborBytes: a cbor encoded binary data item.
 //   * CborUndefined: to encode a data-item as undefined.
 //   * CborIndefinite: and `CborBreakStop` to encode indefinite
 //     length of bytes, string, array and map
@@ -324,22 +324,8 @@ func (config *Config) DocDelete(ptr string, doc interface{}) (newdoc, deleted in
 	return docDel(segs, doc)
 }
 
-// SmallintToCbor encode tiny integers between -23..+23.
-// Can be used by libraries that build on top of cbor.
-func (config *Config) SmallintToCbor(item int8, out []byte) int {
-	if item < 0 {
-		out[0] = cborHdr(cborType1, byte(-(item + 1))) // -23 to -1
-	} else {
-		out[0] = cborHdr(cborType0, byte(item)) // 0 to 23
-	}
-	return 1
-}
-
-// SimpletypeToCbor that falls outside golang native type,
-// code points 0..19 and 32..255 are un-assigned.
-// Can be used by libraries that build on top of cbor.
-func (config *Config) SimpletypeToCbor(typcode byte, out []byte) int {
-	return simpletypeToCbor(typcode, out)
+func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
+	return &Cbor{config: config, data: buffer, n: ln}
 }
 
 // IsIndefiniteBytes can be used to check the shape of cbor

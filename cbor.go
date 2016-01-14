@@ -47,6 +47,9 @@ const ( // simple types for cborType7
 // CborUndefined simple type, cborType7/cborSimpleUndefined
 type CborUndefined byte
 
+// CborBytes encoded bytes in cbor format. tagCborEnc/[]byte
+type CborBytes []byte
+
 // CborBreakStop code, cborType7/cborItemBreak
 type CborBreakStop byte
 
@@ -111,8 +114,74 @@ var hdrIndefiniteText = cborHdr(cborType3, cborIndefiniteLength)
 var hdrIndefiniteArray = cborHdr(cborType4, cborIndefiniteLength)
 var hdrIndefiniteMap = cborHdr(cborType5, cborIndefiniteLength)
 
-// Cbor encoded bytes.
-type Cbor []byte
+// Cbor encapsulates configuration and cbor buffer.
+type Cbor struct {
+	config *Config
+	data   []byte
+	n      int
+}
+
+// Bytes return the o/p buffer of cbor encoded value.
+func (cbr *Cbor) Bytes() []byte {
+	return cbr.data[:cbr.n]
+}
+
+// Reset buffer to zero-length.
+func (cbr *Cbor) Reset() {
+	cbr.n = 0
+}
+
+// EncodeSmallint tiny integers between -23..+23 are encoded into cbor.
+func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
+	if item < 0 {
+		cbr.data[cbr.n] = cborHdr(cborType1, byte(-(item + 1))) // -23 to -1
+	} else {
+		cbr.data[cbr.n] = cborHdr(cborType0, byte(item)) // 0 to 23
+	}
+	cbr.n++
+	return cbr
+}
+
+// EncodeSimpletype code points 0..19 and 32..255 are un-assigned.
+func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
+	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:])
+	return cbr
+}
+
+// IsIndefiniteBytes to check for byte-string of unspecified length.
+func (cbr *Cbor) IsIndefiniteBytes() bool {
+	x := CborIndefinite(cbr.data[0])
+	return x == CborIndefinite(hdrIndefiniteBytes)
+}
+
+// IsIndefiniteText to check for text-string of unspecified length.
+func (cbr *Cbor) IsIndefiniteText() bool {
+	x := CborIndefinite(cbr.data[0])
+	return x == CborIndefinite(hdrIndefiniteText)
+}
+
+// IsIndefiniteArray to check for array of unspecified length.
+func (cbr *Cbor) IsIndefiniteArray() bool {
+	x := CborIndefinite(cbr.data[0])
+	return x == CborIndefinite(hdrIndefiniteArray)
+}
+
+// IsIndefiniteMap to check for map of unspecified length.
+func (cbr *Cbor) IsIndefiniteMap() bool {
+	x := CborIndefinite(cbr.data[0])
+	return x == CborIndefinite(hdrIndefiniteMap)
+}
+
+// IsBreakstop check whether byte-string/text-string/array/map of unspecified
+// length is ending.
+func (cbr *Cbor) IsBreakstop() bool {
+	return cbr.data[0] == brkstp
+}
+
+// Tovalue convert to golang native value, return no. of bytes decoded.
+func (cbr *Cbor) Tovalue() (interface{}, int) {
+	return cbor2value(cbr.data[:cbr.n], cbr.config)
+}
 
 //---- help functions.
 
