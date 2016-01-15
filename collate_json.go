@@ -1,6 +1,7 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
 // transform json encoded value into collate encoding.
+// cnf: NumberKind, arrayLenPrefix, propertyLenPrefix
 
 package gson
 

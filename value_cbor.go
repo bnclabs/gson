@@ -1,5 +1,8 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
+// transform golang native value into cbor encoded value.
+// cnf: ContainerEncoding
+
 package gson
 
 import "math"

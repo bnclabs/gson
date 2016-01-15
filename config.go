@@ -91,24 +91,13 @@ const (
 	Decimal
 )
 
-// SpaceKind to skip white-spaces in JSON text.
-type SpaceKind byte
-
-const (
-	// AnsiSpace will skip white space characters defined by ANSI spec.
-	AnsiSpace SpaceKind = iota + 1
-
-	// UnicodeSpace will skip white space characters defined by Unicode spec.
-	UnicodeSpace
-)
-
-// CborContainerEncoding, encoding method to use for arrays and maps.
-type CborContainerEncoding byte
+// ContainerEncoding, encoding method to use for arrays and maps.
+type ContainerEncoding byte
 
 const (
 	// LengthPrefix encoding for composite types. That is, for arrays and maps
 	// encode the number of contained items as well.
-	LengthPrefix CborContainerEncoding = iota + 1
+	LengthPrefix ContainerEncoding = iota + 1
 
 	// Stream encoding for composite types. That is, for arrays and maps
 	// use cbor's indefinite and break-stop to encode member items.
@@ -118,26 +107,33 @@ const (
 // MaxKeys maximum number of keys allowed in a property object.
 const MaxKeys = 1000
 
+type jsonConfig struct {
+	// if `strict` is false then configurations with IntNumber
+	// will parse floating numbers and then convert it to int64.
+	// else will panic when detecting floating numbers.
+	strict     bool
+	ws         SpaceKind
+	jsonString bool
+}
+
+type collateConfig struct {
+	doMissing         bool // handle missing values (for N1QL)
+	arrayLenPrefix    bool // first sort arrays based on its length
+	propertyLenPrefix bool // first sort properties based on length
+	enc               *json.Encoder
+	buf               *bytes.Buffer
+}
+
 // Config and access gson functions. All APIs to gson is defined via
 // config. To quickly get started, use NewDefaultConfig() that will
 // create a configuration with default values.
 type Config struct {
-	nk                NumberKind
-	ws                SpaceKind
-	ct                CborContainerEncoding
-	jsonString        bool
-	arrayLenPrefix    bool // first sort arrays based on its length
-	propertyLenPrefix bool // first sort properties based on length
-	doMissing         bool // handle missing values (for N1QL)
-	enc               *json.Encoder
-	buf               *bytes.Buffer
-	maxKeys           int
-	// if `strict` is false then configurations with IntNumber
-	// will parse floating numbers and then convert it to int64.
-	// else will panic when detecting floating numbers.
-	strict bool
-	// memory pools
-	pools mempools
+	nk      NumberKind
+	ct      ContainerEncoding
+	maxKeys int
+	pools   mempools
+	jsonConfig
+	collateConfig
 	//-- unicode
 	//backwards        bool
 	//hiraganaQ        bool
@@ -154,15 +150,19 @@ type Config struct {
 // {FloatNumber, UnicodeSpace, Stream}
 func NewDefaultConfig() *Config {
 	config := &Config{
-		nk:                FloatNumber,
-		ws:                UnicodeSpace,
-		ct:                Stream,
-		jsonString:        false,
-		arrayLenPrefix:    false,
-		propertyLenPrefix: true,
-		doMissing:         true,
-		maxKeys:           MaxKeys,
-		strict:            true,
+		nk:      FloatNumber,
+		ct:      Stream,
+		maxKeys: MaxKeys,
+		jsonConfig: jsonConfig{
+			ws:         UnicodeSpace,
+			strict:     true,
+			jsonString: false,
+		},
+		collateConfig: collateConfig{
+			doMissing:         true,
+			arrayLenPrefix:    false,
+			propertyLenPrefix: true,
+		},
 	}
 
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
@@ -191,7 +191,7 @@ func (config Config) SpaceKind(ws SpaceKind) *Config {
 	return &config
 }
 
-func (config Config) ContainerEncoding(ct CborContainerEncoding) *Config {
+func (config Config) ContainerEncoding(ct ContainerEncoding) *Config {
 	config.ct = ct
 	return &config
 }
@@ -261,12 +261,7 @@ func (config *Config) JsonToValues(txt string) []interface{} {
 // ValueToJson will convert json compatible golang value into JSON string.
 // Returns the number of bytes written into `out`.
 func (config *Config) ValueToJson(value interface{}, out []byte) int {
-	config.buf.Reset()
-	if err := config.enc.Encode(value); err != nil {
-		panic(err)
-	}
-	s := config.buf.Bytes()
-	return copy(out, s[:len(s)-1]) // -1 to strip \n
+	return value2json(value, out, config)
 }
 
 // ParseJsonPointer follows rfc-6901 allows ~0 and ~1 escapes, property
@@ -517,18 +512,7 @@ func (nk NumberKind) String() string {
 	}
 }
 
-func (ws SpaceKind) String() string {
-	switch ws {
-	case AnsiSpace:
-		return "AnsiSpace"
-	case UnicodeSpace:
-		return "UnicodeSpace"
-	default:
-		panic("new space-kind")
-	}
-}
-
-func (ct CborContainerEncoding) String() string {
+func (ct ContainerEncoding) String() string {
 	switch ct {
 	case LengthPrefix:
 		return "LengthPrefix"

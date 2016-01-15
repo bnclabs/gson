@@ -1,5 +1,8 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
+// transform golang native value into binary collated encoding.
+// cnf: NumberKind, doMissing, arrayLenPrefix, propertyLenPrefix
+
 package gson
 
 import "strconv"
@@ -89,6 +92,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 
 	case string:
 		return collateString(value, code, config)
+		// FIXME
 		//if config.doMissing && MissingLiteral.Equal(value) {
 		//	code[0], code[1] = TypeMissing, Terminator
 		//	return 2

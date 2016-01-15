@@ -2,6 +2,9 @@
 
 package gson
 
+// transform json encoded value into cbor encoded value.
+// cnf: SpaceKind, NumberKind, ContainerEncoding, strict, jsonString
+
 import "strconv"
 import "unicode/utf8"
 
