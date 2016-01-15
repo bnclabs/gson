@@ -328,7 +328,7 @@ func BenchmarkCborGet(b *testing.B) {
 }
 
 func BenchmarkCborSet(b *testing.B) {
-	config := NewConfig(FloatNumber, UnicodeSpace)
+	config := NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	txt := string(testdataFile("testdata/typical.json"))
 
 	cbordoc := make([]byte, 10*1024)

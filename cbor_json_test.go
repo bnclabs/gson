@@ -109,7 +109,7 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 func TestScanNumber(t *testing.T) {
 	code, out := make([]byte, 1024), make([]byte, 1024)
 	// test JSONNumber
-	config := NewConfig(JSONNumber, UnicodeSpace)
+	config := NewDefaultConfig().NumberKind(JSONNumber).SpaceKind(UnicodeSpace)
 	ref := []byte{216, 38, 98, 49, 48}
 	_, n := config.JsonToCbor("10", code)
 	if bytes.Compare(code[:n], ref) != 0 {
@@ -120,14 +120,14 @@ func TestScanNumber(t *testing.T) {
 		t.Errorf("exected %v, got %v", "10", s)
 	}
 	// test FloatNumber
-	config = NewConfig(FloatNumber, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
 		t.Errorf("expected %q, got %q", "10", s)
 	}
 	// test IntNumber
-	config = NewConfig(IntNumber, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(IntNumber).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
@@ -140,39 +140,39 @@ func TestScanNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config = NewConfig(IntNumber, UnicodeSpace)
+		config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(UnicodeSpace)
 		config.JsonToCbor("10.2", out)
 	}()
 	// test FloatNumber32
-	config = NewConfig(FloatNumber32, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(FloatNumber32).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
 		t.Errorf("expected %q, got %q", "10", s)
 	}
 	// test SmartNumber32
-	config = NewConfig(SmartNumber32, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(SmartNumber32).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10.2", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10.2" {
 		t.Errorf("expected %q, got %q", "10.2", s)
 	}
 	// test SmartNumber32 (integer)
-	config = NewConfig(SmartNumber32, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(SmartNumber32).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
 		t.Errorf("expected %q, got %q", "10", s)
 	}
 	// test SmartNumber
-	config = NewConfig(SmartNumber, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(SmartNumber).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10.2", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10.2" {
 		t.Errorf("expected %q, got %q", "10.2", s)
 	}
 	// test SmartNumber (integer)
-	config = NewConfig(SmartNumber32, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(SmartNumber32).SpaceKind(UnicodeSpace)
 	_, n = config.JsonToCbor("10", code)
 	_, y = config.CborToJson(code[:n], out)
 	if s := string(out[:y]); s != "10" {
@@ -188,7 +188,7 @@ func TestJsonNumber(t *testing.T) {
 		"9223372036854775807", "-9223372036854775807", "-9223372036854775808",
 	}
 	cborout, jsonout := make([]byte, 1024), make([]byte, 1024)
-	config := NewConfig(IntNumber, UnicodeSpace)
+	config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(UnicodeSpace)
 	var ref1, ref2 interface{}
 	for _, tcase := range testcases {
 		t.Logf("testcase - %v", tcase)

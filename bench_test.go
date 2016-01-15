@@ -7,7 +7,7 @@ import "testing"
 
 func BenchmarkMarshalJson(b *testing.B) {
 	txt := string(testdataFile("testdata/typical.json"))
-	config := NewConfig(FloatNumber, AnsiSpace)
+	config := NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(AnsiSpace)
 	_, val := config.JsonToValue(txt)
 	b.SetBytes(int64(len(txt)))
 	b.ResetTimer()

@@ -147,7 +147,9 @@ type Config struct {
 }
 
 // NewDefaultConfig returns a new configuration with default settings:
-// {FloatNumber, UnicodeSpace, Stream}
+// { FloatNumber, Stream, MaxKeys, UnicodeSpace, +strict, -jsonString
+//	 +doMissing, -arrayLenPrefix, +propertyLenPrefix
+// }
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:      FloatNumber,
@@ -171,13 +173,6 @@ func NewDefaultConfig() *Config {
 	strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
 
-	return config
-}
-
-func NewConfig(nk NumberKind, ws SpaceKind) *Config {
-	config := NewDefaultConfig()
-	config.nk = nk
-	config.ws = ws
 	return config
 }
 

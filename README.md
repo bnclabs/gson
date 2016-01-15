@@ -408,7 +408,7 @@ Notes
 * Codec type is renamed to Config.
 * caller should make sure that the o/p buffer passed to encoding
   and decoding APIs are adequately sized.
-* Name and signature of NewCodec() (now, NewConfig) has changed.
+* Name and signature of NewCodec() (now, NewDefaultConfig) has changed.
 * configuration APIs,
   SortbyArrayLen, SortbyPropertyLen, UseMissing, NumberType all now return
   the config object back the caller - helps in call-chaining.

@@ -299,7 +299,7 @@ func TestCborArray(t *testing.T) {
 	ref := []interface{}{10.2, "hello world"}
 
 	// encoding use LengthPrefix
-	config := NewConfig(FloatNumber, UnicodeSpace)
+	config := NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf, config)
@@ -307,7 +307,7 @@ func TestCborArray(t *testing.T) {
 		t.Errorf("fail code text: %v %v %T(%v)", n, m, val, val)
 	}
 	// encoding use Stream
-	config = NewConfig(FloatNumber, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf, config)
 	if n != 23 || n != m || !reflect.DeepEqual(ref, val) {
@@ -323,7 +323,7 @@ func TestCborMapSlice(t *testing.T) {
 	}
 	refm := CborMap2golangMap(ref)
 	// encoding use LengthPrefix
-	config := NewConfig(FloatNumber, UnicodeSpace)
+	config := NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf, config)
@@ -331,7 +331,7 @@ func TestCborMapSlice(t *testing.T) {
 		t.Errorf("fail code text: %v %v %v %v", n, m, refm, val)
 	}
 	// encoding use Stream
-	config = NewConfig(FloatNumber, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf, config)
 	if n != 40 || n != m || !reflect.DeepEqual(refm, val) {
@@ -346,7 +346,7 @@ func TestCborMap(t *testing.T) {
 		"hello world": float64(10.2),
 	}
 	// encoding use LengthPrefix
-	config := NewConfig(FloatNumber, UnicodeSpace)
+	config := NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	config = config.ContainerEncoding(LengthPrefix)
 	n := value2cbor(ref, buf, config)
 	val, m := cbor2value(buf, config)
@@ -355,7 +355,7 @@ func TestCborMap(t *testing.T) {
 		t.Errorf("fail code text: %v %v %v %v", n, m, ref, val)
 	}
 	// encoding use Stream
-	config = NewConfig(FloatNumber, UnicodeSpace)
+	config = NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
 	n = value2cbor(ref, buf, config)
 	val, m = cbor2value(buf, config)
 	val = CborMap2golangMap(val)
@@ -474,7 +474,7 @@ func TestCborSmartnum(t *testing.T) {
 }
 
 func TestCborMalformed(t *testing.T) {
-	config := NewConfig(IntNumber, AnsiSpace)
+	config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(AnsiSpace)
 	out := make([]byte, 1024)
 	for _, tcase := range scaninvalid {
 		func() {
