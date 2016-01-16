@@ -73,6 +73,7 @@ func (clt *Collate) Bytes() []byte {
 func (clt *Collate) Reset(data []byte) *Collate {
 	if data == nil {
 		clt.n = 0
+		return clt
 	}
 	clt.data, clt.n = data, len(data)
 	return clt

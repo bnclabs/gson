@@ -130,6 +130,7 @@ func (cbr *Cbor) Bytes() []byte {
 func (cbr *Cbor) Reset(data []byte) *Cbor {
 	if data == nil {
 		cbr.n = 0
+		return cbr
 	}
 	cbr.data, cbr.n = data, len(data)
 	return cbr

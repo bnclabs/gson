@@ -57,6 +57,7 @@ func (jsn *Json) Bytes() []byte {
 func (jsn *Json) Reset(data []byte) *Json {
 	if data == nil {
 		jsn.n = 0
+		return jsn
 	}
 	jsn.data, jsn.n = data, len(data)
 	return jsn

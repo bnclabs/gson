@@ -1,7 +1,5 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// +build ignore
-
 package gson
 
 import "testing"
@@ -26,14 +24,17 @@ func TestStr2Bytes(t *testing.T) {
 
 func TestCborMap2Golang(t *testing.T) {
 	ref := `{"a":10,"b":[true,false,null]}`
-	cborcode := make([]byte, 1024)
 	config := NewDefaultConfig()
-	_, value := config.JsonToValue(ref)
-	n := config.ValueToCbor(GolangMap2cborMap(value), cborcode)
-	value1, _ := config.CborToValue(cborcode[:n])
-	data, err := json.Marshal(CborMap2golangMap(value1))
+	jsn := config.NewJson([]byte(ref), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	_, val1 := jsn.Tovalue()
+	value := config.NewValue(GolangMap2cborMap(val1))
+	value.Tocbor(cbr)
+	val2 := cbr.Tovalue()
+	data, err := json.Marshal(CborMap2golangMap(val2))
 	if err != nil {
-		t.Fatalf("json parsing: %v\n	%v", value1, err)
+		t.Fatalf("json parsing: %v\n	%v", val2, err)
 	}
 	if s := string(data); s != ref {
 		t.Errorf("expected %q, got %q", ref, s)
@@ -41,8 +42,6 @@ func TestCborMap2Golang(t *testing.T) {
 }
 
 func TestNormalizeFloat(t *testing.T) {
-	config := NewDefaultConfig()
-	code := make([]byte, 1024)
 	// test with SmartNumber32 and SmartNumber
 	panicfn := func(nk NumberKind) {
 		defer func() {
@@ -50,17 +49,16 @@ func TestNormalizeFloat(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config = config.NumberKind(nk)
-		config.JsonToCollate("10.3", code)
+		config := NewDefaultConfig().NumberKind(nk)
+		jsn := config.NewJson([]byte("10.3"), -1)
+		clt := config.NewCollate(make([]byte, 1024), 0)
+		jsn.Tocollate(clt)
 	}
 	panicfn(SmartNumber32)
 	panicfn(SmartNumber)
 }
 
 func TestDenormalizeFloat(t *testing.T) {
-	config := NewDefaultConfig()
-	code, text := make([]byte, 1024), make([]byte, 1024)
-	n := config.JsonToCollate("10.3", code)
 	// test with SmartNumber32 and SmartNumber
 	panicfn := func(nk NumberKind) {
 		defer func() {
@@ -68,17 +66,18 @@ func TestDenormalizeFloat(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config = config.NumberKind(nk)
-		config.CollateToCbor(code[:n], text)
+		config := NewDefaultConfig().NumberKind(nk)
+		jsn := config.NewJson([]byte("10.3"), -1)
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		clt := config.NewCollate(make([]byte, 1024), 0)
+		jsn.Tocollate(clt)
+		clt.Tocbor(cbr)
 	}
 	panicfn(SmartNumber32)
 	panicfn(SmartNumber)
 }
 
 func TestDenormalizeFloatTojson(t *testing.T) {
-	config := NewDefaultConfig()
-	code, text := make([]byte, 1024), make([]byte, 1024)
-	n := config.JsonToCollate("10.3", code)
 	// test with SmartNumber32 and SmartNumber
 	panicfn := func(nk NumberKind) {
 		defer func() {
@@ -86,8 +85,13 @@ func TestDenormalizeFloatTojson(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config = config.NumberKind(nk)
-		config.CollateToJson(code[:n], text)
+		config := NewDefaultConfig().NumberKind(nk)
+		jsn := config.NewJson(make([]byte, 1024), 0)
+		clt := config.NewCollate(make([]byte, 1024), 0)
+
+		jsn.Reset([]byte("10.3"))
+		jsn.Tocollate(clt)
+		clt.Tojson(jsn.Reset(nil))
 	}
 	panicfn(SmartNumber32)
 	panicfn(SmartNumber)
