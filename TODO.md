@@ -1,4 +1,6 @@
 * improve code documentation and README.
+* tagJsonNumber is used instead of tagJsonString.
+* json.Number can be used ?
 
 CBOR:
 

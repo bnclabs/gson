@@ -1,5 +1,7 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
+// +build ignore
+
 package gson
 
 import "testing"
@@ -63,23 +65,34 @@ func TestJson(t *testing.T) {
 		`{}`,
 		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`,
 	}
-	cborout, jsonout := make([]byte, 1024), make([]byte, 1024)
+
 	config := NewDefaultConfig()
+
+	jsn := config.NewJson(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	jsnback := config.NewJson(make([]byte, 1024), 0)
+
 	var ref1, ref2 interface{}
+
 	for _, tcase := range testcases {
 		t.Logf("testcase - %v", tcase)
-		_, n := config.JsonToCbor(tcase, cborout)
-		if err := json.Unmarshal([]byte(tcase), &ref1); err != nil {
-			t.Errorf("json.Unmarshal() failed for tcase %v: %v", tcase, err)
+		json.Unmarshal([]byte(tcase), &ref1)
+
+		jsn.Reset([]byte(tcase))
+
+		cbr.Reset()
+		jsn.Tocbor(cbr)
+		t.Logf("%v %v", len(cbr.Bytes()), cbr.Bytes())
+
+		jsnback.Reset()
+		cbr.Tojson(jsnback)
+		if jsnback.n != jsn.n {
+			t.Errorf("expected %v, got %v", jsn.n, jsnback.n)
 		}
-		t.Logf("%v %v", cborout[:n], n)
-		p, m := config.CborToJson(cborout, jsonout)
-		if p != n {
-			t.Errorf("expected %v, got %v", n, p)
-		}
-		if err := json.Unmarshal(jsonout[:m], &ref2); err != nil {
+		if err := json.Unmarshal(jsnback.Bytes(), &ref2); err != nil {
 			t.Errorf("json.Unmarshal() failed for cbor %v: %v", tcase, err)
 		}
+
 		if !reflect.DeepEqual(ref1, ref2) {
 			t.Errorf("mismatch %v, got %v", ref1, ref2)
 		}
@@ -93,14 +106,26 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 		`{}`,
 		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e","f":[1,2]}`,
 	}
-	cborout, jsonout := make([]byte, 1024), make([]byte, 1024)
+
 	config := NewDefaultConfig().NumberKind(IntNumber)
 	config = config.ContainerEncoding(LengthPrefix)
+
+	jsn := config.NewJson(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	jsnback := config.NewJson(make([]byte, 1024), 0)
+
 	for _, tcase := range testcases {
 		t.Logf("testcase - %v", tcase)
-		_, n := config.JsonToCbor(tcase, cborout)
-		_, m := config.CborToJson(cborout[:n], jsonout)
-		if err := compare_jsons(t, tcase, string(jsonout[:m])); err != nil {
+		jsn.Reset([]byte(tcase))
+
+		cbr.Reset(nil)
+		jsn.Tocbor(cbr)
+
+		jsnback.Reset(nil)
+		cbr.Tojson(jsnback)
+
+		err := compare_jsons(t, tcase, string(jsnback.Bytes()))
+		if err != nil {
 			t.Errorf("%v", err)
 		}
 	}

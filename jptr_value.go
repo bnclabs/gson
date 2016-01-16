@@ -9,45 +9,51 @@ import "strconv"
 import "strings"
 import "unicode/utf8"
 
-func parsePointer(in string, segments []string) []string {
+func parsePointer(in []byte, segments [][]byte) int {
 	if len(in) == 0 {
-		return segments
+		return 0
 	}
 
-	i, j, s, u, part := 0, 0, str2bytes(in), [6]byte{}, [2048]byte{}
-	for i < len(s) {
-		if s[i] == '~' {
-			if s[i+1] == '1' {
-				part[j] = '/'
-				i, j = i+2, j+1
+	updateseg := func(segment []byte, j int) ([]byte, int) {
+		segments[j] = segment
+		j++
+		return segments[j][:0], j
+	}
 
-			} else if s[i+1] == '0' {
-				part[j] = '~'
-				i, j = i+2, j+1
+	var j int
+	var ch rune
+
+	u, segment, escape := [6]byte{}, segments[j][:0], false
+
+	for _, ch = range bytes2str(in) {
+		if ch == '~' {
+			escape = true
+
+		} else if escape {
+			switch ch {
+			case '1':
+				segment = append(segment, '/')
+			case '0':
+				segment = append(segment, '~')
 			}
+			escape = false
 
-		} else if s[i] == '/' {
-			if j > 0 {
-				segments = append(segments, string(part[:j]))
-				j = 0
-			}
-			i++
+		} else if ch == '/' {
+			segment, j = updateseg(segment, j)
 
-		} else if s[i] < utf8.RuneSelf {
-			part[j] = s[i]
-			i, j = i+1, j+1
+		} else if ch < utf8.RuneSelf {
+			segment = append(segment, byte(ch))
 
 		} else {
-			r, size := utf8.DecodeRune(s[i:])
-			sizej := utf8.EncodeRune(u[:], r)
-			copy(part[j:], u[:sizej])
-			i, j = i+size, j+sizej
+			sz := utf8.EncodeRune(u[:], ch)
+			segment = append(segment, u[:sz]...)
 		}
 	}
-	if s[len(s)-1] == '/' || j > 0 {
-		segments = append(segments, string(part[:j]))
+	segment, j = updateseg(segment, j)
+	if in[len(in)-1] == '/' {
+		_, j = updateseg(segment, j)
 	}
-	return segments
+	return j
 }
 
 func encodePointer(p []string, out []byte) int {

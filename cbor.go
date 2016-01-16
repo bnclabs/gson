@@ -127,8 +127,34 @@ func (cbr *Cbor) Bytes() []byte {
 }
 
 // Reset buffer to zero-length.
-func (cbr *Cbor) Reset() {
-	cbr.n = 0
+func (cbr *Cbor) Reset(data []byte) *Cbor {
+	if data == nil {
+		cbr.n = 0
+	}
+	cbr.data, cbr.n = data, len(data)
+	return cbr
+}
+
+// Tovalue convert to golang native value.
+func (cbr *Cbor) Tovalue() interface{} {
+	value, _ /*rb*/ := cbor2value(cbr.data[:cbr.n], cbr.config)
+	return value
+}
+
+// Tojson convert to json encoded value.
+func (cbr *Cbor) Tojson(jsn *Json) *Json {
+	in := cbr.data[:cbr.n]
+	_ /*rb*/, m /*wb*/ := cbor2json(in, jsn.data[jsn.n:], cbr.config)
+	jsn.n += m
+	return jsn
+}
+
+// Tocollate convert to binary-collation.
+func (cbr *Cbor) Tocollate(clt *Collate) *Collate {
+	in := cbr.data[:cbr.n]
+	_ /*rb*/, m /*wb*/ := cbor2collate(in, clt.data[clt.n:], cbr.config)
+	clt.n += m
+	return clt
 }
 
 // EncodeSmallint tiny integers between -23..+23 are encoded into cbor.
@@ -178,9 +204,84 @@ func (cbr *Cbor) IsBreakstop() bool {
 	return cbr.data[0] == brkstp
 }
 
-// Tovalue convert to golang native value, return no. of bytes decoded.
-func (cbr *Cbor) Tovalue() (interface{}, int) {
-	return cbor2value(cbr.data[:cbr.n], cbr.config)
+// JsonPointerToCbor converts json path in RFC-6901 into cbor format.
+func (cbor *Cbor) EncodeJsonpointer(jsonptr []byte) *Cbor {
+	if len(jsonptr) > 0 && jsonptr[0] != '/' {
+		panic("cbor expectedJsonPointer")
+	}
+	cbor.n = jptrToCbor(jsonptr, cbor.data)
+	return cbor
+}
+
+// ToJsonpointer converts cbor encoded path into json path RFC-6901.
+func (cbr *Cbor) ToJsonpointer(out []byte) int {
+	if cbr.n > 0 {
+		if !cbr.IsIndefiniteText() {
+			panic("cbor expectedCborPointer")
+		}
+		return cborToJptr(cbr.data[:cbr.n], out)
+	}
+	return 0
+}
+
+// Get field or nested field specified by cbor-pointer.
+func (cbr *Cbor) Get(cborptr, item *Cbor) *Cbor {
+	if cborptr.n < 2 {
+		panic("cbor empty pointer")
+	} else if !cborptr.IsIndefiniteText() {
+		panic("cbor expectedCborPointer")
+	} else if cborptr.data[1] == brkstp {
+		item.n = copy(item.data, cbr.data[:cbr.n])
+		return cbr
+	}
+	item.n = cborGet(cbr.data[:cbr.n], cborptr.data[:cborptr.n], item.data)
+	return cbr
+}
+
+// Set field or nested field specified by cbor-pointer.
+func (cbr *Cbor) Set(cborptr, item, newdoc, old *Cbor) *Cbor {
+	if cborptr.n < 2 {
+		panic("cbor empty pointer")
+	} else if !cborptr.IsIndefiniteText() {
+		panic("cbor expectedCborPointer")
+	} else if cborptr.data[1] == brkstp { // json-pointer is ""
+		newdoc.n = copy(newdoc.data, item.data[:item.n])
+		old.n = copy(old.data, cbr.data[:cbr.n])
+		return cbr
+	}
+	newdoc.n, old.n = cborSet(
+		cbr.data[:cbr.n], cborptr.data[:cborptr.n],
+		item.data[:item.n],
+		newdoc.data, old.data)
+	return cbr
+}
+
+// Prepend item into a array or property container specified by cbor-pointer.
+func (cbr *Cbor) Prepend(cborptr, item, newdoc *Cbor) *Cbor {
+	if cborptr.n < 2 {
+		panic("cbor empty pointer")
+	} else if !cborptr.IsIndefiniteText() {
+		panic("cbor expectedCborPointer")
+	}
+	newdoc.n = cborPrepend(
+		cbr.data[:cbr.n], cborptr.data[:cborptr.n],
+		item.data[:item.n], newdoc.data, cbr.config)
+	return cbr
+}
+
+// Delete field or nested field specified by cbor-pointer.
+func (cbr *Cbor) Delete(cborptr, newdoc, deleted *Cbor) *Cbor {
+	if cborptr.n < 2 {
+		panic("cbor empty pointer")
+	} else if !cborptr.IsIndefiniteText() {
+		panic("cbor expectedCborPointer")
+	} else if cborptr.data[1] == brkstp { // json-pointer is ""
+		panic("cbor emptyPointer")
+	}
+	newdoc.n, deleted.n = cborDel(
+		cbr.data[:cbr.n], cborptr.data[:cborptr.n],
+		newdoc.data, deleted.data)
+	return cbr
 }
 
 //---- help functions.
