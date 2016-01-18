@@ -1,7 +1,5 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// +build ignore
-
 package gson
 
 import "testing"
@@ -412,29 +410,34 @@ func TestCborMaster(t *testing.T) {
 	}...)
 
 	config := NewDefaultConfig()
-	cborout, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
+	jsn := config.NewJson(nil, 0)
+	cbr := config.NewCbor(make([]byte, 1024*1024), 0)
+	jsn1 := config.NewJson(make([]byte, 1024*1024), 0)
+	cbr1 := config.NewCbor(make([]byte, 1024*1024), 0)
+	jsn2 := config.NewJson(make([]byte, 1024*1024), 0)
+
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase)
-		if err := json.Unmarshal([]byte(tcase), &ref); err != nil {
-			t.Fatalf("error parsing %q: %v", tcase, err)
-		}
+		json.Unmarshal([]byte(tcase), &ref)
+		jsn.Reset([]byte(tcase))
+
 		// test JsonToCbor/CborToJson
-		_, n := config.JsonToCbor(tcase, cborout)       // json -> cbor
-		_, q := config.CborToJson(cborout[:n], jsonout) // cbor -> json
-		if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
-			t.Fatalf("error parsing %v: %v", string(jsonout[:q]), err)
+		jsn.Tocbor(cbr.Reset(nil))
+		cbr.Tojson(jsn1.Reset(nil))
+		if err := json.Unmarshal(jsn1.Bytes(), &outval); err != nil {
+			t.Fatalf("error parsing %v: %v", string(jsn1.Bytes()), err)
 		} else if !reflect.DeepEqual(outval, ref) {
 			t.Fatalf("expected '%v', got '%v'", ref, outval)
 		}
 
-		value, _ := config.CborToValue(cborout[:n])    // cbor -> golang
-		p := config.ValueToCbor(value, cborout)        // golang -> cbor
-		_, q = config.CborToJson(cborout[:p], jsonout) // cbor -> json
-		if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
-			t.Fatalf("error parsing %q: %v", jsonout[:q], err)
+		val := config.NewValue(cbr.Tovalue())
+		val.Tocbor(cbr1.Reset(nil))
+		cbr1.Tojson(jsn2.Reset(nil))
+		if err := json.Unmarshal(jsn2.Bytes(), &outval); err != nil {
+			t.Fatalf("error parsing %q: %v", string(jsn2.Bytes()), err)
 		} else if !reflect.DeepEqual(outval, ref) {
 			fmsg := "expected {%T,%v}, got {%T,%v}"
-			t.Fatalf(fmsg, value, value, outval, outval)
+			t.Fatalf(fmsg, val.data, val.data, outval, outval)
 		}
 	}
 }
@@ -443,50 +446,56 @@ func TestCborSmartnum(t *testing.T) {
 	var outval, ref interface{}
 
 	data := testdataFile("testdata/smartnum")
-	config := NewDefaultConfig()
-	cborout, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
+	json.Unmarshal(data, &ref)
 
-	if err := json.Unmarshal(data, &ref); err != nil {
-		t.Fatalf("error parsing code.json.gz: %v", err)
-	}
+	config := NewDefaultConfig()
+	jsn := config.NewJson(data, -1)
+	cbr := config.NewCbor(make([]byte, 1024*1024), 0)
+	jsnback := config.NewJson(make([]byte, 1024*1024), 0)
 
 	// test JsonToCbor/CborToJson
-	_, n := config.JsonToCbor(string(data), cborout) // json -> cbor
-	_, q := config.CborToJson(cborout[:n], jsonout)
-	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
-		t.Logf("%v", string(jsonout[:q]))
+	jsn.Tocbor(cbr)
+	cbr.Tojson(jsnback)
+	if err := json.Unmarshal(jsnback.Bytes(), &outval); err != nil {
+		t.Logf("%v", string(jsnback.Bytes()))
 		t.Fatalf("error parsing code.json.gz: %v", err)
 	} else if !reflect.DeepEqual(ref, outval) {
 		t.Errorf("expected %v", ref)
-		t.Errorf("got-json %v", string(jsonout[:q]))
+		t.Errorf("got-json %v", string(jsnback.Bytes()))
 		t.Fatalf("got %v", outval)
 	}
 
-	value, _ := config.CborToValue(cborout[:n])    // cbor -> golang
-	p := config.ValueToCbor(value, cborout)        // golang -> cbor
-	_, q = config.CborToJson(cborout[:p], jsonout) // cbor -> json
-	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+	val := config.NewValue(cbr.Tovalue())
+
+	jsn = config.NewJson(make([]byte, 1024*1024), 0)
+	cbr = config.NewCbor(make([]byte, 1024*1024), 0)
+
+	val.Tocbor(cbr)
+	cbr.Tojson(jsn)
+	if err := json.Unmarshal(jsn.Bytes(), &outval); err != nil {
 		t.Fatalf("error parsing %v", err)
-	} else if err := json.Unmarshal(data, &value); err != nil {
+	} else if err := json.Unmarshal(data, &val.data); err != nil {
 		t.Fatalf("error parsing code.json: %v", err)
-	} else if !reflect.DeepEqual(outval, value) {
-		t.Errorf("expected %v", value)
+	} else if !reflect.DeepEqual(outval, val.data) {
+		t.Errorf("expected %v", val.data)
 		t.Fatalf("got %v", outval)
 	}
 }
 
 func TestCborMalformed(t *testing.T) {
-	config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(AnsiSpace)
-	out := make([]byte, 1024)
 	for _, tcase := range scaninvalid {
 		func() {
+			config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(AnsiSpace)
+			jsn := config.NewJson(make([]byte, 1024), 0)
+			cbr := config.NewCbor(make([]byte, 1024), 0)
+
 			defer func() {
 				if r := recover(); r == nil {
 					t.Fatalf("expected panic")
 				}
 			}()
 			t.Logf("%v", tcase)
-			config.JsonToCbor(tcase, out)
+			jsn.Tocbor(cbr)
 		}()
 	}
 }
@@ -494,20 +503,20 @@ func TestCborMalformed(t *testing.T) {
 func TestCborCodeJSON(t *testing.T) {
 	var ref, outval interface{}
 
-	config := NewDefaultConfig()
-	cborout, jsonout := make([]byte, 10*1024*1024), make([]byte, 10*1024*1024)
 	data := testdataFile("testdata/code.json.gz")
+	json.Unmarshal(data, &ref)
 
-	if err := json.Unmarshal(data, &ref); err != nil {
-		t.Fatalf("error parsing code.json.gz: %v", err)
-	}
+	config := NewDefaultConfig()
+	jsn := config.NewJson(data, -1)
+	cbr := config.NewCbor(make([]byte, 10*1024*1024), 0)
+	jsnback := config.NewJson(make([]byte, 10*1024*1024), 0)
 
 	// json->cbor->json
-	_, n := config.JsonToCbor(string(data), cborout) // json -> cbor
-	_, q := config.CborToJson(cborout[:n], jsonout)
-	t.Logf("%v %v %v %v", n, q, len(data), len(jsonout[:q]))
-	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
-		t.Logf("%v", string(jsonout[:q]))
+	jsn.Tocbor(cbr)
+	cbr.Tojson(jsnback)
+	t.Logf("%v %v", len(data), len(jsnback.Bytes()))
+	if err := json.Unmarshal(jsnback.Bytes(), &outval); err != nil {
+		t.Logf("%v", string(jsnback.Bytes()))
 		t.Fatalf("error parsing code.json.gz: %v", err)
 	} else {
 		if !reflect.DeepEqual(ref, outval) {
@@ -516,34 +525,37 @@ func TestCborCodeJSON(t *testing.T) {
 		}
 	}
 
+	jsn = config.NewJson(make([]byte, 10*1024*1024), 0)
+	cbrback := config.NewCbor(make([]byte, 10*1024*1024), 0)
+
 	// cbor->golang->cbor->json->golang
-	value, _ := config.CborToValue(cborout[:n])    // cbor -> golang
-	p := config.ValueToCbor(value, cborout)        // golang -> cbor
-	_, q = config.CborToJson(cborout[:p], jsonout) // cbor -> json
-	if err := json.Unmarshal(jsonout[:q], &outval); err != nil {
+	val := config.NewValue(cbr.Tovalue())
+	val.Tocbor(cbrback)
+	cbrback.Tojson(jsn)
+	if err := json.Unmarshal(jsn.Bytes(), &outval); err != nil {
 		t.Fatalf("error parsing %v", err)
 	} else {
 		if !reflect.DeepEqual(outval, ref) {
-			t.Errorf("expected %v", value)
+			t.Errorf("expected %v", val.data)
 			t.Fatalf("got %v", outval)
 		}
 	}
 }
 
 func TestCborTypical(t *testing.T) {
-	config := NewDefaultConfig()
-	cbordoc, jsonout := make([]byte, 1024*1024), make([]byte, 1024*1024)
-
-	txt := string(testdataFile("testdata/typical.json"))
-	_, n := config.JsonToCbor(txt, cbordoc)
-	p, q := config.CborToJson(cbordoc[:n], jsonout)
-	if p != n {
-		t.Errorf("expected %v, got %v", n, q)
-	}
 	var ref, out interface{}
-	if err := json.Unmarshal([]byte(txt), &ref); err != nil {
-		t.Errorf("error parsing typical.json: %v", err)
-	} else if err := json.Unmarshal(jsonout[:q], &out); err != nil {
+
+	data := testdataFile("testdata/typical.json")
+	json.Unmarshal(data, &ref)
+
+	config := NewDefaultConfig()
+	jsn := config.NewJson(data, -1)
+	cbr := config.NewCbor(make([]byte, 1024*1024), 0)
+	jsnback := config.NewJson(make([]byte, 1024*1024), 0)
+
+	jsn.Tocbor(cbr)
+	cbr.Tojson(jsnback)
+	if err := json.Unmarshal(jsnback.Bytes(), &out); err != nil {
 		t.Errorf("error parsing typical.json: %v", err)
 	} else if !reflect.DeepEqual(ref, out) {
 		t.Errorf("expected %v", ref)
@@ -554,20 +566,17 @@ func TestCborTypical(t *testing.T) {
 //---- test cases for tag function
 
 func TestDateTime(t *testing.T) {
-	buf := make([]byte, 64)
-	config := NewDefaultConfig()
-
 	ref, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05+07:00")
 	if err != nil {
 		t.Errorf("time.Parse() failed: %v", err)
 	}
 
-	n := config.ValueToCbor(ref, buf)
-	item, m := config.CborToValue(buf[:n])
-	if n != 28 || n != m {
-		t.Errorf("expected %v got %v %v", 28, n, m)
-	}
-	if !ref.Equal(item.(time.Time)) {
+	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
+	val := config.NewValue(ref)
+	val.Tocbor(cbr)
+	if item := cbr.Tovalue(); !ref.Equal(item.(time.Time)) {
 		t.Errorf("expected %v got %v", ref, item.(time.Time))
 	}
 
@@ -578,27 +587,24 @@ func TestDateTime(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		buf[5] = 'a'
-		config.CborToValue(buf[:n])
+		cbr.data[5] = 'a'
+		cbr.Tovalue()
 	}()
 }
 
 func TestTagEpoch(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 64), 0)
 
 	// positive and negative epoch
-	for _, val := range [2]int64{1000000, -100000} {
-		ref := CborTagEpoch(val)
-		n := config.ValueToCbor(ref, buf)
-		item, m := config.CborToValue(buf[:n])
-		if n != 6 || n != m {
-			t.Errorf("expected %v got %v %v", 6, n, m)
-		}
-		if !reflect.DeepEqual(ref, item) {
-			t.Errorf("expected %v got %v", ref, item)
+	for _, v := range [2]int64{1000000, -100000} {
+		val := config.NewValue(CborTagEpoch(v))
+		val.Tocbor(cbr.Reset(nil))
+		if item := cbr.Tovalue(); !reflect.DeepEqual(val.data, item) {
+			t.Errorf("expected %v got %v", val.data, item)
 		}
 	}
+
 	// malformed epoch
 	func() {
 		defer func() {
@@ -606,9 +612,10 @@ func TestTagEpoch(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		buf[1] = 0x5a // instead of 0x3a
-		config.CborToValue(buf)
+		cbr.data[1] = 0x5a // instead of 0x3a
+		cbr.Tovalue()
 	}()
+
 	// malformed epoch
 	func() {
 		defer func() {
@@ -619,49 +626,43 @@ func TestTagEpoch(t *testing.T) {
 		buf := make([]byte, 16)
 		n := tag2cbor(tagEpoch, buf)
 		n += valbytes2cbor([]byte{1, 2}, buf[n:])
-		config.CborToValue(buf)
+		config.NewCbor(buf, n).Tovalue()
 	}()
 }
 
 func TestTagEpochMicro(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
 	// positive and negative epoch in uS.
-	for _, val := range [2]float64{1000000.123456, -100000.123456} {
-		ref := CborTagEpochMicro(val)
-		n := config.ValueToCbor(ref, buf)
-		item, m := config.CborToValue(buf[:n])
-		if n != 10 || n != m {
-			t.Errorf("expected %v got %v %v", 10, n, m)
-		}
-		if !reflect.DeepEqual(ref, item) {
-			t.Errorf("expected %v got %v", ref, item)
+	for _, v := range [2]float64{1000000.123456, -100000.123456} {
+		val := config.NewValue(CborTagEpochMicro(v))
+		val.Tocbor(cbr.Reset(nil))
+		if item := cbr.Tovalue(); !reflect.DeepEqual(val.data, item) {
+			t.Errorf("expected %v got %v", val.data, item)
 		}
 	}
 }
 
 func TestBigNum(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
 	// positive and negative bignums
-	for _, val := range [2]int64{1000, -1000} {
-		bigx := big.NewInt(9223372036854775807)
-		bigy := big.NewInt(val)
-		bigz := big.NewInt(0).Mul(bigx, bigy)
-		n := config.ValueToCbor(bigz, buf)
-		item, m := config.CborToValue(buf[:n])
-		if n != 12 || n != m {
-			t.Errorf("expected %v got %v %v", 12, n, m)
-		}
-		if bigz.Cmp(item.(*big.Int)) != 0 {
-			t.Errorf("expected %v got %v", bigz, item.(*big.Int))
+	for _, v := range [2]int64{1000, -1000} {
+		z := big.NewInt(0).Mul(big.NewInt(9223372036854775807), big.NewInt(v))
+		val := config.NewValue(z)
+		val.Tocbor(cbr.Reset(nil))
+		if item := cbr.Tovalue(); z.Cmp(item.(*big.Int)) != 0 {
+			t.Errorf("expected %v got %v", z, item.(*big.Int))
 		}
 	}
 }
 
 func TestDecimalFraction(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
 	// for positive
 	refs := []CborTagFraction{
 		CborTagFraction([2]int64{int64(-10), int64(-23)}),
@@ -669,21 +670,20 @@ func TestDecimalFraction(t *testing.T) {
 		CborTagFraction([2]int64{int64(10), int64(-23)}),
 		CborTagFraction([2]int64{int64(10), int64(23)}),
 	}
+
 	for _, ref := range refs {
-		n := config.ValueToCbor(ref, buf)
-		item, m := config.CborToValue(buf[:n])
-		if n != 3 || n != m {
-			t.Errorf("expected %v got %v %v", 3, n, m)
-		}
-		if !reflect.DeepEqual(ref, item) {
+		val := config.NewValue(ref)
+		val.Tocbor(cbr.Reset(nil))
+		if item := cbr.Tovalue(); !reflect.DeepEqual(ref, item) {
 			t.Errorf("expected %v got %v", ref, item)
 		}
 	}
 }
 
 func TestBigFloat(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
 	refs := []CborTagFloat{
 		CborTagFloat([2]int64{int64(-10), int64(-23)}),
 		CborTagFloat([2]int64{int64(-10), int64(23)}),
@@ -691,43 +691,33 @@ func TestBigFloat(t *testing.T) {
 		CborTagFloat([2]int64{int64(10), int64(23)}),
 	}
 	for _, ref := range refs {
-		n := config.ValueToCbor(ref, buf)
-		item, m := config.CborToValue(buf[:n])
-		if n != 3 || n != m {
-			t.Errorf("expected %v got %v %v", 3, n, m)
-		}
-		if !reflect.DeepEqual(ref, item) {
+		val := config.NewValue(ref)
+		val.Tocbor(cbr.Reset(nil))
+		if item := cbr.Tovalue(); !reflect.DeepEqual(ref, item) {
 			t.Errorf("expected %v got %v", ref, item)
 		}
 	}
 }
 
 func TestCbor(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	ref := CborBytes([]byte("hello world"))
-	n := config.ValueToCbor(ref, buf)
-	item, m := config.CborToValue(buf[:n])
-	if n != 14 || n != m {
-		t.Errorf("expected %v got %v %v", 14, n, m)
-	}
-	if !reflect.DeepEqual(ref, item) {
-		t.Errorf("exptected %v got %v", ref, item)
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
+	val := config.NewValue(CborBytes([]byte("hello world")))
+	val.Tocbor(cbr)
+	if item := cbr.Tovalue(); !reflect.DeepEqual(val.data, item) {
+		t.Errorf("exptected %v got %v", val.data, item)
 	}
 }
 
 func TestRegexp(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	ref, err := regexp.Compile(`a([0-9]t*)+`)
-	if err != nil {
-		t.Errorf("compiling regex")
-	}
-	n := config.ValueToCbor(ref, buf)
-	item, m := config.CborToValue(buf[:n])
-	if n != 14 || n != m {
-		t.Errorf("expected %v got %v %v", 14, n, m)
-	}
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
+	ref, _ := regexp.Compile(`a([0-9]t*)+`)
+	val := config.NewValue(ref)
+	val.Tocbor(cbr)
+	item := cbr.Tovalue()
 	if ref.String() != (item.(*regexp.Regexp)).String() {
 		t.Errorf("expected %v got %v", ref, item)
 	}
@@ -738,23 +728,21 @@ func TestRegexp(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
+		buf := make([]byte, 1024)
 		n := tag2cbor(tagRegexp, buf)
 		n += valtext2cbor(`a([0-9]t*+`, buf[n:])
-		config.CborToValue(buf)
+		config.NewCbor(buf, n).Tovalue()
 	}()
 }
 
 func TestCborTagPrefix(t *testing.T) {
-	buf := make([]byte, 64)
 	config := NewDefaultConfig()
-	ref := CborTagPrefix([]byte("hello world"))
-	n := config.ValueToCbor(ref, buf)
-	item, m := config.CborToValue(buf[:n])
-	if n != 15 || n != m {
-		t.Errorf("expected %v got %v %v", 15, n, m)
-	}
-	if !reflect.DeepEqual(ref, item) {
-		t.Errorf("exptected %v got %v", ref, item)
+	cbr := config.NewCbor(make([]byte, 64), 0)
+
+	val := config.NewValue(CborTagPrefix([]byte("hello world")))
+	val.Tocbor(cbr)
+	if item := cbr.Tovalue(); !reflect.DeepEqual(val.data, item) {
+		t.Errorf("exptected %v got %v", val.data, item)
 	}
 }
 
@@ -1114,22 +1102,25 @@ func BenchmarkCbor2ValMap5(b *testing.B) {
 
 func BenchmarkVal2CborTyp(b *testing.B) {
 	config := NewDefaultConfig()
-	txt := string(testdataFile("testdata/typical.json"))
+	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
+	_, value := jsn.Tovalue()
+
 	buf := make([]byte, 10*1024)
-	_, val := config.JsonToValue(txt)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		value2cbor(val, buf, config)
+		value2cbor(value, buf, config)
 	}
 }
 
 func BenchmarkCbor2ValTyp(b *testing.B) {
 	config := NewDefaultConfig()
-	txt := string(testdataFile("testdata/typical.json"))
-	buf := make([]byte, 10*1024)
-	_, n := config.JsonToCbor(txt, buf)
+	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
+	cbr := config.NewCbor(make([]byte, 10*1024), 0)
+	jsn.Tocbor(cbr)
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		cbor2value(buf[:n], config)
+		cbor2value(cbr.Bytes(), config)
 	}
 }
 
