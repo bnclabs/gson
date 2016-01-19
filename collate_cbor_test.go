@@ -1,7 +1,5 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// +build ignore
-
 package gson
 
 import "testing"
@@ -294,190 +292,274 @@ func TestCbor2CollateMap(t *testing.T) {
 }
 
 func BenchmarkCbor2CollNil(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor("null", cborin)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("null"), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborNil(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate("null", code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("null"), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollTrue(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor("true", cborin)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("true"), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborTrue(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate("true", code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("true"), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollFalse(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor("false", cborin)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("false"), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborFalse(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate("false", code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("false"), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollF64(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor("10.121312213123123", cborin)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("10.121312213123123"), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborF64(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate("10.121312213123123", code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("10.121312213123123"), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollI64(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor("123456789", cborin)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("123456789"), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborI64(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate("123456789", code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte("123456789"), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollMiss(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor(fmt.Sprintf(`"%s"`, MissingLiteral), cborin)
-	b.ResetTimer()
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte(fmt.Sprintf(`"%s"`, MissingLiteral)), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborMiss(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate(fmt.Sprintf(`"%s"`, MissingLiteral), code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte(fmt.Sprintf(`"%s"`, MissingLiteral)), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollStr(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	_, n := config.JsonToCbor(`"hello world"`, cborin)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte(`"hello world"`), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborStr(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	n := config.JsonToCollate(`"hello world"`, code)
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte(`"hello world"`), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollArr(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	inp := `[null,true,false,"hello world",10.23122312]`
-	_, n := config.JsonToCbor(inp, cborin)
+	in := []byte(`[null,true,false,"hello world",10.23122312]`)
+
+	config := NewDefaultConfig()
+	jsn := config.NewJson(in, -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborArr(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
-	inp := `[null,true,false,"hello world",10.23122312]`
-	n := config.JsonToCollate(inp, code)
+	in := []byte(`[null,true,false,"hello world",10.23122312]`)
+
+	config := NewDefaultConfig()
+	jsn := config.NewJson(in, -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollMap(b *testing.B) {
-	cborin := make([]byte, 1024)
-	code, config := make([]byte, 1024), NewDefaultConfig().SetMaxkeys(10)
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
-	_, n := config.JsonToCbor(inp, cborin)
+	config := NewDefaultConfig().SetMaxkeys(10)
+	jsn := config.NewJson([]byte(inp), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborMap(b *testing.B) {
-	code, config := make([]byte, 1024), NewDefaultConfig()
-	cborout := make([]byte, 1024)
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
-	n := config.JsonToCollate(inp, code)
+
+	config := NewDefaultConfig()
+	jsn := config.NewJson([]byte(inp), -1)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
 
 func BenchmarkCbor2CollTyp(b *testing.B) {
-	cborin := make([]byte, 10*1024)
-	code, config := make([]byte, 10*1024), NewDefaultConfig().SetMaxkeys(10)
-	txt := string(testdataFile("testdata/typical.json"))
-	_, n := config.JsonToCbor(txt, cborin)
+	data := testdataFile("testdata/typical.json")
+
+	config := NewDefaultConfig().SetMaxkeys(10)
+	jsn := config.NewJson(data, -1)
+	cbr := config.NewCbor(make([]byte, 10*1024), 0)
+	clt := config.NewCollate(make([]byte, 10*1024), 0)
+
+	jsn.Tocbor(cbr)
+
 	for i := 0; i < b.N; i++ {
-		config.CborToCollate(cborin[:n], code)
+		cbr.Tocollate(clt.Reset(nil))
 	}
 }
 
 func BenchmarkColl2CborTyp(b *testing.B) {
-	code, config := make([]byte, 10*1024), NewDefaultConfig()
-	cborout := make([]byte, 10*1024)
-	txt := string(testdataFile("testdata/typical.json"))
-	n := config.JsonToCollate(txt, code)
+	data := testdataFile("testdata/typical.json")
+
+	config := NewDefaultConfig().SetMaxkeys(10)
+	jsn := config.NewJson(data, -1)
+	clt := config.NewCollate(make([]byte, 10*1024), 0)
+	cbr := config.NewCbor(make([]byte, 10*1024), 0)
+
+	jsn.Tocollate(clt)
+
 	for i := 0; i < b.N; i++ {
-		config.CollateToCbor(code[:n], cborout)
+		clt.Tocbor(cbr.Reset(nil))
 	}
 }
