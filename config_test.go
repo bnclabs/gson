@@ -1,10 +1,9 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// +build ignore
-
 package gson
 
 import "testing"
+import "bytes"
 import "reflect"
 import "encoding/json"
 import "fmt"
@@ -13,13 +12,11 @@ var _ = fmt.Sprintf("dummy")
 
 func TestConfig(t *testing.T) {
 	config := NewDefaultConfig()
-	ref, buf := 10.2, make([]byte, 16)
-	n := config.ValueToCbor(ref, buf)
-	val, m := config.CborToValue(buf[:n])
-	if n != m {
-		t.Errorf("expected %v got %v", n, m)
-	} else if !reflect.DeepEqual(ref, val) {
-		t.Errorf("expected %v got %v", ref, val)
+	cbr := config.NewCbor(make([]byte, 16), 0)
+	val := config.NewValue(10.2)
+	val.Tocbor(cbr)
+	if value := cbr.Tovalue(); !reflect.DeepEqual(val.data, value) {
+		t.Errorf("expected %v got %v", val.data, value)
 	}
 }
 
@@ -27,13 +24,11 @@ type testLocal byte
 
 func TestUndefined(t *testing.T) {
 	config := NewDefaultConfig()
-	ref, buf := CborUndefined(cborSimpleUndefined), make([]byte, 16)
-	n := config.ValueToCbor(ref, buf)
-	val, m := config.CborToValue(buf[:n])
-	if n != m {
-		t.Errorf("expected %v got %v", n, m)
-	} else if !reflect.DeepEqual(ref, val) {
-		t.Errorf("expected %v got %v", ref, val)
+	cbr := config.NewCbor(make([]byte, 16), 0)
+	val := config.NewValue(CborUndefined(cborSimpleUndefined))
+	val.Tocbor(cbr)
+	if value := cbr.Tovalue(); !reflect.DeepEqual(val.data, value) {
+		t.Errorf("expected %v got %v", val.data, value)
 	}
 	// test unknown type.
 	func() {
@@ -42,93 +37,91 @@ func TestUndefined(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config.ValueToCbor(testLocal(10), buf)
+		config.NewValue(testLocal(10)).Tocbor(cbr.Reset(nil))
 	}()
 }
 
 func TestJsonToValue(t *testing.T) {
 	config := NewDefaultConfig().SpaceKind(AnsiSpace)
-	inp := `"abcd"  "xyz" "10" `
-	out := make([]byte, 1024)
-	txt, value := config.JsonToValue(inp)
-	if ref := `  "xyz" "10" `; txt != ref {
-		t.Errorf("expected %q, got %q", ref, txt)
+	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `), -1)
+	jsnrmn, value := jsn.Tovalue()
+	if string(jsnrmn.Bytes()) != `  "xyz" "10" ` {
+		t.Errorf("expected %q, got %q", `  "xyz" "10" `, string(jsnrmn.Bytes()))
 	}
-	n := config.ValueToJson(value, out)
-	if s := string(out[:n]); s != `"abcd"` {
-		t.Errorf("expected %v, got %v", `"abcd"`, s)
+
+	jsnback := config.NewJson(make([]byte, 1024), 0)
+	config.NewValue(value).Tojson(jsnback)
+	if ref := `"abcd"`; string(jsnback.Bytes()) != ref {
+		t.Errorf("expected %v, got %v", ref, string(jsnback.Bytes()))
 	}
 }
 
 func TestJsonToValues(t *testing.T) {
 	var s string
-	config := NewDefaultConfig().SpaceKind(AnsiSpace)
 	uni_s := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
-	inp := `"abcd"  "xyz" "10" ` + uni_s
-	if err := json.Unmarshal([]byte(uni_s), &s); err != nil {
-		t.Fatal(err)
-	}
+	json.Unmarshal([]byte(uni_s), &s)
 	ref := []interface{}{"abcd", "xyz", "10", s}
-	values := config.JsonToValues(inp)
-	if !reflect.DeepEqual(values, ref) {
+
+	config := NewDefaultConfig().SpaceKind(AnsiSpace)
+	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `+uni_s), -1)
+	if values := jsn.Tovalues(); !reflect.DeepEqual(values, ref) {
 		t.Errorf("expected %v, got %v", ref, values)
 	}
 }
 
 func TestParseJsonPointer(t *testing.T) {
 	config := NewDefaultConfig()
-	segments := config.ParseJsonPointer("/a/b", []string{})
-	if ref := []string{"a", "b"}; !reflect.DeepEqual(segments, ref) {
-		t.Errorf("expected %v, got %v", ref, segments)
+	jptr := config.NewJsonpointer("/a/b")
+	refsegs := [][]byte{[]byte("a"), []byte("b")}
+	if segments := jptr.Segments(); !reflect.DeepEqual(segments, refsegs) {
+		t.Errorf("expected %v, got %v", refsegs, segments)
 	}
 }
 
 func TestToJsonPointer(t *testing.T) {
 	config := NewDefaultConfig()
-	jptr := "/a/b"
-	segments := config.ParseJsonPointer(jptr, []string{})
-	pointer := make([]byte, 1024)
-	n := config.ToJsonPointer(segments, pointer)
-	if s := string(pointer[:n]); jptr != s {
-		t.Errorf("expected %v, got %v", jptr, s)
+	refptr := config.NewJsonpointer("/a/b")
+	jptr := config.NewJsonpointer("").ResetSegments([]string{"a", "b"})
+
+	if bytes.Compare(jptr.path, refptr.path) != 0 {
+		t.Errorf("expected %v, got %v", refptr.path, jptr.path)
 	}
 }
 
 func TestGsonToCollate(t *testing.T) {
 	config := NewDefaultConfig().NumberKind(IntNumber)
-	inp := map[string]interface{}{"a": 10, "b": 20}
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	config.NewValue(map[string]interface{}{"a": 10, "b": 20}).Tocollate(clt)
 	ref := map[string]interface{}{"a": int64(10), "b": int64(20)}
-	code := make([]byte, 1024)
-	n := config.ValueToCollate(inp, code)
-	val, _ := config.CollateToValue(code[:n])
-	if !reflect.DeepEqual(ref, val) {
-		t.Errorf("expected %v, got %v", inp, val)
+	if value := clt.Tovalue(); !reflect.DeepEqual(ref, value) {
+		t.Errorf("expected %v, got %v", ref, value)
 	}
 }
 
 func TestCborToCollate(t *testing.T) {
 	config := NewDefaultConfig().NumberKind(IntNumber)
-	ref := [][2]interface{}{
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	out := config.NewCbor(make([]byte, 1024), 0)
+
+	o := [][2]interface{}{
 		[2]interface{}{"a", uint64(10)},
 		[2]interface{}{"b", uint64(20)},
 	}
-	refm := CborMap2golangMap(ref)
-	code, coll := make([]byte, 1024), make([]byte, 1024)
-	out := make([]byte, 1024)
-	n := config.ValueToCbor(ref, code)
-	_, m := config.CborToCollate(code[:n], coll)
-	_, x := config.CollateToCbor(coll[:m], out)
-	val, _ := config.CborToValue(out[:x])
-	if !reflect.DeepEqual(refm, val) {
-		t.Errorf("expected %v, got %v", refm, val)
+	refm := CborMap2golangMap(o)
+
+	value := config.NewValue(o).Tocbor(cbr).Tocollate(clt).Tocbor(out).Tovalue()
+	if !reflect.DeepEqual(refm, value) {
+		t.Errorf("expected %v, got %v", refm, value)
 	}
 }
 
 func TestIsBreakCodes(t *testing.T) {
 	config := NewDefaultConfig()
-	out := make([]byte, 1024)
-	value2cbor([]interface{}{}, out, config)
-	if config.IsBreakstop(out[1]) == false {
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	config.NewValue([]interface{}{}).Tocbor(cbr)
+	cbr.data = cbr.data[1:]
+	if cbr.IsBreakstop() == false {
 		t.Errorf("expected breakcode-array")
 	}
 }

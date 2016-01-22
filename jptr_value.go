@@ -10,8 +10,13 @@ import "strings"
 import "unicode/utf8"
 
 func parsePointer(in []byte, segments [][]byte) int {
+	j := 0
+
 	if len(in) == 0 {
 		return 0
+	} else if len(in) == 1 && in[0] == '/' {
+		segments[0] = segments[0][:0]
+		return 1
 	}
 
 	updateseg := func(segment []byte, j int) ([]byte, int) {
@@ -20,12 +25,11 @@ func parsePointer(in []byte, segments [][]byte) int {
 		return segments[j][:0], j
 	}
 
-	var j int
 	var ch rune
 
 	u, segment, escape := [6]byte{}, segments[j][:0], false
 
-	for _, ch = range bytes2str(in) {
+	for _, ch = range bytes2str(in[1:]) {
 		if ch == '~' {
 			escape = true
 

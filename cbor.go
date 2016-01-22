@@ -226,64 +226,43 @@ func (cbr *Cbor) ToJsonpointer(out []byte) int {
 }
 
 // Get field or nested field specified by cbor-pointer.
-func (cbr *Cbor) Get(cborptr, item *Cbor) *Cbor {
-	if cborptr.n < 2 {
-		panic("cbor empty pointer")
-	} else if !cborptr.IsIndefiniteText() {
-		panic("cbor expectedCborPointer")
-	} else if cborptr.data[1] == brkstp {
-		item.n = copy(item.data, cbr.data[:cbr.n])
-		return cbr
-	}
-	item.n = cborGet(cbr.data[:cbr.n], cborptr.data[:cborptr.n], item.data)
-	return cbr
-}
+//func (cbr *Cbor) Get(jptr *Jsonpointer, item *Cbor) *Cbor {
+//	if len(jptr.path) == 1 && jptr.path[0] == '/' {
+//		item.n = copy(item.data, cbr.data[:cbr.n])
+//		return item
+//	}
+//	item.n = cborGet(cbr.data[:cbr.n], jptr, item.data)
+//	return item
+//}
 
 // Set field or nested field specified by cbor-pointer.
-func (cbr *Cbor) Set(cborptr, item, newdoc, old *Cbor) *Cbor {
-	if cborptr.n < 2 {
-		panic("cbor empty pointer")
-	} else if !cborptr.IsIndefiniteText() {
-		panic("cbor expectedCborPointer")
-	} else if cborptr.data[1] == brkstp { // json-pointer is ""
-		newdoc.n = copy(newdoc.data, item.data[:item.n])
-		old.n = copy(old.data, cbr.data[:cbr.n])
-		return cbr
-	}
-	newdoc.n, old.n = cborSet(
-		cbr.data[:cbr.n], cborptr.data[:cborptr.n],
-		item.data[:item.n],
-		newdoc.data, old.data)
-	return cbr
-}
+//func (cbr *Cbor) Set(jptr *Jsonpointer, item, newdoc, old *Cbor) *Cbor {
+//	if len(jptr.path) == 1 && jptr.path[0] == '/' {
+//		newdoc.n = copy(newdoc.data, item.data[:item.n])
+//		old.n = copy(old.data, cbr.data[:cbr.n])
+//		return cbr
+//	}
+//	docdata, itemdata := cbr.data[:cbr.n], item.data[:item.n]
+//	newdoc.n, old.n = cborSet(docdata, jptr, itemdata, newdoc.data, old.data)
+//	return cbr
+//}
 
 // Prepend item into a array or property container specified by cbor-pointer.
-func (cbr *Cbor) Prepend(cborptr, item, newdoc *Cbor) *Cbor {
-	if cborptr.n < 2 {
-		panic("cbor empty pointer")
-	} else if !cborptr.IsIndefiniteText() {
-		panic("cbor expectedCborPointer")
-	}
-	newdoc.n = cborPrepend(
-		cbr.data[:cbr.n], cborptr.data[:cborptr.n],
-		item.data[:item.n], newdoc.data, cbr.config)
-	return cbr
-}
+//func (cbr *Cbor) Prepend(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
+//	docdata, itemdata := cbr.data[:cbr.n], item.data[:item.n]
+//	newdoc.n = cborPrepend(docdata, jptr, itemdata, newdoc.data, cbr.config)
+//	return cbr
+//}
 
 // Delete field or nested field specified by cbor-pointer.
-func (cbr *Cbor) Delete(cborptr, newdoc, deleted *Cbor) *Cbor {
-	if cborptr.n < 2 {
-		panic("cbor empty pointer")
-	} else if !cborptr.IsIndefiniteText() {
-		panic("cbor expectedCborPointer")
-	} else if cborptr.data[1] == brkstp { // json-pointer is ""
-		panic("cbor emptyPointer")
-	}
-	newdoc.n, deleted.n = cborDel(
-		cbr.data[:cbr.n], cborptr.data[:cborptr.n],
-		newdoc.data, deleted.data)
-	return cbr
-}
+//func (cbr *Cbor) Delete(jptr *Jsonpointer, newdoc, deleted *Cbor) *Cbor {
+//	if len(jptr.path) == 1 && jptr.path[0] == '/' {
+//		panic("cbor emptyPointer")
+//	}
+//	docdata = cbr.data[:cbr.n]
+//	newdoc.n, deleted.n = cborDel(docdata, jptr, newdoc.data, deleted.data)
+//	return cbr
+//}
 
 //---- help functions.
 

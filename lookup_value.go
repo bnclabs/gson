@@ -41,11 +41,10 @@ func valSet(segments [][]byte, doc, item interface{}) (newdoc, old interface{}) 
 		container = valGet(segments[:ln-1], doc)
 	} // else if ln == 1, container _is_ doc
 
-	key := bytes2str(segments[ln-1])
-
 	var ok bool
 	switch cont := container.(type) {
 	case []interface{}:
+		key := bytes2str(segments[ln-1])
 		if key == "-" {
 			old = item
 			cont = append(cont, item)
@@ -63,6 +62,7 @@ func valSet(segments [][]byte, doc, item interface{}) (newdoc, old interface{}) 
 		}
 
 	case map[string]interface{}:
+		key := string(segments[ln-1])
 		if old, ok = cont[key]; !ok {
 			old = item
 		}

@@ -114,6 +114,7 @@ type Config struct {
 
 	jsonConfig
 	collateConfig
+	jptrConfig
 
 	//-- unicode
 	//backwards        bool
@@ -148,6 +149,10 @@ func NewDefaultConfig() *Config {
 			arrayLenPrefix:    false,
 			propertyLenPrefix: true,
 		},
+		jptrConfig: jptrConfig{
+			jptrMaxlen: MaxJsonpointerLen,
+			jptrMaxseg: MaxJsonpointerLen / 8,
+		},
 	}
 
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
@@ -174,6 +179,13 @@ func (config Config) ContainerEncoding(ct ContainerEncoding) *Config {
 // SetMaxkeys will set the maximum number of keys allowed in property item.
 func (config Config) SetMaxkeys(n int) *Config {
 	config.maxKeys = n
+	return &config
+}
+
+// SetJptrlen will set the maximum size for jsonpointer path.
+func (config Config) SetJptrlen(n int) *Config {
+	config.jptrMaxlen = n
+	config.jptrMaxseg = n / 2
 	return &config
 }
 
@@ -215,6 +227,24 @@ func (config *Config) NewValue(value interface{}) *Value {
 // MapsliceToCbor to encode key,value pairs into cbor
 func (config *Config) MapsliceToCbor(items [][2]interface{}, out []byte) int {
 	return mapl2cbor(items, out, config)
+}
+
+// NewJsonpointer create a instance of Jsonpointer allocate necessary memory.
+func (config *Config) NewJsonpointer(path string) *Jsonpointer {
+	if len(path) > config.jptrMaxlen {
+		panic("jsonpointer path exceeds configured length")
+	}
+	jptr := &Jsonpointer{
+		config:   config,
+		path:     make([]byte, config.jptrMaxlen+16),
+		segments: make([][]byte, config.jptrMaxseg),
+	}
+	for i := 0; i < config.jptrMaxseg; i++ {
+		jptr.segments[i] = make([]byte, 0, 16)
+	}
+	n := copy(jptr.path, path)
+	jptr.path = jptr.path[:n]
+	return jptr
 }
 
 func (config *Config) ConfigString() string {
