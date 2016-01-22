@@ -47,9 +47,6 @@ const ( // simple types for cborType7
 // CborUndefined simple type, cborType7/cborSimpleUndefined
 type CborUndefined byte
 
-// CborBytes encoded bytes in cbor format. tagCborEnc/[]byte
-type CborBytes []byte
-
 // CborBreakStop code, cborType7/cborItemBreak
 type CborBreakStop byte
 
@@ -104,6 +101,9 @@ type CborTagFraction [2]int64
 // CborTagFloat codepoint-5, followed by [2]int64{e,m} => m*(2**e).
 type CborTagFloat [2]int64
 
+// CborTagBytes codepoint-24, bytes in cbor format.
+type CborTagBytes []byte
+
 // CborTagPrefix, codepoint-5579, followed by byte-string.
 type CborTagPrefix []byte
 
@@ -114,14 +114,14 @@ var hdrIndefiniteText = cborHdr(cborType3, cborIndefiniteLength)
 var hdrIndefiniteArray = cborHdr(cborType4, cborIndefiniteLength)
 var hdrIndefiniteMap = cborHdr(cborType5, cborIndefiniteLength)
 
-// Cbor encapsulates configuration and cbor buffer.
+// Cbor encapsulates configuration and a cbor buffer.
 type Cbor struct {
 	config *Config
 	data   []byte
 	n      int
 }
 
-// Bytes return the o/p buffer of cbor encoded value.
+// Bytes return a reference slice to encapsulated cbor-buffer.
 func (cbr *Cbor) Bytes() []byte {
 	return cbr.data[:cbr.n]
 }
@@ -158,7 +158,14 @@ func (cbr *Cbor) Tocollate(clt *Collate) *Collate {
 	return clt
 }
 
-// EncodeSmallint tiny integers between -23..+23 are encoded into cbor.
+// EncodeSimpletype to encode simple type into cbor buffer.
+// Code points 0..19 and 32..255 are un-assigned.
+func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
+	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:])
+	return cbr
+}
+
+// EncodeSmallint to encode tiny integers between -23..+23 into cbor buffer.
 func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 	if item < 0 {
 		cbr.data[cbr.n] = cborHdr(cborType1, byte(-(item + 1))) // -23 to -1
@@ -166,12 +173,6 @@ func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 		cbr.data[cbr.n] = cborHdr(cborType0, byte(item)) // 0 to 23
 	}
 	cbr.n++
-	return cbr
-}
-
-// EncodeSimpletype code points 0..19 and 32..255 are un-assigned.
-func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
-	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:])
 	return cbr
 }
 
@@ -206,24 +207,24 @@ func (cbr *Cbor) IsBreakstop() bool {
 }
 
 // JsonPointerToCbor converts json path in RFC-6901 into cbor format.
-func (cbor *Cbor) EncodeJsonpointer(jsonptr []byte) *Cbor {
-	if len(jsonptr) > 0 && jsonptr[0] != '/' {
-		panic("cbor expectedJsonPointer")
-	}
-	cbor.n = jptrToCbor(jsonptr, cbor.data)
-	return cbor
-}
+//func (cbor *Cbor) EncodeJsonpointer(jsonptr []byte) *Cbor {
+//	if len(jsonptr) > 0 && jsonptr[0] != '/' {
+//		panic("cbor expectedJsonPointer")
+//	}
+//	cbor.n = jptrToCbor(jsonptr, cbor.data)
+//	return cbor
+//}
 
 // ToJsonpointer converts cbor encoded path into json path RFC-6901.
-func (cbr *Cbor) ToJsonpointer(out []byte) int {
-	if cbr.n > 0 {
-		if !cbr.IsIndefiniteText() {
-			panic("cbor expectedCborPointer")
-		}
-		return cborToJptr(cbr.data[:cbr.n], out)
-	}
-	return 0
-}
+//func (cbr *Cbor) ToJsonpointer(out []byte) int {
+//	if cbr.n > 0 {
+//		if !cbr.IsIndefiniteText() {
+//			panic("cbor expectedCborPointer")
+//		}
+//		return cborToJptr(cbr.data[:cbr.n], out)
+//	}
+//	return 0
+//}
 
 // Get field or nested field specified by cbor-pointer.
 //func (cbr *Cbor) Get(jptr *Jsonpointer, item *Cbor) *Cbor {

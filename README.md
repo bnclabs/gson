@@ -153,7 +153,7 @@ BenchmarkVal2JsonTyp       50000      30180 ns/op   39.33 MB/s      3488 B/op   
     encoded with tag-4.
   * `BigFloat` type supplied by cbor package, encoded
     with tag-5.
-  * `CborBytes` type supplied by cbor package, encoded with
+  * `CborTagBytes` type supplied by cbor package, encoded with
     tag-24.
   * `regexp.Regexp` encoded with tag-35.
   * `CborTagPrefix` type supplied by cbor package, encoded

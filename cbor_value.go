@@ -299,7 +299,7 @@ func cbor2bigfloatval(buf []byte, config *Config) (interface{}, int) {
 
 func cbor2cborval(buf []byte, config *Config) (interface{}, int) {
 	item, n := cbor2value(buf, config)
-	return CborBytes(item.([]uint8)), n
+	return CborTagBytes(item.([]uint8)), n
 }
 
 func cbor2regexpval(buf []byte, config *Config) (interface{}, int) {

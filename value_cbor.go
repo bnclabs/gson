@@ -82,7 +82,7 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 		n += valdecimal2cbor(v, out)
 	case CborTagFloat: // tag-5
 		n += valbigfloat2cbor(v, out)
-	case CborBytes: // tag-24
+	case CborTagBytes: // tag-24
 		n += valcbor2cbor(v, out)
 	case *regexp.Regexp: // tag-35
 		n += valregexp2cbor(v, out)

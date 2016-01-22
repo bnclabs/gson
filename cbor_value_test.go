@@ -254,7 +254,7 @@ func TestCborFloat64(t *testing.T) {
 	}
 }
 
-func TestCborBytes(t *testing.T) {
+func TestCborTagBytes(t *testing.T) {
 	buf, ref := make([]byte, 200), make([]uint8, 100)
 	config := NewDefaultConfig()
 	for i := 0; i < len(ref); i++ {
@@ -703,7 +703,7 @@ func TestCbor(t *testing.T) {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 64), 0)
 
-	val := config.NewValue(CborBytes([]byte("hello world")))
+	val := config.NewValue(CborTagBytes([]byte("hello world")))
 	val.Tocbor(cbr)
 	if item := cbr.Tovalue(); !reflect.DeepEqual(val.data, item) {
 		t.Errorf("exptected %v got %v", val.data, item)
@@ -981,7 +981,7 @@ func BenchmarkCbor2ValFlt64(b *testing.B) {
 	}
 }
 
-func BenchmarkVal2CborBytes(b *testing.B) {
+func BenchmarkVal2CborTBytes(b *testing.B) {
 	buf := make([]byte, 64)
 	config := NewDefaultConfig()
 	val := interface{}([]byte("hello world"))

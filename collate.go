@@ -64,7 +64,7 @@ type Collate struct {
 	n      int
 }
 
-// Bytes return the binary collated bytes.
+// Bytes return a reference slice to encapsulated buffer.
 func (clt *Collate) Bytes() []byte {
 	return clt.data[:clt.n]
 }

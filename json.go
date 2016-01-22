@@ -48,7 +48,7 @@ type Json struct {
 	n      int
 }
 
-// Bytes return the json encoded date.
+// Bytes return a reference slice to encapsulated buffer.
 func (jsn *Json) Bytes() []byte {
 	return jsn.data[:jsn.n]
 }

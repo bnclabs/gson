@@ -25,7 +25,7 @@
 //
 // Types from golang's standard library and custom types provided
 // by this package that can be encoded using CBOR:
-//   * CborBytes: a cbor encoded []bytes treated as value.
+//   * CborTagBytes: a cbor encoded []bytes treated as value.
 //   * CborUndefined: encode a data-item as undefined.
 //   * CborIndefinite: encode bytes, string, array and map of unspefied length.
 //   * CborBreakStop: to encode end of CborIndefinite length item.
@@ -46,17 +46,6 @@
 // Json-Pointer:
 //
 // Package also provides a RFC-6901 (JSON-pointers) implementation.
-// Pointers themself can be encoded into cbor format and
-// vice-versa:
-//
-//   cbor-path        : text-chunk-start segments break-stop
-//   segments         : tagJsonString len cbor-text
-//                    | segments tagJsonString len cbor-text
-//   text-chunk-start : 0xdf
-//   tagJsonString    : 0x25
-//   break-stop       : 0xff
-//   len              : <encoded as cbor integer>
-//   cbor-text        : <encoded as cbor text>
 package gson
 
 import "bytes"
