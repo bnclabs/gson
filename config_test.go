@@ -115,13 +115,3 @@ func TestCborToCollate(t *testing.T) {
 		t.Errorf("expected %v, got %v", refm, value)
 	}
 }
-
-func TestIsBreakCodes(t *testing.T) {
-	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
-	config.NewValue([]interface{}{}).Tocbor(cbr)
-	cbr.data = cbr.data[1:]
-	if cbr.IsBreakstop() == false {
-		t.Errorf("expected breakcode-array")
-	}
-}

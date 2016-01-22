@@ -176,36 +176,6 @@ func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 	return cbr
 }
 
-// IsIndefiniteBytes to check for byte-string of unspecified length.
-func (cbr *Cbor) IsIndefiniteBytes() bool {
-	x := CborIndefinite(cbr.data[0])
-	return x == CborIndefinite(hdrIndefiniteBytes)
-}
-
-// IsIndefiniteText to check for text-string of unspecified length.
-func (cbr *Cbor) IsIndefiniteText() bool {
-	x := CborIndefinite(cbr.data[0])
-	return x == CborIndefinite(hdrIndefiniteText)
-}
-
-// IsIndefiniteArray to check for array of unspecified length.
-func (cbr *Cbor) IsIndefiniteArray() bool {
-	x := CborIndefinite(cbr.data[0])
-	return x == CborIndefinite(hdrIndefiniteArray)
-}
-
-// IsIndefiniteMap to check for map of unspecified length.
-func (cbr *Cbor) IsIndefiniteMap() bool {
-	x := CborIndefinite(cbr.data[0])
-	return x == CborIndefinite(hdrIndefiniteMap)
-}
-
-// IsBreakstop check whether byte-string/text-string/array/map of unspecified
-// length is ending.
-func (cbr *Cbor) IsBreakstop() bool {
-	return cbr.data[0] == brkstp
-}
-
 // JsonPointerToCbor converts json path in RFC-6901 into cbor format.
 //func (cbor *Cbor) EncodeJsonpointer(jsonptr []byte) *Cbor {
 //	if len(jsonptr) > 0 && jsonptr[0] != '/' {

@@ -52,33 +52,3 @@ func TestCborSimpleType(t *testing.T) {
 		cbr.Reset(nil)
 	}
 }
-
-func TestIndefinite(t *testing.T) {
-	buf := make([]byte, 16)
-	config := NewDefaultConfig()
-	cbr := config.NewCbor(buf, 0)
-
-	cbr.n = bytesStart(cbr.data)
-	if cbr.IsIndefiniteBytes() == false {
-		t.Errorf("failed")
-	}
-	cbr.Reset(nil)
-
-	cbr.n = textStart(cbr.data)
-	if cbr.IsIndefiniteText() == false {
-		t.Errorf("failed")
-	}
-	cbr.Reset(nil)
-
-	cbr.n = arrayStart(cbr.data)
-	if cbr.IsIndefiniteArray() == false {
-		t.Errorf("failed")
-	}
-	cbr.Reset(nil)
-
-	cbr.n = mapStart(cbr.data)
-	if cbr.IsIndefiniteMap() == false {
-		t.Errorf("failed")
-	}
-	cbr.Reset(nil)
-}
