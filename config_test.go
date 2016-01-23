@@ -42,7 +42,7 @@ func TestUndefined(t *testing.T) {
 }
 
 func TestJsonToValue(t *testing.T) {
-	config := NewDefaultConfig().SpaceKind(AnsiSpace)
+	config := NewDefaultConfig().SetSpaceKind(AnsiSpace)
 	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `), -1)
 	jsnrmn, value := jsn.Tovalue()
 	if string(jsnrmn.Bytes()) != `  "xyz" "10" ` {
@@ -62,7 +62,7 @@ func TestJsonToValues(t *testing.T) {
 	json.Unmarshal([]byte(uni_s), &s)
 	ref := []interface{}{"abcd", "xyz", "10", s}
 
-	config := NewDefaultConfig().SpaceKind(AnsiSpace)
+	config := NewDefaultConfig().SetSpaceKind(AnsiSpace)
 	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `+uni_s), -1)
 	if values := jsn.Tovalues(); !reflect.DeepEqual(values, ref) {
 		t.Errorf("expected %v, got %v", ref, values)
@@ -89,7 +89,7 @@ func TestToJsonPointer(t *testing.T) {
 }
 
 func TestGsonToCollate(t *testing.T) {
-	config := NewDefaultConfig().NumberKind(IntNumber)
+	config := NewDefaultConfig().SetNumberKind(IntNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	config.NewValue(map[string]interface{}{"a": 10, "b": 20}).Tocollate(clt)
 	ref := map[string]interface{}{"a": int64(10), "b": int64(20)}
@@ -99,7 +99,7 @@ func TestGsonToCollate(t *testing.T) {
 }
 
 func TestCborToCollate(t *testing.T) {
-	config := NewDefaultConfig().NumberKind(IntNumber)
+	config := NewDefaultConfig().SetNumberKind(IntNumber)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	out := config.NewCbor(make([]byte, 1024), 0)

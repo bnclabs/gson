@@ -60,7 +60,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	txt := make([]byte, 1024)
 	// as float64 using FloatNumber configuration
 	inp, refcode, reftxt := "10.2", `\x05>>2102-\x00`, "+0.102e+2"
-	config = config.NumberKind(FloatNumber)
+	config = config.SetNumberKind(FloatNumber)
 	_, n := json2collate(inp, code, config)
 	out := fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
@@ -73,7 +73,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 	// as int64 using FloatNumber configuration
 	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "+0.1e+2"
-	_, n = json2collate(inp, code, config.NumberKind(FloatNumber))
+	_, n = json2collate(inp, code, config.SetNumberKind(FloatNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -86,7 +86,7 @@ func TestJson2CollateNumber(t *testing.T) {
 
 	// as float64 using IntNumber configuration
 	inp, refcode, reftxt = "10.2", `\x05>>210\x00`, "+10"
-	config = config.NumberKind(IntNumber)
+	config = config.SetNumberKind(IntNumber)
 	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
@@ -99,7 +99,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 	// as int64 using IntNumber configuration
 	inp, refcode, reftxt = "10", `\x05>>210\x00`, "+10"
-	_, n = json2collate(inp, code, config.NumberKind(IntNumber))
+	_, n = json2collate(inp, code, config.SetNumberKind(IntNumber))
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
 	if out != refcode {
@@ -112,7 +112,7 @@ func TestJson2CollateNumber(t *testing.T) {
 
 	// as float64 using Decimal configuration
 	inp, refcode, reftxt = "0.2", `\x05>2-\x00`, "+0.2"
-	config = config.NumberKind(Decimal)
+	config = config.SetNumberKind(Decimal)
 	_, n = json2collate(inp, code, config)
 	out = fmt.Sprintf("%q", code[:n])
 	out = out[1 : len(out)-1]
@@ -124,7 +124,7 @@ func TestJson2CollateNumber(t *testing.T) {
 		t.Errorf("expected {%v,%v}, got {%v,%v}", reftxt, n, s, x)
 	}
 	// as int64 using Decimal configuration, expect a panic
-	config = config.NumberKind(Decimal)
+	config = config.SetNumberKind(Decimal)
 	func() {
 		defer func() {
 			if r := recover(); r == nil {

@@ -100,8 +100,8 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e","f":[1,2]}`,
 	}
 
-	config := NewDefaultConfig().NumberKind(IntNumber)
-	config = config.ContainerEncoding(LengthPrefix)
+	config := NewDefaultConfig().SetNumberKind(IntNumber)
+	config = config.SetContainerEncoding(LengthPrefix)
 
 	jsn := config.NewJson(make([]byte, 1024), 0)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
@@ -126,8 +126,9 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 
 func TestScanNumber(t *testing.T) {
 	// test JSONNumber
-	ref := []byte{216, 38, 98, 49, 48}
-	config := NewDefaultConfig().NumberKind(JSONNumber).SpaceKind(UnicodeSpace)
+	ref := []byte{216, 37, 98, 49, 48}
+	config := NewDefaultConfig()
+	config = config.SetNumberKind(JSONNumber).SetSpaceKind(UnicodeSpace)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	jsn := config.NewJson(make([]byte, 1024), 0)
 
@@ -144,7 +145,8 @@ func TestScanNumber(t *testing.T) {
 	}
 
 	// test FloatNumber
-	config = NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	jsnback := config.NewJson(make([]byte, 1024), 0)
@@ -157,7 +159,8 @@ func TestScanNumber(t *testing.T) {
 	}
 
 	// test IntNumber
-	config = NewDefaultConfig().NumberKind(IntNumber).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -176,7 +179,8 @@ func TestScanNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(UnicodeSpace)
+		config := NewDefaultConfig()
+		config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
 		jsn := config.NewJson(make([]byte, 1024), 0)
 		cbr := config.NewCbor(make([]byte, 1024), 0)
 		jsn.Reset([]byte("10.2"))
@@ -184,7 +188,8 @@ func TestScanNumber(t *testing.T) {
 	}()
 
 	// test FloatNumber32
-	config = NewDefaultConfig().NumberKind(FloatNumber32).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(FloatNumber32).SetSpaceKind(UnicodeSpace)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -197,7 +202,8 @@ func TestScanNumber(t *testing.T) {
 	}
 
 	// test SmartNumber32
-	config = NewDefaultConfig().NumberKind(SmartNumber32).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(SmartNumber32).SetSpaceKind(UnicodeSpace)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -210,7 +216,8 @@ func TestScanNumber(t *testing.T) {
 	}
 
 	// test SmartNumber32 (integer)
-	config = NewDefaultConfig().NumberKind(SmartNumber32).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(SmartNumber32).SetSpaceKind(UnicodeSpace)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -223,7 +230,8 @@ func TestScanNumber(t *testing.T) {
 	}
 
 	// test SmartNumber
-	config = NewDefaultConfig().NumberKind(SmartNumber).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(SmartNumber).SetSpaceKind(UnicodeSpace)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -236,7 +244,8 @@ func TestScanNumber(t *testing.T) {
 	}
 
 	// test SmartNumber (integer)
-	config = NewDefaultConfig().NumberKind(SmartNumber32).SpaceKind(UnicodeSpace)
+	config = NewDefaultConfig()
+	config = config.SetNumberKind(SmartNumber32).SetSpaceKind(UnicodeSpace)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -258,7 +267,8 @@ func TestJsonNumber(t *testing.T) {
 		"4294967295", "4294967296", "-4294967295", "-4294967296",
 		"9223372036854775807", "-9223372036854775807", "-9223372036854775808",
 	}
-	config := NewDefaultConfig().NumberKind(IntNumber).SpaceKind(UnicodeSpace)
+	config := NewDefaultConfig()
+	config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	jsn := config.NewJson(make([]byte, 1024), 0)
 	jsnback := config.NewJson(make([]byte, 1024), 0)
@@ -368,10 +378,10 @@ func TestJsonString(t *testing.T) {
 	config := NewDefaultConfig()
 	buf, out := make([]byte, 64), make([]byte, 64)
 
+	var s string
 	ref := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
-	n := tag2cbor(uint64(tagJsonString), buf)
-	x := valtext2cbor(ref, buf[n:])
-	n += x
+	json.Unmarshal([]byte(ref), &s)
+	n := valtext2cbor(s, buf)
 
 	_, m := cbor2json(buf[:n], out, config)
 	if err := compare_jsons(t, ref, string(out[:m])); err != nil {

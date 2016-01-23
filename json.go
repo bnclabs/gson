@@ -17,13 +17,12 @@ type jsonConfig struct {
 	// if `strict` is false then configurations with IntNumber
 	// will parse floating numbers and then convert it to int64.
 	// else will panic when detecting floating numbers.
-	strict     bool
-	ws         SpaceKind
-	jsonString bool
+	strict bool
+	ws     SpaceKind
 }
 
 // SpaceKind setting to interpret whitespaces in json text.
-func (config Config) SpaceKind(ws SpaceKind) *Config {
+func (config Config) SetSpaceKind(ws SpaceKind) *Config {
 	config.ws = ws
 	return &config
 }
@@ -32,12 +31,6 @@ func (config Config) SpaceKind(ws SpaceKind) *Config {
 // TODO: describe this more.
 func (config Config) Strict(what bool) *Config {
 	config.strict = what
-	return &config
-}
-
-// JsonString settings to parse json string as it is, avoid un-quoting.
-func (config Config) JsonString(what bool) *Config {
-	config.jsonString = what
 	return &config
 }
 

@@ -84,7 +84,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 		inp, refcode := tcase[0].(string), tcase[1].(string)
 		t.Logf("%v", inp)
 		nk := tcase[2].(NumberKind)
-		config = config.NumberKind(nk)
+		config = config.SetNumberKind(nk)
 		_, n := json2collate(inp, coll, config)
 		_, n = collate2cbor(coll[:n], code, config)
 		_, n = cbor2collate(code[:n], out, config)
@@ -102,7 +102,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 		inp, refcode := tcase[0].(string), tcase[1].(string)
 		t.Logf("%v", inp)
 		nk := tcase[2].(NumberKind)
-		config = config.NumberKind(nk)
+		config = config.SetNumberKind(nk)
 		_, n := json2cbor(inp, code, config)
 		_, n = cbor2collate(code[:n], out, config)
 		seqn := fmt.Sprintf("%q", out[:n])
@@ -145,16 +145,13 @@ func TestCbor2CollateString(t *testing.T) {
 	if seqn != refcode {
 		t.Errorf("expected %v, got %v", refcode, seqn)
 	}
-}
 
-func TestCbor2CollateJsonString(t *testing.T) {
-	config := NewDefaultConfig().JsonString(true)
+	// utf8 string
+	config = NewDefaultConfig()
 	buf, out := make([]byte, 64), make([]byte, 64)
 
 	ref := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
-	n := tag2cbor(uint64(tagJsonString), buf)
-	_, x := json2cbor(ref, buf[n:], config)
-	n += x
+	_, n = json2cbor(ref, buf, config)
 
 	cbor2collate(buf[:n], out, config)
 	//fmt.Printf("%q\n", out[:m])
@@ -209,7 +206,7 @@ func TestCbor2CollateArray(t *testing.T) {
 		}
 	}
 	// with sort by length and length prefix
-	config = config.SortbyArrayLen(true).ContainerEncoding(LengthPrefix)
+	config = config.SortbyArrayLen(true).SetContainerEncoding(LengthPrefix)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
@@ -224,7 +221,7 @@ func TestCbor2CollateArray(t *testing.T) {
 		}
 	}
 	// with sort by length and stream encoding
-	config = config.SortbyArrayLen(true).ContainerEncoding(Stream)
+	config = config.SortbyArrayLen(true).SetContainerEncoding(Stream)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)
@@ -275,7 +272,7 @@ func TestCbor2CollateMap(t *testing.T) {
 	}
 	// without length prefix, and different length for keys
 	config = NewDefaultConfig().SetMaxkeys(10).SortbyPropertyLen(false)
-	config = config.ContainerEncoding(LengthPrefix)
+	config = config.SetContainerEncoding(LengthPrefix)
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		inp, refcode := tcase[0].(string), tcase[2].(string)

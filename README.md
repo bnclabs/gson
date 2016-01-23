@@ -114,7 +114,6 @@ BenchmarkUnmarshalTyp      20000       66649 ns/op   21.83 MB/s       6544 B/op 
 
 ```
 BenchmarkVal2JsonFlt     3000000        561 ns/op   16.02 MB/s         8 B/op        1 allocs/op
-BenchmarkVal2JsonString  2000000        631 ns/op   60.20 MB/s         8 B/op        1 allocs/op
 BenchmarkVal2JsonArr5    1000000       1470 ns/op   19.72 MB/s        72 B/op        6 allocs/op
 BenchmarkVal2JsonMap5     300000       5025 ns/op   10.15 MB/s       601 B/op       23 allocs/op
 BenchmarkVal2JsonTyp       50000      30180 ns/op   39.33 MB/s      3488 B/op      141 allocs/op
@@ -215,8 +214,7 @@ BenchmarkCbor2ValTyp       50000  25685 ns/op   7783 B/op  140 allocs/op
   * `SmartNumber32` if number is floating point then it is encoded
     as cbor-float32, else encoded as cbor-float32.
 * `string` will be parsed and translated into utf8, and subsequently
-  encoded as cbor-text. If config.JsonString() is set, string will be
-  encoded simply as JSON-string and tagged as `tagJsonString` (tag-37).
+  encoded as cbor-text.
 * `arrays` can be encoded in `Stream` mode, using cbor's
   indefinite-length scheme, or in `LengthPrefix` mode.
 * `properties` can be encoded either using cbor's indefinite-length

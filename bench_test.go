@@ -6,7 +6,8 @@ import "encoding/json"
 import "testing"
 
 func BenchmarkMarshalJson(b *testing.B) {
-	config := NewDefaultConfig().NumberKind(FloatNumber).SpaceKind(AnsiSpace)
+	config := NewDefaultConfig()
+	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
 
 	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
 	_, val := jsn.Tovalue()

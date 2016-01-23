@@ -38,8 +38,6 @@
 // Package also provides an implementation for encoding json to CBOR
 // and vice-versa:
 //   * number can be encoded as integer or float.
-//   * string is wrapped as `tagJsonString` data-item, to avoid
-//     marshalling and unmarshalling json-string to utf8.
 //   * arrays and maps are encoded using indefinite encoding.
 //   * byte-string encoding is not used.
 //
@@ -120,18 +118,16 @@ type Config struct {
 // NewDefaultConfig returns a new configuration with default settings:
 //	   FloatNumber			Stream
 //	   MaxKeys				UnicodeSpace
-//	   +strict				-jsonString
-//	   +doMissing			-arrayLenPrefix
-//	   +propertyLenPrefix
+//	   +strict 				+doMissing
+//	   -arrayLenPrefix      +propertyLenPrefix
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:      FloatNumber,
 		ct:      Stream,
 		maxKeys: MaxKeys,
 		jsonConfig: jsonConfig{
-			ws:         UnicodeSpace,
-			strict:     true,
-			jsonString: false,
+			ws:     UnicodeSpace,
+			strict: true,
 		},
 		collateConfig: collateConfig{
 			doMissing:         true,
@@ -154,13 +150,13 @@ func NewDefaultConfig() *Config {
 }
 
 // NumberKind setting to interpret number values.
-func (config Config) NumberKind(nk NumberKind) *Config {
+func (config Config) SetNumberKind(nk NumberKind) *Config {
 	config.nk = nk
 	return &config
 }
 
 // ContainerEncoding setting to encode / decode arrays and maps.
-func (config Config) ContainerEncoding(ct ContainerEncoding) *Config {
+func (config Config) SetContainerEncoding(ct ContainerEncoding) *Config {
 	config.ct = ct
 	return &config
 }
@@ -238,9 +234,9 @@ func (config *Config) NewJsonpointer(path string) *Jsonpointer {
 
 func (config *Config) ConfigString() string {
 	return fmt.Sprintf(
-		"nk:%v, ws:%v, ct:%v, jsonString:%v, arrayLenPrefix:%v, "+
+		"nk:%v, ws:%v, ct:%v, arrayLenPrefix:%v, "+
 			"propertyLenPrefix:%v, doMissing:%v, maxKeys:%v",
-		config.nk, config.ws, config.ct, config.jsonString,
+		config.nk, config.ws, config.ct,
 		config.arrayLenPrefix, config.propertyLenPrefix,
 		config.doMissing, config.maxKeys)
 }

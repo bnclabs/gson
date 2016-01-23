@@ -70,12 +70,6 @@ const ( // pre-defined tag values
 	tagRegexp                   // PCRE and ECMA262 regular expression
 	tagMime                     // MIME defined by rfc2045
 
-	// tag 37 is un-assigned as per spec and used here to encode
-	// json-string, the difficulty is that JSON string are
-	// not really utf8 encoded string (mostly meant for human
-	// readability).
-	tagJsonString
-
 	// tag 38 is un-assigned as per spec and used here to encode
 	// number as json-string, which is more optimized by avoiding
 	// atoi and itoa (or similar operations for float). can be used

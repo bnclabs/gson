@@ -49,7 +49,7 @@ func TestNormalizeFloat(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config := NewDefaultConfig().NumberKind(nk)
+		config := NewDefaultConfig().SetNumberKind(nk)
 		jsn := config.NewJson([]byte("10.3"), -1)
 		clt := config.NewCollate(make([]byte, 1024), 0)
 		jsn.Tocollate(clt)
@@ -66,7 +66,7 @@ func TestDenormalizeFloat(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config := NewDefaultConfig().NumberKind(nk)
+		config := NewDefaultConfig().SetNumberKind(nk)
 		jsn := config.NewJson([]byte("10.3"), -1)
 		cbr := config.NewCbor(make([]byte, 1024), 0)
 		clt := config.NewCollate(make([]byte, 1024), 0)
@@ -85,7 +85,7 @@ func TestDenormalizeFloatTojson(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config := NewDefaultConfig().NumberKind(nk)
+		config := NewDefaultConfig().SetNumberKind(nk)
 		jsn := config.NewJson(make([]byte, 1024), 0)
 		clt := config.NewCollate(make([]byte, 1024), 0)
 

@@ -54,7 +54,7 @@ func TestGson2CollateFalse(t *testing.T) {
 func TestGson2CollateNumber(t *testing.T) {
 	// as float64 using FloatNumber configuration
 	objf, ref := float64(10.2), `\x05>>2102-\x00`
-	config := NewDefaultConfig().NumberKind(FloatNumber)
+	config := NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(objf).Tocollate(clt)
@@ -67,7 +67,7 @@ func TestGson2CollateNumber(t *testing.T) {
 
 	// as int64 using FloatNumber configuration
 	obji, ref := int64(10), `\x05>>21-\x00`
-	config = config.NumberKind(FloatNumber)
+	config = config.SetNumberKind(FloatNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(obji).Tocollate(clt)
@@ -81,7 +81,7 @@ func TestGson2CollateNumber(t *testing.T) {
 	// as float64 using IntNumber configuration
 	objf, ref = float64(10.2), `\x05>>210\x00`
 	objr := int64(10)
-	config = config.NumberKind(IntNumber)
+	config = config.SetNumberKind(IntNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(objf).Tocollate(clt)
@@ -94,7 +94,7 @@ func TestGson2CollateNumber(t *testing.T) {
 
 	// as int64 using IntNumber configuration
 	obji, ref = int64(10), `\x05>>210\x00`
-	config = config.NumberKind(IntNumber)
+	config = config.SetNumberKind(IntNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(obji).Tocollate(clt)
@@ -107,7 +107,7 @@ func TestGson2CollateNumber(t *testing.T) {
 
 	// as float64 using Decimal configuration
 	objf, ref = float64(0.2), `\x05>2-\x00`
-	config = config.NumberKind(Decimal)
+	config = config.SetNumberKind(Decimal)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(objf).Tocollate(clt)
@@ -125,7 +125,7 @@ func TestGson2CollateNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config = config.NumberKind(Decimal)
+		config = config.SetNumberKind(Decimal)
 		clt := config.NewCollate(make([]byte, 1024), 0)
 		config.NewValue(int64(10)).Tocollate(clt)
 	}()
@@ -135,7 +135,7 @@ func TestGson2CollateNumber(t *testing.T) {
 				t.Errorf("expected panic")
 			}
 		}()
-		config = config.NumberKind(Decimal)
+		config = config.SetNumberKind(Decimal)
 		clt := config.NewCollate(make([]byte, 1024), 0)
 		config.NewValue(float64(10.2)).Tocollate(clt)
 	}()

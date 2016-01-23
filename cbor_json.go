@@ -214,23 +214,6 @@ func tag2json(buf, out []byte, config *Config) (int, int) {
 	byt := (buf[0] & 0x1f) | cborType0 // fix as positive num
 	item, n := cbor2valueM[byt](buf, config)
 	switch item.(uint64) {
-	case tagJsonString:
-		ln, m := cborItemLength(buf[n:])
-		n += m
-
-		x := 0
-		copy(out[x:], buf[n:n+ln])
-		x += ln
-		return n + ln, x
-
-		//config.buf.Reset()
-		//if err := config.enc.Encode(bytes2str(buf[n : n+ln])); err != nil {
-		//	panic(err)
-		//}
-		//s := config.buf.Bytes()
-		//copy(out, s[:len(s)-1])
-		//return n + ln, len(s) - 1
-
 	case tagJsonNumber:
 		ln, m := cborItemLength(buf[n:])
 		n += m

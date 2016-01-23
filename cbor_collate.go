@@ -329,30 +329,6 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 func collateCborTag(buf, out []byte, config *Config) (int, int) {
 	item, m := cborItemLength(buf)
 	switch uint64(item) {
-	case tagJsonString:
-		ln, x := cborItemLength(buf[m:])
-		m += x
-		// copy the JSON string into scratch buffer.
-		poolstr1 := config.pools.stringPool.Get()
-		scratch := poolstr1.([]byte)
-		poolstr2 := config.pools.stringPool.Get()
-		utf8str := poolstr2.([]byte)
-		defer config.pools.stringPool.Put(poolstr1)
-		defer config.pools.stringPool.Put(poolstr2)
-
-		scratch[0] = '"'
-		copy(scratch[1:], buf[m:m+ln])
-		scratch[1+ln] = '"'
-		_, y := scanString(bytes2str(scratch[:ln+2]), utf8str)
-		// collate golang string.
-		n := 0
-		out[n] = TypeString
-		n++
-		n += suffixEncodeString(utf8str[:y], out[n:])
-		out[n] = Terminator
-		n++
-		return m + ln, n
-
 	case tagJsonNumber:
 		ln, x := cborItemLength(buf[m:])
 		m += x
