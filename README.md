@@ -74,8 +74,7 @@ Transforms
 **json to value**
 
 * a custom parser is supplied that must be faster than encoding/json.
-* numbers can be interpreted as integer, or float64, or retained as
-  string based on the configuration parameter `NumberKind`.
+* numbers can be interpreted as integer, or float64,
   *  `IntNumber` to interpret JSON number as integer whose size is
      defined by the platform.
   *  `FloatNumber` to interpret JSON number as 64-bit floating point.
@@ -85,36 +84,27 @@ Transforms
   as well.
 
 ```text
-BenchmarkJson2ValFlt    10000000         161 ns/op    55.66 MB/s           8 B/op        1 allocs/op
-BenchmarkJson2ValJsn    10000000         121 ns/op    74.06 MB/s          16 B/op        1 allocs/op
-BenchmarkJson2ValString  3000000         467 ns/op    68.52 MB/s          80 B/op        3 allocs/op
-BenchmarkJson2ValArr5    1000000        1013 ns/op    29.60 MB/s         719 B/op        8 allocs/op
-BenchmarkJson2ValMap5     500000        2998 ns/op    20.67 MB/s        5166 B/op       14 allocs/op
-BenchmarkJson2ValTyp       50000       24049 ns/op    60.50 MB/s       17613 B/op      127 allocs/op
-```
-
-as compared to using encoding/json for the same data sample:
-
-```text
-BenchmarkUnmarshalFlt    1000000        1389 ns/op    6.48 MB/s        264 B/op        3 allocs/op
-BenchmarkUnmarshalNum    1000000        1401 ns/op    6.42 MB/s        264 B/op        3 allocs/op
-BenchmarkUnmarshalStr    1000000        1939 ns/op   16.50 MB/s        336 B/op        4 allocs/op
-BenchmarkUnmarshalArr5    500000        3329 ns/op    9.01 MB/s        320 B/op       10 allocs/op
-BenchmarkUnmarshalMap5    200000        8715 ns/op    7.11 MB/s        976 B/op       41 allocs/op
-BenchmarkUnmarshalTyp      20000       66649 ns/op   21.83 MB/s       6544 B/op      248 allocs/op
+BenchmarkJson2ValNil    30000000     38 ns/op   104 MB/s       0 B/op     0 allocs/op
+BenchmarkJson2ValBool   20000000     66 ns/op    59 MB/s       1 B/op     1 allocs/op
+BenchmarkJson2ValNum    10000000    164 ns/op    54 MB/s       8 B/op     1 allocs/op
+BenchmarkJson2ValString  3000000    491 ns/op    65 MB/s      80 B/op     3 allocs/op
+BenchmarkJson2ValArr5    1000000   1062 ns/op    28 MB/s     788 B/op     9 allocs/op
+BenchmarkJson2ValMap5     500000   2654 ns/op    23 MB/s    5344 B/op    14 allocs/op
+BenchmarkJson2ValTyp       50000  26077 ns/op    55 MB/s   23967 B/op   128 allocs/op
 ```
 
 **value to json**
 
-* to convert value back to json text golang's encoding/json package is
-  used.
-* `Encoder` interface{} is used to re-use o/p buffer.
+to convert value back to json text.
 
 ```
-BenchmarkVal2JsonFlt     3000000        561 ns/op   16.02 MB/s         8 B/op        1 allocs/op
-BenchmarkVal2JsonArr5    1000000       1470 ns/op   19.72 MB/s        72 B/op        6 allocs/op
-BenchmarkVal2JsonMap5     300000       5025 ns/op   10.15 MB/s       601 B/op       23 allocs/op
-BenchmarkVal2JsonTyp       50000      30180 ns/op   39.33 MB/s      3488 B/op      141 allocs/op
+BenchmarkVal2JsonNil    100000000    14 ns/op  273 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonBool   50000000     25 ns/op  158 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonNum    10000000    212 ns/op   42 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonString 10000000    210 ns/op  181 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonArr5    5000000    257 ns/op  113 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonMap5    1000000   1113 ns/op   46 MB/s   80 B/op    5 allocs/op
+BenchmarkVal2JsonTyp      200000  10609 ns/op  112 MB/s  512 B/op   32 allocs/op
 ```
 
 **value to cbor**

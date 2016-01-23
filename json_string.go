@@ -18,7 +18,7 @@ var hex = "0123456789abcdef"
 // Copied from golang src/pkg/encoding/json/encode.go
 // Modified to use []byte as input and use DecodeRune() instead of
 // DecodeRuneInString.
-func encodeString(s []byte, text []byte) ([]byte, error) {
+func encodeString(s, text []byte) ([]byte, error) {
 	text = append(text, '"')
 	start := 0
 	for i := 0; i < len(s); {

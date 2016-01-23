@@ -110,6 +110,15 @@ func BenchmarkVal2JsonNil(b *testing.B) {
 	b.SetBytes(int64(len(jsn.Bytes())))
 }
 
+func BenchmarkMarshalNil(b *testing.B) {
+	var data []byte
+
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(nil)
+	}
+	b.SetBytes(int64(len(data)))
+}
+
 func BenchmarkVal2JsonBool(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
@@ -120,6 +129,15 @@ func BenchmarkVal2JsonBool(b *testing.B) {
 		val.Tojson(jsn.Reset(nil))
 	}
 	b.SetBytes(int64(len(jsn.Bytes())))
+}
+
+func BenchmarkMarshalBool(b *testing.B) {
+	var data []byte
+
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(true)
+	}
+	b.SetBytes(int64(len(data)))
 }
 
 func BenchmarkVal2JsonNum(b *testing.B) {
@@ -134,6 +152,15 @@ func BenchmarkVal2JsonNum(b *testing.B) {
 	b.SetBytes(int64(len(jsn.Bytes())))
 }
 
+func BenchmarkMarshalNum(b *testing.B) {
+	var data []byte
+
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(100000.23)
+	}
+	b.SetBytes(int64(len(data)))
+}
+
 func BenchmarkVal2JsonString(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(make([]byte, 1024), 0)
@@ -143,6 +170,15 @@ func BenchmarkVal2JsonString(b *testing.B) {
 		val.Tojson(jsn.Reset(nil))
 	}
 	b.SetBytes(int64(len(jsn.Bytes())))
+}
+
+func BenchmarkMarshalString(b *testing.B) {
+	var data []byte
+
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(`"汉语 / 漢語; Hàn\b \tyǔ "`)
+	}
+	b.SetBytes(int64(len(data)))
 }
 
 func BenchmarkVal2JsonArr5(b *testing.B) {
@@ -157,6 +193,16 @@ func BenchmarkVal2JsonArr5(b *testing.B) {
 	b.SetBytes(int64(len(jsn.Bytes())))
 }
 
+func BenchmarkMarshalArr5(b *testing.B) {
+	var data []byte
+
+	val := []interface{}{nil, true, false, 10, "tru\"e"}
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(val)
+	}
+	b.SetBytes(int64(len(data)))
+}
+
 func BenchmarkVal2JsonMap5(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
@@ -169,6 +215,18 @@ func BenchmarkVal2JsonMap5(b *testing.B) {
 		val.Tojson(jsn.Reset(nil))
 	}
 	b.SetBytes(int64(len(jsn.Bytes())))
+}
+
+func BenchmarkMarshalMap5(b *testing.B) {
+	var data []byte
+
+	val := map[string]interface{}{
+		"a": nil, "b": true, "c": false, "d\"": -10E-1, "e": "tru\"e",
+	}
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(val)
+	}
+	b.SetBytes(int64(len(data)))
 }
 
 func BenchmarkVal2JsonTyp(b *testing.B) {
@@ -189,6 +247,21 @@ func BenchmarkVal2JsonTyp(b *testing.B) {
 		val.Tojson(jsn.Reset(nil))
 	}
 	b.SetBytes(int64(len(jsn.Bytes())))
+}
+
+func BenchmarkMarshalTyp(b *testing.B) {
+	var value interface{}
+
+	data := testdataFile("testdata/typical.json")
+	if err := json.Unmarshal(data, &value); err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(value)
+	}
+	b.SetBytes(int64(len(data)))
 }
 
 func BenchmarkVal2JsonCgz(b *testing.B) {
@@ -212,4 +285,23 @@ func BenchmarkVal2JsonCgz(b *testing.B) {
 		val.Tojson(jsn.Reset(nil))
 	}
 	b.SetBytes(int64(len(jsn.Bytes())))
+}
+
+func BenchmarkMarshalCgz(b *testing.B) {
+	var value interface{}
+
+	if testing.Short() {
+		b.Skip("skipping code.json.gz")
+	}
+
+	data := testdataFile("testdata/code.json.gz")
+	if err := json.Unmarshal(data, &value); err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		data, _ = json.Marshal(value)
+	}
+	b.SetBytes(int64(len(data)))
 }
