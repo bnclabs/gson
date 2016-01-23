@@ -154,11 +154,6 @@ func jsonNumToCbor(txt string, out []byte, config *Config) (string, int) {
 		}
 	}
 	switch config.nk {
-	case JSONNumber:
-		n := tag2cbor(uint64(tagJsonNumber), out)
-		n += valtext2cbor(txt[s:e], out[n:])
-		return txt[e:], n
-
 	case FloatNumber:
 		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
 		if err != nil { // once parsing logic is bullet proof remove this

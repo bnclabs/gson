@@ -4,7 +4,6 @@ package gson
 
 import "testing"
 import "fmt"
-import "bytes"
 import "reflect"
 import "encoding/json"
 
@@ -125,30 +124,11 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 }
 
 func TestScanNumber(t *testing.T) {
-	// test JSONNumber
-	ref := []byte{216, 37, 98, 49, 48}
+	// test FloatNumber
 	config := NewDefaultConfig()
-	config = config.SetNumberKind(JSONNumber).SetSpaceKind(UnicodeSpace)
+	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	jsn := config.NewJson(make([]byte, 1024), 0)
-
-	jsn.Reset([]byte("10"))
-	jsn.Tocbor(cbr)
-	if code := cbr.Bytes(); bytes.Compare(code, ref) != 0 {
-		t.Errorf("expected %v, got %v", ref, code)
-	}
-
-	jsn.Reset(nil)
-	cbr.Tojson(jsn)
-	if s := string(jsn.Bytes()); s != "10" {
-		t.Errorf("exected %v, got %v", "10", s)
-	}
-
-	// test FloatNumber
-	config = NewDefaultConfig()
-	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	jsn = config.NewJson(make([]byte, 1024), 0)
 	jsnback := config.NewJson(make([]byte, 1024), 0)
 
 	jsn.Reset([]byte("10"))

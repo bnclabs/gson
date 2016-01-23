@@ -6,7 +6,6 @@
 package gson
 
 import "strconv"
-import "encoding/json"
 
 // primary interface to scan JSON text and return,
 // a. text remaining to be parsed.
@@ -55,7 +54,7 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		} else if txt[0] == ']' {
 			return txt[1:], []interface{}{}
 		}
-		arr := make([]interface{}, 0, 16)
+		arr := make([]interface{}, 0, 4)
 		for {
 			var tok interface{}
 			txt, tok = json2value(txt, config)
@@ -119,11 +118,6 @@ func jsonnum2value(txt string, config *Config) (string, interface{}) {
 	}
 
 	switch config.nk {
-	case JSONNumber:
-		bs := make([]byte, len(txt[s:e]))
-		copy(bs, txt[s:e])
-		return txt[e:], json.Number(string(bs))
-
 	case IntNumber:
 		num, err := strconv.Atoi(txt[s:e])
 		if err == nil {
@@ -133,8 +127,9 @@ func jsonnum2value(txt string, config *Config) (string, interface{}) {
 		}
 	}
 	// FloatNumber, or FloatNumber32, or SmartNumber, or SmartNumber32
-	// NOTE: ignore the error because we have only picked
-	// valid text to parse.
-	num, _ := strconv.ParseFloat(string(txt[s:e]), 64)
+	num, err := strconv.ParseFloat(string(txt[s:e]), 64)
+	if err != nil {
+		panic("unexpected json-number")
+	}
 	return txt[e:], num
 }

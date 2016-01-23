@@ -180,7 +180,7 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 	var num [64]byte
 	switch nt {
-	case FloatNumber, JSONNumber:
+	case FloatNumber:
 		v := asfloat64(value)
 		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
 		return collateFloat(bs, code)
@@ -209,7 +209,7 @@ func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
 func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 	var scratch [64]byte
 	switch nt {
-	case FloatNumber, JSONNumber:
+	case FloatNumber:
 		_, y := collated2Float(code, scratch[:])
 		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
 		if err != nil {
@@ -246,7 +246,7 @@ func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 
 func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
 	switch nt {
-	case FloatNumber, FloatNumber32, JSONNumber:
+	case FloatNumber, FloatNumber32:
 		_, y := collated2Float(code, text[:])
 		return y
 

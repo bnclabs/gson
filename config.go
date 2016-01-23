@@ -69,9 +69,6 @@ const (
 	// FloatNumber to treat number as float64.
 	FloatNumber
 
-	// JSONNumber to treat number as JSON encodend text.
-	JSONNumber
-
 	// Decimal to collate input numbers as N, where -1 < N < 1
 	Decimal
 )
@@ -252,8 +249,6 @@ func (nk NumberKind) String() string {
 		return "FloatNumber32"
 	case FloatNumber:
 		return "FloatNumber"
-	case JSONNumber:
-		return "JSONNumber"
 	case Decimal:
 		return "Decimal"
 	default:

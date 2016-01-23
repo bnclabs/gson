@@ -213,16 +213,6 @@ func TestCborNum(t *testing.T) {
 	}()
 }
 
-func TestCborJsonNumber(t *testing.T) {
-	buf, ref := make([]byte, 10), "10.11"
-	config := NewDefaultConfig().SetNumberKind(JSONNumber)
-	_, n := json2cbor(ref, buf, config)
-	val, m := cbor2value(buf[:n], config)
-	if n != 8 || n != m || !reflect.DeepEqual(string(val.(json.Number)), ref) {
-		t.Errorf("fail code json-number: %v %v %T(%v)", n, m, val, val)
-	}
-}
-
 func TestCborFloat16(t *testing.T) {
 	config := NewDefaultConfig()
 	defer func() {

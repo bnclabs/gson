@@ -94,23 +94,6 @@ func TestCbor2CollateNumber(t *testing.T) {
 			t.Errorf("expected %v, got %v", refcode, seqn)
 		}
 	}
-	testcases = [][3]interface{}{
-		[3]interface{}{"-10", `\x05--78>\x00`, JSONNumber},
-	}
-	// skip collate2cbor
-	for _, tcase := range testcases {
-		inp, refcode := tcase[0].(string), tcase[1].(string)
-		t.Logf("%v", inp)
-		nk := tcase[2].(NumberKind)
-		config = config.SetNumberKind(nk)
-		_, n := json2cbor(inp, code, config)
-		_, n = cbor2collate(code[:n], out, config)
-		seqn := fmt.Sprintf("%q", out[:n])
-		seqn = seqn[1 : len(seqn)-1]
-		if seqn != refcode {
-			t.Errorf("expected %v, got %v", refcode, seqn)
-		}
-	}
 }
 
 func TestCbor2CollateString(t *testing.T) {

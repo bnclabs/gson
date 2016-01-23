@@ -1,6 +1,7 @@
 * tagJsonNumber is used instead of tagJsonString.
-* get rid of JSONNumber, leads to more confusion.
 * json.Number can be used ?
+* make this constant:
+     strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 * improve code documentation and README.
 
         collt cbor json value

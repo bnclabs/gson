@@ -87,15 +87,6 @@ func TestScanIntegers(t *testing.T) {
 		} else if v, ok := val.(int64); !ok || v != int64(ref.(float64)) {
 			t.Errorf("%q int should be parsed to %T %v", tcase, val, ref)
 		}
-
-		config = NewDefaultConfig()
-		config = config.SetNumberKind(JSONNumber).SetSpaceKind(AnsiSpace)
-		jsn = config.NewJson(make([]byte, 1024), 0)
-		if jsnrem, val := jsn.Reset([]byte(tcase)).Tovalue(); jsnrem != nil {
-			t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
-		} else if v, ok := val.(json.Number); !ok || string(v) != tcase {
-			t.Errorf("expected {%T,%v}, got {%T,%v} %v", v, v, tcase, tcase, ok)
-		}
 	}
 
 	testcases = []string{
@@ -127,15 +118,6 @@ func TestScanIntegers(t *testing.T) {
 				t.Errorf("expected %v got %v", tcase, remtxt)
 			}
 		}()
-
-		config = NewDefaultConfig()
-		config = config.SetNumberKind(JSONNumber).SetSpaceKind(AnsiSpace)
-		jsn = config.NewJson(make([]byte, 1024), 0)
-		if jsnrem, val := jsn.Reset([]byte(tcase)).Tovalue(); jsnrem != nil {
-			t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
-		} else if v, ok := val.(json.Number); !ok || string(v) != tcase {
-			t.Errorf("should be parsed as String-number")
-		}
 	}
 }
 
@@ -261,17 +243,6 @@ func BenchmarkUnmarshalNum(b *testing.B) {
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
 		json.Unmarshal(in, &val)
-	}
-}
-
-func BenchmarkJson2ValJsn(b *testing.B) {
-	config := NewDefaultConfig()
-	config = config.SetNumberKind(JSONNumber)
-	in := "100000.23"
-	jsn := config.NewJson([]byte(in), len(in))
-	b.SetBytes(int64(len(in)))
-	for i := 0; i < b.N; i++ {
-		jsn.Tovalue()
 	}
 }
 
