@@ -1,7 +1,5 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// +build ignore
-
 package gson
 
 import "testing"
@@ -31,29 +29,27 @@ func TestParsePointer(t *testing.T) {
 
 	// test ParseJsonPointer
 	config := NewDefaultConfig()
+	jptr := config.NewJsonpointer("")
 	for _, tcase := range tcasesJSONPointers {
-		in, ref := tcase[0].(string), tcase[1].([]string)
-		t.Logf("input pointer %q", in)
-		segments := config.ParseJsonPointer(in, []string{})
+		t.Logf("input pointer %q", tcase[0].(string))
+		ref := tcase[1].([]string)
+
+		jptr.ResetPath(tcase[0].(string))
+		segments := jptr.Segments()
 		if len(segments) != len(ref) {
 			t.Errorf("expected %v, got %v", len(ref), len(segments))
 		} else {
 			for i, x := range ref {
-				if string(segments[i]) != string(x) {
-					t.Errorf("expected %q, got %q", string(x), segments[i])
+				if string(segments[i]) != x {
+					t.Errorf("expected %q, got %q", x, segments[i])
 				}
 			}
 		}
-	}
 
-	// test encode pointers
-	out := make([]byte, 1024)
-	for _, tcase := range tcasesJSONPointers {
-		in, ref := tcase[0].(string), tcase[1].([]string)
-		t.Logf("input %v", ref)
-		n := config.ToJsonPointer(ref, out)
-		if outs := string(out[:n]); outs != in {
-			t.Errorf("expected %q, %q", in, outs)
+		// test encode pointers
+		jptr.ResetPath("").ResetSegments(ref)
+		if path := string(jptr.Path()); path != tcase[0].(string) {
+			t.Errorf("expected %q, got %q", path, tcase[0].(string))
 		}
 	}
 }
@@ -64,11 +60,12 @@ func TestTypicalPointers(t *testing.T) {
 	sort.Strings(refs)
 	config := NewDefaultConfig()
 
-	txt := string(testdataFile("testdata/typical.json"))
-	_, value := config.JsonToValue(txt)
+	data := testdataFile("testdata/typical.json")
+	_, value := config.NewJson(data, -1).Tovalue()
+	val := config.NewValue(value)
 
 	// test list pointers
-	pointers := config.ListPointers(value, make([]string, 0, 1024))
+	pointers := val.ListPointers(make([]string, 0, 1024))
 	sort.Strings(pointers)
 	if len(refs) != len(pointers) {
 		t.Errorf("expected %v, got %v", len(refs), len(pointers))
@@ -81,8 +78,11 @@ func TestTypicalPointers(t *testing.T) {
 
 	// test list pointers for document using [][2]interface{} for map.
 	value = GolangMap2cborMap(value)
-	pointers = config.ListPointers(value, make([]string, 0, 1024))
+	val = config.NewValue(value)
+
+	pointers = val.ListPointers(make([]string, 0, 1024))
 	sort.Strings(pointers)
+
 	if len(refs) != len(pointers) {
 		t.Errorf("expected %v, got %v", len(refs), len(pointers))
 	}
@@ -96,53 +96,56 @@ func TestTypicalPointers(t *testing.T) {
 func BenchmarkParseJsonPtr3(b *testing.B) {
 	config := NewDefaultConfig()
 	path := "/foo/g/0"
-	segments := make([]string, 0, 16)
+
 	b.SetBytes(int64(len(path)))
 	for i := 0; i < b.N; i++ {
-		config.ParseJsonPointer(path, segments)
+		config.NewJsonpointer(path).Segments()
 	}
 }
 
 func BenchmarkParseJsonPtr4(b *testing.B) {
 	config := NewDefaultConfig()
 	path := "/foo/g~1n~1r/0/hello"
-	segments := make([]string, 0, 16)
+
 	b.SetBytes(int64(len(path)))
 	for i := 0; i < b.N; i++ {
-		config.ParseJsonPointer(path, segments)
+		config.NewJsonpointer(path).Segments()
 	}
 }
 
 func BenchmarkParseJsonPtr5(b *testing.B) {
+	segments := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
 	config := NewDefaultConfig()
-	out := make([]byte, 1024)
-	n := config.ToJsonPointer([]string{"a", "ab", "a~b", "a/b", "a~/~/b"}, out)
-	segments := make([]string, 0, 16)
-	b.SetBytes(int64(n))
+	jptr := config.NewJsonpointer("").ResetSegments(segments)
+
+	b.SetBytes(int64(len(jptr.Path())))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.ParseJsonPointer(bytes2str(out[:n]), segments)
+		config.NewJsonpointer(string(jptr.Path())).Segments()
 	}
 }
 
 func BenchmarkToJsonPtr5(b *testing.B) {
+	segments := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
 	config := NewDefaultConfig()
-	path := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
-	out := make([]byte, 1024)
+
 	b.SetBytes(15)
 	for i := 0; i < b.N; i++ {
-		config.ToJsonPointer(path, out)
+		config.NewJsonpointer("").ResetSegments(segments)
 	}
 }
 
 func BenchmarkListPointers(b *testing.B) {
 	config := NewDefaultConfig()
-	txt := string(testdataFile("testdata/typical.json"))
-	_, doc := config.JsonToValue(txt)
-	pointers := make([]string, 0, 1024)
-	b.SetBytes(int64(len(txt)))
+	data := testdataFile("testdata/typical.json")
+	_, value := config.NewJson(data, -1).Tovalue()
+	val := config.NewValue(value)
+
+	pointers := make([]string, 0)
+
+	b.SetBytes(int64(len(data)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.ListPointers(doc, pointers)
+		pointers = val.ListPointers(pointers)[:0]
 	}
 }
