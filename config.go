@@ -116,10 +116,12 @@ type Config struct {
 }
 
 // NewDefaultConfig returns a new configuration with default settings:
-//	   FloatNumber			Stream
-//	   MaxKeys				UnicodeSpace
-//	   +strict 				+doMissing
-//	   -arrayLenPrefix      +propertyLenPrefix
+//		FloatNumber			Stream
+//		MaxKeys
+//		UnicodeSpace		+strict
+//		+doMissing			-arrayLenPrefix
+//		+propertyLenPrefix
+//		MaxJsonpointerLen
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:      FloatNumber,
@@ -134,11 +136,8 @@ func NewDefaultConfig() *Config {
 			arrayLenPrefix:    false,
 			propertyLenPrefix: true,
 		},
-		jptrConfig: jptrConfig{
-			jptrMaxlen: MaxJsonpointerLen,
-			jptrMaxseg: MaxJsonpointerLen / 8,
-		},
 	}
+	config = config.SetJptrlen(MaxJsonpointerLen)
 
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
 	config.enc = json.NewEncoder(config.buf)
@@ -170,7 +169,7 @@ func (config Config) SetMaxkeys(n int) *Config {
 // SetJptrlen will set the maximum size for jsonpointer path.
 func (config Config) SetJptrlen(n int) *Config {
 	config.jptrMaxlen = n
-	config.jptrMaxseg = n / 2
+	config.jptrMaxseg = n / 8
 	return &config
 }
 
@@ -232,7 +231,7 @@ func (config *Config) NewJsonpointer(path string) *Jsonpointer {
 	return jptr
 }
 
-func (config *Config) ConfigString() string {
+func (config *Config) String() string {
 	return fmt.Sprintf(
 		"nk:%v, ws:%v, ct:%v, arrayLenPrefix:%v, "+
 			"propertyLenPrefix:%v, doMissing:%v, maxKeys:%v",

@@ -7,6 +7,10 @@ import "bytes"
 import "reflect"
 import "encoding/json"
 import "fmt"
+import "os"
+import "strings"
+import "compress/gzip"
+import "io/ioutil"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -114,4 +118,111 @@ func TestCborToCollate(t *testing.T) {
 	if !reflect.DeepEqual(refm, value) {
 		t.Errorf("expected %v, got %v", refm, value)
 	}
+}
+
+func testdataFile(filename string) []byte {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	var data []byte
+	if strings.HasSuffix(filename, ".gz") {
+		gz, err := gzip.NewReader(f)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(gz)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		data, err = ioutil.ReadAll(f)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return data
+}
+
+var allValueIndent, allValueCompact, pallValueIndent, pallValueCompact []byte
+var mapValue []byte
+var scanvalid []string
+var scaninvalid []string
+
+func init() {
+	var value interface{}
+	var err error
+
+	allValueIndent, err = ioutil.ReadFile("testdata/allValueIndent")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = json.Unmarshal(allValueIndent, &value); err != nil {
+		panic(err)
+	}
+	if allValueCompact, err = json.Marshal(value); err != nil {
+		panic(err)
+	}
+
+	pallValueIndent, err = ioutil.ReadFile("testdata/pallValueIndent")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = json.Unmarshal(pallValueIndent, &value); err != nil {
+		panic(err)
+	}
+	if pallValueCompact, err = json.Marshal(value); err != nil {
+		panic(err)
+	}
+
+	mapValue, err = ioutil.ReadFile("testdata/map")
+	if err != nil {
+		panic(err)
+	}
+
+	scanvalidb, err := ioutil.ReadFile("testdata/scan_valid")
+	if err != nil {
+		panic(err)
+	}
+	scanvalid = []string{}
+	for _, s := range strings.Split(string(scanvalidb), "\n") {
+		if strings.Trim(s, " ") != "" {
+			scanvalid = append(scanvalid, s)
+		}
+	}
+	scanvalid = append(scanvalid, []string{
+		"\"hello\xffworld\"",
+		"\"hello\xc2\xc2world\"",
+		"\"hello\xc2\xffworld\"",
+		"\"hello\xed\xa0\x80\xed\xb0\x80world\""}...)
+
+	scaninvalidb, err := ioutil.ReadFile("testdata/scan_invalid")
+	if err != nil {
+		panic(err)
+	}
+	scaninvalid = []string{}
+	for _, s := range strings.Split(string(scaninvalidb), "\n") {
+		if strings.Trim(s, " ") != "" {
+			scaninvalid = append(scaninvalid, s)
+		}
+	}
+	scaninvalid = append(scaninvalid, []string{
+		"\xed\xa0\x80", // RuneError
+		"\xed\xbf\xbf", // RuneError
+		// raw value errors
+		"\x01 42",
+		"\x01 true",
+		"\x01 1.2",
+		" 3.4 \x01",
+		"\x01 \"string\"",
+		// bad-utf8
+		"hello\xffworld",
+		"\xff",
+		"\xff\xff",
+		"a\xffb",
+		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e"}...)
 }

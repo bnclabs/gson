@@ -1,6 +1,13 @@
-* improve code documentation and README.
 * tagJsonNumber is used instead of tagJsonString.
+* get rid of JSONNumber, leads to more confusion.
 * json.Number can be used ?
+* improve code documentation and README.
+
+        collt cbor json value
+value                ✓    X
+json                 X    ✓
+cbor            X
+collt     X
 
 CBOR:
 

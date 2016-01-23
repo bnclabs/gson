@@ -5,13 +5,11 @@ package gson
 import "sync"
 
 type mempools struct {
-	prefixPool   *sync.Pool // maximum length of json pointer
-	segmentsPool *sync.Pool // number of segments in json-pointer
-	stringPool   *sync.Pool // scratch pad for string objects
-	keysPool     *sync.Pool // property keys
-
-	keypool  *sync.Pool
-	codepool *sync.Pool
+	prefixPool *sync.Pool // maximum length of json pointer
+	stringPool *sync.Pool // scratch pad for string objects
+	keysPool   *sync.Pool // property keys
+	keypool    *sync.Pool
+	codepool   *sync.Pool
 }
 
 func newMempool(strlen, numkeys, itemlen, jptrlen int) mempools {
@@ -22,9 +20,6 @@ func newMempool(strlen, numkeys, itemlen, jptrlen int) mempools {
 	m := mempools{}
 	m.prefixPool = &sync.Pool{
 		New: func() interface{} { return make([]byte, 0, jptrlen) },
-	}
-	m.segmentsPool = &sync.Pool{
-		New: func() interface{} { return make([]string, 0, jptrlen) },
 	}
 	m.stringPool = &sync.Pool{
 		New: func() interface{} { return make([]byte, strlen) },
