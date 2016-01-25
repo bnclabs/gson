@@ -4,7 +4,6 @@ package gson
 
 import "reflect"
 import "unsafe"
-import "sort"
 import "encoding/json"
 import "strconv"
 
@@ -266,8 +265,21 @@ func sortProps(props map[string]interface{}, keys []string) []string {
 	for k := range props {
 		keys = append(keys, k)
 	}
-	ss := sort.StringSlice(keys)
-	sort.Sort(ss)
+
+	// bubble sort, moving to qsort should be atleast 40% faster.
+	for ln := len(keys) - 1; ; ln-- {
+		changed := false
+		for i := 0; i < ln; i++ {
+			if keys[i] > keys[i+1] {
+				keys[i], keys[i+1] = keys[i+1], keys[i]
+				changed = true
+			}
+		}
+		if changed == false {
+			break
+		}
+	}
+
 	return keys
 }
 

@@ -9,6 +9,7 @@ import "strconv"
 
 func value2json(value interface{}, out []byte, config *Config) int {
 	var err error
+	var outsl []byte
 
 	if value == nil {
 		return copy(out, "null")
@@ -98,7 +99,11 @@ func value2json(value interface{}, out []byte, config *Config) int {
 
 		count := len(v)
 		for key := range v {
-			n += value2json(key, out[n:], config)
+			outsl, err = encodeString(str2bytes(key), out[n:n])
+			if err != nil {
+				panic("error encoding key")
+			}
+			n += len(outsl)
 			out[n] = ':'
 			n++
 

@@ -92,18 +92,6 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 
 	case string:
 		return collateString(value, code, config)
-		// FIXME
-		//if config.doMissing && MissingLiteral.Equal(value) {
-		//	code[0], code[1] = TypeMissing, Terminator
-		//	return 2
-		//}
-		//n := 0
-		//code[n] = TypeString
-		//n++
-		//n += suffixEncodeString(str2bytes(value), code[n:])
-		//code[n] = Terminator
-		//n++
-		//return n
 
 	case []byte:
 		n := 0
