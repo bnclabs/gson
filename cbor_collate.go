@@ -6,7 +6,6 @@
 package gson
 
 import "math"
-import "strconv"
 import "sort"
 import "encoding/binary"
 

@@ -226,3 +226,20 @@ func init() {
 		"a\xffb",
 		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e"}...)
 }
+func fixFloats(val interface{}) interface{} {
+	switch v := val.(type) {
+	case float64:
+		return float32(v)
+	case []interface{}:
+		for i, x := range v {
+			v[i] = fixFloats(x)
+		}
+		return v
+	case map[string]interface{}:
+		for p, q := range v {
+			v[p] = fixFloats(q)
+		}
+		return v
+	}
+	return val
+}

@@ -148,18 +148,15 @@ BenchmarkVal2JsonTyp      200000  10609 ns/op  112 MB/s  512 B/op   32 allocs/op
 * all other types shall cause a panic.
 
 ```text
-BenchmarkVal2CborNull   200000000    8.75 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborTrue   100000000   18.0 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborFalse  100000000   18.6 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborUint64 50000000    24.2 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborInt64  50000000    26.7 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborFlt32  100000000   20.8 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborFlt64  50000000    25.7 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborBytes  50000000    34.7 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborText   30000000    42.5 ns/op   0 B/op  0 allocs/op
-BenchmarkVal2CborArr5   10000000   175 ns/op     0 B/op  0 allocs/op
-BenchmarkVal2CborMap5    3000000   414 ns/op     0 B/op  0 allocs/op
-BenchmarkVal2CborTyp      500000  3941 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborNull   50000000    45 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborTrue   30000000    40 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborUint64 20000000   168 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborFlt64  30000000   306 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborTBytes  5000000   365 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborText    5000000   402 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborArr5    2000000  1032 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborMap5    1000000  1332 ns/op     0 B/op  0 allocs/op
+BenchmarkVal2CborTyp      200000  8833 ns/op     0 B/op  0 allocs/op
 ```
 
 
@@ -172,18 +169,15 @@ BenchmarkVal2CborTyp      500000  3941 ns/op     0 B/op  0 allocs/op
   this package using `IsIndefinite*()` and `IsBreakstop()` APIs.
 
 ```text
-BenchmarkCbor2ValNull	50000000     37.1 ns/op	   0 B/op	 0 allocs/op
-BenchmarkCbor2ValTrue	20000000     67.9 ns/op	   1 B/op	 1 allocs/op
-BenchmarkCbor2ValFalse	20000000     68.9 ns/op	   1 B/op	 1 allocs/op
-BenchmarkCbor2ValUint64	20000000     92.0 ns/op	   8 B/op	 1 allocs/op
-BenchmarkCbor2ValInt64	20000000     90.3 ns/op	   8 B/op	 1 allocs/op
-BenchmarkCbor2ValFlt32	20000000     87.4 ns/op	   4 B/op	 1 allocs/op
-BenchmarkCbor2ValFlt64	20000000     98.1 ns/op	   8 B/op	 1 allocs/op
-BenchmarkCbor2ValBytes	 5000000    248 ns/op	  48 B/op	 2 allocs/op
-BenchmarkCbor2ValText	10000000    217 ns/op	  32 B/op	 2 allocs/op
-BenchmarkCbor2ValArr5	 1000000   1400 ns/op	 304 B/op	10 allocs/op
-BenchmarkCbor2ValMap5	  500000   2850 ns/op	 496 B/op	18 allocs/op
-BenchmarkCbor2ValTyp       50000  25685 ns/op   7783 B/op  140 allocs/op
+BenchmarkCbor2ValNull   50000000     40 ns/op      0 B/op    0 allocs/op
+BenchmarkCbor2ValTrue   20000000     67 ns/op      1 B/op    1 allocs/op
+BenchmarkCbor2ValUint64 20000000    100 ns/op      8 B/op    1 allocs/op
+BenchmarkCbor2ValFlt64  20000000    116 ns/op      8 B/op    1 allocs/op
+BenchmarkCbor2ValBytes   5000000    261 ns/op     48 B/op    2 allocs/op
+BenchmarkCbor2ValText    5000000    224 ns/op     32 B/op    2 allocs/op
+BenchmarkCbor2ValArr5    1000000   1379 ns/op    304 B/op    10 allocs/op
+BenchmarkCbor2ValMap5     500000   3428 ns/op    496 B/op    18 allocs/op
+BenchmarkCbor2ValTyp       50000  29681 ns/op   7784 B/op   140 allocs/op
 ```
 
 **json to cbor**

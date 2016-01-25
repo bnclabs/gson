@@ -1,12 +1,14 @@
-* json.Number can be used ?
+* json.Number can be used ? [+] add an explanation in README
 * make this constant:
      strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 * improve code documentation and README.
+* by using ``[][2]interface{}`` instead of map[string]interface{} we can
+  optimize on heap allocation.
 
         collt cbor json value
-value                ✓    X
+value           ✓    ✓    X
 json                 X    ✓
-cbor            X
+cbor            X         ✓
 collt     X
 
 CBOR:
