@@ -327,22 +327,7 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 }
 
 func collateCborTag(buf, out []byte, config *Config) (int, int) {
-	item, m := cborItemLength(buf)
-	switch uint64(item) {
-	case tagJsonNumber:
-		ln, x := cborItemLength(buf[m:])
-		m += x
-		f, err := strconv.ParseFloat(bytes2str(buf[m:m+ln]), 64)
-		if err != nil {
-			panic(err)
-		}
-		n := 0
-		out[n] = TypeNumber
-		n++
-		n += normalizeFloat(f, out[n:], config.nk)
-		out[n] = Terminator
-		return m + ln, n + 1
-	}
+	_ /*item*/, m := cborItemLength(buf)
 	return m, 0 // skip this tag
 }
 

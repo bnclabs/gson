@@ -75,11 +75,6 @@ func cbor2tag(buf []byte, config *Config) (interface{}, int) {
 		item, m := cbor2regexpval(buf[n:], config)
 		return item, n + m
 
-	case tagJsonNumber:
-		ln, m := cborItemLength(buf[n:])
-		_, num := json2value(bytes2str(buf[n+m:n+m+ln]), config)
-		return num, n + m + ln
-
 	case tagCborPrefix:
 		item, m := cbor2cborprefixval(buf[n:], config)
 		return item, n + m

@@ -228,7 +228,6 @@ BenchmarkJson2CborTyp     200000  10136 ns/op    143.54 MB/s   0 B/op  0 allocs/
   non-exponent format.
 * `integers` are transformed back to JSON-integer representation,
   and integers exceeding 9223372036854775807 are not supported.
-* `tagJsonNumber` are interpreted as it is into JSON number.
 * `strings` are encoded into JSON-string using `encoding/json`
   package.
 * `arrays` either with length prefix or with indefinite encoding

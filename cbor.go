@@ -57,26 +57,26 @@ const ( // pre-defined tag values
 	tagNegBignum              // as []bytes
 	tagDecimalFraction        // decimal fraction as array of [2]num
 	tagBigFloat               // as array of [2]num
+
 	// unassigned 6..20
+
 	// TODO: tagBase64URL, tagBase64, tagBase16
 	tagBase64URL = iota + 15 // interpret []byte as base64 format
 	tagBase64                // interpret []byte as base64 format
 	tagBase16                // interpret []byte as base16 format
-	tagCborEnc               // embedd another CBOR message
+
+	tagCborEnc // embedd another CBOR message
+
 	// unassigned 25..31
+
 	tagURI          = iota + 22 // defined in rfc3986
 	tagBase64URLEnc             // base64 encoded url as text strings
 	tagBase64Enc                // base64 encoded byte-string as text strings
 	tagRegexp                   // PCRE and ECMA262 regular expression
 	tagMime                     // MIME defined by rfc2045
 
-	// tag 38 is un-assigned as per spec and used here to encode
-	// number as json-string, which is more optimized by avoiding
-	// atoi and itoa (or similar operations for float). can be used
-	// while converting json->cbor
-	tagJsonNumber
-
 	// unassigned 38..55798
+
 	tagCborPrefix = iota + 55783
 	// unassigned 55800..
 )

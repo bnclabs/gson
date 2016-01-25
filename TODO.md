@@ -1,4 +1,3 @@
-* tagJsonNumber is used instead of tagJsonString.
 * json.Number can be used ?
 * make this constant:
      strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024

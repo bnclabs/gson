@@ -212,28 +212,3 @@ func jsonNumToCbor(txt string, out []byte, config *Config) (string, int) {
 	n := valint642cbor(int64(num), out)
 	return txt[e:], n
 }
-
-// TODO: remove this if not requred jsonString parameter is removed
-// from configuration
-//func jsonStringToCbor(txt string, out []byte) (string, int) {
-//	if len(txt) < 2 {
-//		panic("cbor scanner expected string")
-//	}
-//
-//	var scratch [10]byte
-//	skipchar := false
-//	for off, ch := range txt[1:] {
-//		if skipchar {
-//			skipchar = false
-//			continue
-//		} else if ch == '\\' {
-//			skipchar = true
-//		} else if ch == '"' {
-//			x := utf8.EncodeRune(scratch[:], ch)
-//			n := tag2cbor(uint64(tagJsonNumber), out)
-//			n += valtext2cbor(txt[:off+x], out[n:]) // except last char
-//			return txt[off+x:], n
-//		}
-//	}
-//	panic("cbor scanner expected string")
-//}
