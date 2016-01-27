@@ -6,7 +6,6 @@
 package gson
 
 import "strconv"
-import "sort"
 
 func json2collate(txt string, code []byte, config *Config) (string, int) {
 	txt = skipWS(txt, config.ws)
@@ -49,8 +48,9 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		panic("collate scanner expectedFalse")
 
 	case '"':
-		scratch := config.pools.stringPool.Get().([]byte)
-		defer config.pools.stringPool.Put(scratch)
+		scratchi := config.pools.stringPool.Get()
+		scratch := scratchi.([]byte)
+		defer config.pools.stringPool.Put(scratchi)
 
 		txt, p := scanString(txt, scratch)
 		if config.doMissing && MissingLiteral.Equal(bytes2str(scratch[:p])) {
@@ -104,15 +104,18 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		return txt[1:], n
 
 	case '{':
-		var x int
+		var x, p, ln int
 
 		code[n] = TypeObj
 		n++
 
-		altcode, p := config.pools.codepool.Get().([]byte), 0
-		defer config.pools.codepool.Put(altcode)
-		refs, ln := config.pools.keypool.Get().(kvrefs), 0
-		defer config.pools.keypool.Put(refs)
+		altcodei := config.pools.codepool.Get()
+		altcode := altcodei.([]byte)
+		defer config.pools.codepool.Put(altcodei)
+
+		refsi := config.pools.keypool.Get()
+		refs := refsi.(kvrefs)
+		defer config.pools.keypool.Put(refsi)
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("collate scanner expectedCloseobject")
@@ -144,14 +147,15 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 					panic("collate scanner expectedCloseobject")
 				}
 			}
-			sort.Sort(refs[:ln])
+
+			(refs[:ln]).sort()
 		}
 		if config.propertyLenPrefix {
 			n += collateLength(ln, code[n:])
 		}
 		for j := 0; j < ln; j++ {
 			kv := refs[j]
-			n += gson2collate(kv.key, code[n:], config) // encode key
+			n += collateString(kv.key, code[n:], config) // encode key
 			n += copy(code[n:], kv.code)
 		}
 		code[n] = Terminator

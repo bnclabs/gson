@@ -54,7 +54,7 @@ func collateCborT0SmallInt(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(int64(cborInfo(buf[0])), out[n:], config.nk)
+	n += normalizeInt64(int64(cborInfo(buf[0])), out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 1, n
@@ -64,7 +64,7 @@ func collateCborT1SmallInt(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(-int64(cborInfo(buf[0])+1), out[n:], config.nk)
+	n += normalizeInt64(-int64(cborInfo(buf[0])+1), out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 1, n
@@ -74,7 +74,7 @@ func collateCborT0Info24(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(int64(buf[1]), out[n:], config.nk)
+	n += normalizeInt64(int64(buf[1]), out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 2, n
@@ -84,7 +84,7 @@ func collateCborT1Info24(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(-int64(buf[1]+1), out[n:], config.nk)
+	n += normalizeInt64(-int64(buf[1]+1), out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 2, n
@@ -95,7 +95,7 @@ func collateCborT0Info25(buf, out []byte, config *Config) (int, int) {
 	out[n] = TypeNumber
 	n++
 	i := int64(binary.BigEndian.Uint16(buf[1:]))
-	n += normalizeFloat(i, out[n:], config.nk)
+	n += normalizeInt64(i, out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 3, n
@@ -106,7 +106,7 @@ func collateCborT1Info25(buf, out []byte, config *Config) (int, int) {
 	out[n] = TypeNumber
 	n++
 	i := -int64(binary.BigEndian.Uint16(buf[1:]) + 1)
-	n += normalizeFloat(i, out[n:], config.nk)
+	n += normalizeInt64(i, out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 3, n
@@ -117,7 +117,7 @@ func collateCborT0Info26(buf, out []byte, config *Config) (int, int) {
 	out[n] = TypeNumber
 	n++
 	i := int64(binary.BigEndian.Uint32(buf[1:]))
-	n += normalizeFloat(i, out[n:], config.nk)
+	n += normalizeInt64(i, out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 5, n
@@ -128,7 +128,7 @@ func collateCborT1Info26(buf, out []byte, config *Config) (int, int) {
 	out[n] = TypeNumber
 	n++
 	i := -int64(binary.BigEndian.Uint32(buf[1:]) + 1)
-	n += normalizeFloat(i, out[n:], config.nk)
+	n += normalizeInt64(i, out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 5, n
@@ -139,7 +139,7 @@ func collateCborT0Info27(buf, out []byte, config *Config) (int, int) {
 	out[n] = TypeNumber
 	n++
 	i := int64(binary.BigEndian.Uint64(buf[1:]))
-	n += normalizeFloat(i, out[n:], config.nk)
+	n += normalizeInt64(i, out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 9, n
@@ -153,7 +153,7 @@ func collateCborT1Info27(buf, out []byte, config *Config) (int, int) {
 	val, n := (int64(-x) - 1), 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(val, out[n:], config.nk)
+	n += normalizeInt64(val, out[n:], config.nk)
 	out[n] = Terminator
 	n++
 	return 9, n
@@ -190,7 +190,7 @@ func collateCborLength(length int, out []byte, config *Config) int {
 	n := 0
 	out[n] = TypeLength
 	n++
-	n += normalizeFloat(int64(length), out[n:], IntNumber)
+	n += normalizeInt64(int64(length), out[n:], IntNumber)
 	out[n] = Terminator
 	n++
 	return n

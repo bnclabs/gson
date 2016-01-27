@@ -29,7 +29,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(obj, code[n:], config.nk)
+		n += normalizeFloat(value, code[n:], config.nk)
 		code[n] = Terminator
 		n++
 		return n
@@ -47,7 +47,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(obj, code[n:], config.nk)
+		n += normalizeInt64(value, code[n:], config.nk)
 		code[n] = Terminator
 		n++
 		return n
@@ -56,7 +56,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(int64(value), code[n:], config.nk)
+		n += normalizeInt64(int64(value), code[n:], config.nk)
 		code[n] = Terminator
 		n++
 		return n
@@ -65,7 +65,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(int64(value), code[n:], config.nk)
+		n += normalizeInt64(int64(value), code[n:], config.nk)
 		code[n] = Terminator
 		n++
 		return n

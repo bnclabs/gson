@@ -34,17 +34,26 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		return n + x, m + y
 
 	case TypeString:
-		block := config.pools.stringPool.Get()
-		scratch := block.([]byte)
-		defer config.pools.stringPool.Put(block)
+		scratchi := config.pools.stringPool.Get()
+		scratch := scratchi.([]byte)
+		defer config.pools.stringPool.Put(scratchi)
+
 		x, y := suffixDecodeString(code[n:], scratch[:])
-		config.buf.Reset()
-		if err := config.enc.Encode(bytes2str(scratch[:y])); err != nil {
+
+		// TODO: To make it complaint with golang's stdlib, comment out
+		// the following line and un-comment the next 6 lines.
+		remtxt, err := encodeString(scratch[:y], text[m:m])
+		if err != nil {
 			panic(err)
 		}
-		s := config.buf.Bytes()
-		m += copy(text[m:], s[:len(s)-1]) // -1 to strip \n
-		return n + x, m
+		//config.buf.Reset()
+		//if err := config.enc.Encode(bytes2str(scratch[:y])); err != nil {
+		//	panic(err)
+		//}
+		//s := config.buf.Bytes()
+		//m += copy(text[m:], s[:len(s)-1]) // -1 to strip \n
+		//return n+x, m
+		return n + x, m + len(remtxt)
 
 	case TypeArray:
 		if config.arrayLenPrefix {

@@ -8,9 +8,9 @@
 
         collt cbor json value
 value     ✓     ✓    ✓    X
-json            ✓    X    ✓
+json      ✓     ✓    X    ✓
 cbor            X    ✓    ✓
-collt     X               ✓
+collt     X          ✓    ✓
 
 CBOR:
 

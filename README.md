@@ -300,15 +300,14 @@ BenchmarkColl2ValTyp       50000   31729 ns/op     8005 B/op  133 allocs/op
   collating it.
 
 ```text
-BenchmarkJson2CollNil	50000000     35.7 ns/op	  0 B/op    0 allocs/op
-BenchmarkJson2CollTrue	50000000     35.5 ns/op	  0 B/op    0 allocs/op
-BenchmarkJson2CollFalse	50000000     37.1 ns/op	  0 B/op    0 allocs/op
-BenchmarkJson2CollF64	 1000000   1038 ns/op     8 B/op    1 allocs/op
-BenchmarkJson2CollI64	 2000000    638 ns/op     8 B/op    1 allocs/op
-BenchmarkJson2CollStr	 5000000    293 ns/op    32 B/op    1 allocs/op
-BenchmarkJson2CollArr	 1000000   1562 ns/op    42 B/op    2 allocs/op
-BenchmarkJson2CollMap	  500000   3550 ns/op   620 B/op   12 allocs/op
-BenchmarkJson2CollTyp      50000  27891 ns/op  5380 B/op   70 allocs/op
+BenchmarkJson2CollNil   30000000     50 ns/op     0 B/op    0 allocs/op
+BenchmarkJson2CollTrue  30000000     44 ns/op     0 B/op    0 allocs/op
+BenchmarkJson2CollF64    1000000   1029 ns/op     0 B/op    0 allocs/op
+BenchmarkJson2CollI64    2000000    638 ns/op     0 B/op    0 allocs/op
+BenchmarkJson2CollStr    5000000    263 ns/op     0 B/op    0 allocs/op
+BenchmarkJson2CollArr    1000000   1544 ns/op     1 B/op    0 allocs/op
+BenchmarkJson2CollMap     500000   2594 ns/op     4 B/op    0 allocs/op
+BenchmarkJson2CollTyp      50000  27444 ns/op   107 B/op    0 allocs/op
 ```
 
 **collate to json**
@@ -317,15 +316,14 @@ BenchmarkJson2CollTyp      50000  27891 ns/op  5380 B/op   70 allocs/op
   types are converted back to json.
 
 ```text
-BenchmarkColl2JsonNil   100000000     16.3 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2JsonTrue  100000000     17.5 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2JsonFalse 100000000     18.1 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2JsonF64   10000000     123 ns/op       0 B/op    0 allocs/op
-BenchmarkColl2JsonI64   20000000     104 ns/op       0 B/op    0 allocs/op
-BenchmarkColl2JsonStr    2000000     660 ns/op      24 B/op    2 allocs/op
-BenchmarkColl2JsonArr    2000000     903 ns/op      24 B/op    2 allocs/op
-BenchmarkColl2JsonMap     300000    4395 ns/op     151 B/op   12 allocs/op
-BenchmarkColl2JsonTyp      30000   41649 ns/op    1344 B/op  112 allocs/op
+BenchmarkColl2JsonNil   50000000      23 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonTrue  50000000      23 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonF64   10000000     128 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonI64   10000000     127 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonStr    5000000     265 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonArr    3000000     539 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonMap    1000000    1878 ns/op       0 B/op    0 allocs/op
+BenchmarkColl2JsonTyp     100000   19555 ns/op       0 B/op    0 allocs/op
 ```
 
 **cbor to collate**

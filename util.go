@@ -174,28 +174,57 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 
 // numbers can be encoded as integers, or as small-decimal,
 // or as floating-point - normalizeFloat() takes the number as
-// float64 or int64 and based on the configuration encodes it
-// integer or small-decimal or floating-point.
-func normalizeFloat(value interface{}, code []byte, nt NumberKind) int {
+// float64 and based on the configuration encodes it integer or
+// small-decimal or floating-point.
+func normalizeFloat(value float64, code []byte, nt NumberKind) int {
 	var num [64]byte
 	switch nt {
 	case FloatNumber:
-		v := asfloat64(value)
-		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
+		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 64)
 		return collateFloat(bs, code)
 
 	case FloatNumber32:
-		v := asfloat64(value)
-		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 32)
+		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 32)
 		return collateFloat(bs, code)
 
 	case IntNumber:
-		v := asint64(value)
+		v := int64(value)
 		bs := strconv.AppendInt(num[:0], v, 10)
 		return collateInt(bs, code)
 
 	case Decimal:
-		v := asfloat64(value)
+		if -1 >= value || value <= 1 {
+			bs := strconv.AppendFloat(num[:0], value, 'f', -1, 64)
+			return collateSD(bs, code)
+		}
+		panic("collate invalid decimal")
+	}
+	panic("SmartNumber32 or SmartNumber not supported for collation")
+}
+
+// numbers can be encoded as integers, or as small-decimal,
+// or as floating-point - normalizeFloat() takes the number as
+// int64 and based on the configuration encodes it integer or
+// small-decimal or floating-point.
+func normalizeInt64(value int64, code []byte, nt NumberKind) int {
+	var num [64]byte
+	switch nt {
+	case FloatNumber:
+		v := float64(value)
+		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
+		return collateFloat(bs, code)
+
+	case FloatNumber32:
+		v := float64(value)
+		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 32)
+		return collateFloat(bs, code)
+
+	case IntNumber:
+		bs := strconv.AppendInt(num[:0], value, 10)
+		return collateInt(bs, code)
+
+	case Decimal:
+		v := float64(value)
 		if -1 >= v || v <= 1 {
 			bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
 			return collateSD(bs, code)
@@ -266,12 +295,16 @@ func sortProps(props map[string]interface{}, keys []string) []string {
 		keys = append(keys, k)
 	}
 
-	// bubble sort, moving to qsort should be atleast 40% faster.
-	for ln := len(keys) - 1; ; ln-- {
+	return sortStrings(keys)
+}
+
+// bubble sort, moving to qsort should be atleast 40% faster.
+func sortStrings(strs []string) []string {
+	for ln := len(strs) - 1; ; ln-- {
 		changed := false
 		for i := 0; i < ln; i++ {
-			if keys[i] > keys[i+1] {
-				keys[i], keys[i+1] = keys[i+1], keys[i]
+			if strs[i] > strs[i+1] {
+				strs[i], strs[i+1] = strs[i+1], strs[i]
 				changed = true
 			}
 		}
@@ -279,24 +312,7 @@ func sortProps(props map[string]interface{}, keys []string) []string {
 			break
 		}
 	}
-
-	return keys
-}
-
-func asfloat64(value interface{}) float64 {
-	v, ok := value.(float64)
-	if !ok {
-		v = float64(value.(int64))
-	}
-	return v
-}
-
-func asint64(value interface{}) int64 {
-	v, ok := value.(int64)
-	if !ok {
-		v = int64(value.(float64))
-	}
-	return v
+	return strs
 }
 
 //---- data modelling to sort and collate JSON property items.
@@ -320,4 +336,20 @@ func (kv kvrefs) Swap(i, j int) {
 	tmp := kv[i]
 	kv[i] = kv[j]
 	kv[j] = tmp
+}
+
+// bubble sort, moving to qsort should be atleast 40% faster.
+func (kv kvrefs) sort() {
+	for ln := len(kv) - 1; ; ln-- {
+		changed := false
+		for i := 0; i < ln; i++ {
+			if kv[i].key > kv[i+1].key {
+				kv[i], kv[i+1] = kv[i+1], kv[i]
+				changed = true
+			}
+		}
+		if changed == false {
+			break
+		}
+	}
 }
