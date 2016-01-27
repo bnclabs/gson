@@ -29,8 +29,18 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 
 	case TypeNumber:
 		m := getDatum(code[n:])
-		f := denormalizeFloat(code[n:n+m-1], config.nk) // -1 to skip terminator
-		return f, n + m
+		switch config.nk {
+		case FloatNumber:
+			return denormalizeFloat(code[n:n+m-1], config.nk), n + m
+		case FloatNumber32:
+			return denormalizeFloat(code[n:n+m-1], config.nk), n + m
+		case IntNumber:
+			return denormalizeInt64(code[n:n+m-1], config.nk), n + m
+		case Decimal:
+			return denormalizeFloat(code[n:n+m-1], config.nk), n + m
+		default:
+			panic("SmartNumber32 or SmartNumber not supported for collation")
+		}
 
 	case TypeString:
 		s := make([]byte, encodedStringSize(code[n:]))

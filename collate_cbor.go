@@ -33,14 +33,21 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 	case TypeNumber:
 		x := getDatum(code[m:])
 		// -1 is to skip terminator
-		num := denormalizeFloat(code[m:m+x-1], config.nk)
-		switch v := num.(type) {
-		case float32:
-			n += valfloat322cbor(v, out[n:])
-		case float64:
-			n += valfloat642cbor(v, out[n:])
-		case int64:
-			n += valint642cbor(v, out[n:])
+		switch config.nk {
+		case FloatNumber:
+			num := denormalizeFloat(code[m:m+x-1], config.nk)
+			n += valfloat642cbor(num, out[n:])
+		case FloatNumber32:
+			num := denormalizeFloat(code[m:m+x-1], config.nk)
+			n += valfloat322cbor(float32(num), out[n:])
+		case IntNumber:
+			num := denormalizeInt64(code[m:m+x-1], config.nk)
+			n += valint642cbor(num, out[n:])
+		case Decimal:
+			num := denormalizeFloat(code[m:m+x-1], config.nk)
+			n += valfloat642cbor(num, out[n:])
+		default:
+			panic("SmartNumber32 or SmartNumber not supported for collation")
 		}
 		return m + x, n
 

@@ -335,16 +335,13 @@ BenchmarkColl2JsonTyp     100000   19555 ns/op       0 B/op    0 allocs/op
 * LengthPrefix and Stream encoding for array and maps are supported.
 
 ```text
-BenchmarkCbor2CollNil   30000000     40.4 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2CollTrue  30000000     39.1 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2CollFalse 50000000     38.5 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2CollF64    2000000    844 ns/op      8 B/op  1 allocs/op
-BenchmarkCbor2CollI64    3000000    523 ns/op      8 B/op  1 allocs/op
-BenchmarkCbor2CollMiss  30000000     58.9 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2CollStr   20000000     67.1 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2CollArr    1000000   1209 ns/op      8 B/op  1 allocs/op
-BenchmarkCbor2CollMap    1000000   2269 ns/op     49 B/op  3 allocs/op
-BenchmarkCbor2CollTyp     100000  14241 ns/op    367 B/op 11 allocs/op
+BenchmarkCbor2CollNil   30000000     46 ns/op      0 B/op  0 allocs/op
+BenchmarkCbor2CollTrue  30000000     43 ns/op      0 B/op  0 allocs/op
+BenchmarkCbor2CollF64    2000000    871 ns/op      0 B/op  0 allocs/op
+BenchmarkCbor2CollStr   20000000     78 ns/op      0 B/op  0 allocs/op
+BenchmarkCbor2CollArr    1000000   1155 ns/op      0 B/op  0 allocs/op
+BenchmarkCbor2CollMap    1000000   2040 ns/op      1 B/op  0 allocs/op
+BenchmarkCbor2CollTyp     100000  18300 ns/op     32 B/op  0 allocs/op
 ```
 
 **collate to cbor**
@@ -354,16 +351,13 @@ BenchmarkCbor2CollTyp     100000  14241 ns/op    367 B/op 11 allocs/op
   from its collated from can be converted back to cbor.
 
 ```text
-BenchmarkColl2CborNil   100000000    20.3 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborTrue  100000000    20.7 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborFalse 100000000    21.4 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborF64    5000000    364 ns/op      8 B/op    1 allocs/op
-BenchmarkColl2CborI64    5000000    268 ns/op      8 B/op    1 allocs/op
-BenchmarkColl2CborMiss  30000000     43.6 ns/op    0 B/op    0 allocs/op
-BenchmarkColl2CborStr   10000000    215 ns/op      0 B/op    0 allocs/op
-BenchmarkColl2CborArr    2000000    620 ns/op     22 B/op    1 allocs/op
-BenchmarkColl2CborMap    1000000   1838 ns/op     23 B/op    1 allocs/op
-BenchmarkColl2CborTyp     100000  16425 ns/op    167 B/op    5 allocs/op
+BenchmarkColl2CborNil   100000000    23 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2CborTrue  100000000    24 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2CborF64    5000000    344 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2CborStr    5000000    263 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2CborArr    2000000    582 ns/op      0 B/op    0 allocs/op
+BenchmarkColl2CborMap    1000000   2025 ns/op      2 B/op    0 allocs/op
+BenchmarkColl2CborTyp     100000  17977 ns/op     53 B/op    0 allocs/op
 ```
 
 Notes

@@ -6,7 +6,6 @@
 package gson
 
 import "math"
-import "sort"
 import "encoding/binary"
 
 func cbor2collate(in, out []byte, config *Config) (int, int) {
@@ -259,6 +258,7 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 	poolobj1, p := config.pools.codepool.Get(), 0
 	altcode := poolobj1.([]byte)
 	defer config.pools.codepool.Put(poolobj1)
+
 	poolobj2 := config.pools.keypool.Get()
 	refs := poolobj2.(kvrefs)
 	defer config.pools.keypool.Put(poolobj2)
@@ -271,7 +271,7 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 		refs[i] = kvref{bytes2str(key), altcode[p : p+y]}
 		m, p = m+x, p+y
 	}
-	sort.Sort(refs[:ln])
+	(refs[:ln]).sort()
 	for i := 0; i < ln; i++ {
 		kv := refs[i]
 		copy(out[n:], kv.key)
@@ -293,6 +293,7 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	poolobj1, p := config.pools.codepool.Get(), 0
 	altcode := poolobj1.([]byte)
 	defer config.pools.codepool.Put(poolobj1)
+
 	poolobj2 := config.pools.keypool.Get()
 	refs := poolobj2.(kvrefs)
 	defer config.pools.keypool.Put(poolobj2)
@@ -308,7 +309,8 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 		ln++
 	}
 	m++
-	sort.Sort(refs[:ln])
+
+	(refs[:ln]).sort()
 
 	if config.propertyLenPrefix {
 		n += collateCborLength(ln, out[n:], config)

@@ -234,7 +234,7 @@ func normalizeInt64(value int64, code []byte, nt NumberKind) int {
 	panic("SmartNumber32 or SmartNumber not supported for collation")
 }
 
-func denormalizeFloat(code []byte, nt NumberKind) interface{} {
+func denormalizeFloat(code []byte, nt NumberKind) float64 {
 	var scratch [64]byte
 	switch nt {
 	case FloatNumber:
@@ -251,15 +251,7 @@ func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 		if err != nil {
 			panic(err)
 		}
-		return float32(f)
-
-	case IntNumber:
-		_, y := collated2Int(code, scratch[:])
-		i, err := strconv.Atoi(bytes2str(scratch[:y]))
-		if err != nil {
-			panic(err)
-		}
-		return int64(i)
+		return f
 
 	case Decimal:
 		_, y := collated2SD(code, scratch[:])
@@ -269,7 +261,21 @@ func denormalizeFloat(code []byte, nt NumberKind) interface{} {
 		}
 		return res
 	}
-	panic("SmartNumber32 or SmartNumber not supported for collation")
+	panic("SmartNumber32/SmartNumber/IntNumber not configured for collation")
+}
+
+func denormalizeInt64(code []byte, nt NumberKind) int64 {
+	var scratch [64]byte
+	switch nt {
+	case IntNumber:
+		_, y := collated2Int(code, scratch[:])
+		i, err := strconv.Atoi(bytes2str(scratch[:y]))
+		if err != nil {
+			panic(err)
+		}
+		return int64(i)
+	}
+	panic("only IntNumber is configured for collation")
 }
 
 func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
