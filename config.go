@@ -77,10 +77,10 @@ const (
 type ContainerEncoding byte
 
 const (
-	// LengthPrefix to encode number of items in the collection type.
+	// LengthPrefix to cbor-encode number of items in the collection type.
 	LengthPrefix ContainerEncoding = iota + 1
 
-	// Stream to encode collection types as indefinite sequence of items.
+	// Stream to cbor-encode collection types as indefinite sequence of items.
 	Stream
 )
 
