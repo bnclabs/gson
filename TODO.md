@@ -1,5 +1,3 @@
-* make this constant:
-     strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 * improve code documentation and README.
 * support for encoding/json.Number
 

@@ -4,6 +4,19 @@ package gson
 
 import "sync"
 
+// MaxStringLen maximum length of string value insdie json document.
+const MaxStringLen = 1024 * 1024
+
+// MaxCollateLen maximum length of collated value.
+const MaxCollateLen = 1024 * 1024
+
+type memConfig struct {
+	strlen  int // maximum length of string value inside JSON document
+	numkeys int // maximum number of keys that a property object can have
+	itemlen int // maximum length of collated value.
+	ptrlen  int // maximum length of json-pointer can take
+}
+
 type mempools struct {
 	prefixPool *sync.Pool // maximum length of json pointer
 	stringPool *sync.Pool // scratch pad for string objects
@@ -13,10 +26,6 @@ type mempools struct {
 }
 
 func newMempool(strlen, numkeys, itemlen, jptrlen int) mempools {
-	// strlen:  maximum length a string value can take in the JSON document.
-	// numkeys: maximum number of keys that a property obj. can have.
-	// itemlen: maximum length a collated value can take.
-	// jptrlen: maximum length a json-pointer can take.
 	m := mempools{}
 	m.prefixPool = &sync.Pool{
 		New: func() interface{} { return make([]byte, 0, jptrlen) },

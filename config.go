@@ -85,7 +85,7 @@ const (
 )
 
 // MaxKeys maximum number of keys allowed in a property object.
-const MaxKeys = 1000
+const MaxKeys = 1024
 
 // Config is the primary object to access the APIs exported by this package.
 // Before calling any of the config-methods, make sure to initialize
@@ -99,6 +99,7 @@ type Config struct {
 	jsonConfig
 	collateConfig
 	jptrConfig
+	memConfig
 
 	//-- unicode
 	//backwards        bool
@@ -119,6 +120,8 @@ type Config struct {
 //		+doMissing			-arrayLenPrefix
 //		+propertyLenPrefix
 //		MaxJsonpointerLen
+//		MaxStringLen		MaxKeys
+//		MaxCollateLen		MaxJsonpointerLen
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:      FloatNumber,
@@ -133,14 +136,19 @@ func NewDefaultConfig() *Config {
 			arrayLenPrefix:    false,
 			propertyLenPrefix: true,
 		},
+		memConfig: memConfig{
+			strlen:  MaxStringLen,
+			numkeys: MaxKeys,
+			itemlen: MaxCollateLen,
+			ptrlen:  MaxJsonpointerLen,
+		},
 	}
 	config = config.SetJptrlen(MaxJsonpointerLen)
 
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
 	config.enc = json.NewEncoder(config.buf)
-
-	strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
-	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
+	a, b, c, d := config.strlen, config.numkeys, config.itemlen, config.ptrlen
+	config.pools = newMempool(a, b, c, d)
 
 	return config
 }
