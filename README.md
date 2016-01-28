@@ -369,6 +369,7 @@ Notes
   error.
 * maximum integer space shall be in int64.
 * `Config` instances, and its APIs, are neither re-entrant not thread safe.
+* encoding/json.Number is not supported yet.
 
 **list of changes from github.com/prataprc/collatejson**
 

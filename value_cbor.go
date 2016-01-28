@@ -10,7 +10,6 @@ import "math/big"
 import "regexp"
 import "time"
 import "encoding/binary"
-import "encoding/json"
 import "fmt"
 
 func value2cbor(item interface{}, out []byte, config *Config) int {
@@ -63,9 +62,6 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 			n += value2cbor(value, out[n:], config)
 		}
 		n += breakStop(out[n:])
-	case json.Number:
-		_, x := json2cbor(string(v), out, config)
-		n += x
 	// simple types
 	case CborUndefined:
 		n += valundefined2cbor(out)

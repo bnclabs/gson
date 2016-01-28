@@ -1,16 +1,7 @@
-* json.Number can be used ? [+] add an explanation in README
 * make this constant:
      strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, 1024*1024, 1024
 * improve code documentation and README.
-* by using ``[][2]interface{}`` instead of map[string]interface{} we can
-  optimize on heap allocation. affects value-to-json, value-to-collate
-  transformations
-
-        collt cbor json value
-value     ✓     ✓    ✓    X
-json      ✓     ✓    X    ✓
-cbor      ✓     X    ✓    ✓
-collt     X     ✓    ✓    ✓
+* support for encoding/json.Number
 
 CBOR:
 
