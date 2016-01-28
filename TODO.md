@@ -1,10 +1,15 @@
 * improve code documentation and README.
+
+JSON:
+
 * support for encoding/json.Number
 
 CBOR:
 
 * integrate CBOR test vector with gson.
 * from json to cbor support LengthPrefix encoding.
+* tag cbor arrays and maps with size-prefix.
+* document the different between length prefix and size prefix.
 * make cbor date-time parsing format configurable for tagDateTime.
 * in transforming cbor to json, encodeString() optimized version of golang's
   encoding/json library is used (contributed by Sarath). keep it in sync with
