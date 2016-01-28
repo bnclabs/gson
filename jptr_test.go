@@ -94,50 +94,50 @@ func TestTypicalPointers(t *testing.T) {
 }
 
 func BenchmarkParseJsonPtr3(b *testing.B) {
-	config := NewDefaultConfig()
 	path := "/foo/g/0"
+	jptr := NewDefaultConfig().NewJsonpointer(path)
 
 	b.SetBytes(int64(len(path)))
 	for i := 0; i < b.N; i++ {
-		config.NewJsonpointer(path).Segments()
+		jptr.ResetPath(path).Segments()
 	}
 }
 
 func BenchmarkParseJsonPtr4(b *testing.B) {
-	config := NewDefaultConfig()
 	path := "/foo/g~1n~1r/0/hello"
+	jptr := NewDefaultConfig().NewJsonpointer(path)
 
 	b.SetBytes(int64(len(path)))
 	for i := 0; i < b.N; i++ {
-		config.NewJsonpointer(path).Segments()
+		jptr.ResetPath(path).Segments()
 	}
 }
 
 func BenchmarkParseJsonPtr5(b *testing.B) {
 	segments := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
-	config := NewDefaultConfig()
-	jptr := config.NewJsonpointer("").ResetSegments(segments)
+	jptr := NewDefaultConfig().NewJsonpointer("").ResetSegments(segments)
+	path := string(jptr.Path())
 
-	b.SetBytes(int64(len(jptr.Path())))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.NewJsonpointer(string(jptr.Path())).Segments()
+		jptr.ResetPath(path).Segments()
 	}
+	b.SetBytes(int64(len(jptr.Path())))
 }
 
 func BenchmarkToJsonPtr5(b *testing.B) {
 	segments := []string{"a", "ab", "a~b", "a/b", "a~/~/b"}
-	config := NewDefaultConfig()
+	jptr := NewDefaultConfig().NewJsonpointer("")
 
 	b.SetBytes(15)
 	for i := 0; i < b.N; i++ {
-		config.NewJsonpointer("").ResetSegments(segments)
+		jptr.ResetSegments(segments)
 	}
 }
 
-func BenchmarkListPointers(b *testing.B) {
-	config := NewDefaultConfig()
+func BenchmarkListPtrsTyp(b *testing.B) {
 	data := testdataFile("testdata/typical.json")
+	config := NewDefaultConfig()
 	_, value := config.NewJson(data, -1).Tovalue()
 	val := config.NewValue(value)
 
@@ -146,6 +146,6 @@ func BenchmarkListPointers(b *testing.B) {
 	b.SetBytes(int64(len(data)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pointers = val.ListPointers(pointers)[:0]
+		pointers = val.ListPointers(pointers[:0])
 	}
 }
