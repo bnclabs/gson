@@ -19,8 +19,8 @@ func TestParsePointer(t *testing.T) {
 		[2]interface{}{"/c%d", []string{"c%d"}},
 		[2]interface{}{"/e^f", []string{"e^f"}},
 		[2]interface{}{"/g|h", []string{"g|h"}},
-		[2]interface{}{"/i\\j", []string{"i\\j"}},
-		[2]interface{}{"/k\"l", []string{"k\"l"}},
+		[2]interface{}{"/i\\\\j", []string{"i\\j"}},
+		[2]interface{}{"/k\\\"l", []string{"k\"l"}},
 		[2]interface{}{"/ ", []string{" "}},
 		[2]interface{}{"/m~0n", []string{"m~n"}},
 		[2]interface{}{"/g~1n~1r", []string{"g/n/r"}},
@@ -41,7 +41,7 @@ func TestParsePointer(t *testing.T) {
 		} else {
 			for i, x := range ref {
 				if string(segments[i]) != x {
-					t.Errorf("expected %q, got %q", x, segments[i])
+					t.Errorf("expected %v, got %v", x, string(segments[i]))
 				}
 			}
 		}
@@ -49,7 +49,7 @@ func TestParsePointer(t *testing.T) {
 		// test encode pointers
 		jptr.ResetPath("").ResetSegments(ref)
 		if path := string(jptr.Path()); path != tcase[0].(string) {
-			t.Errorf("expected %q, got %q", path, tcase[0].(string))
+			t.Errorf("expected %v, got %v", tcase[0].(string), path)
 		}
 	}
 }

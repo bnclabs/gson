@@ -7,6 +7,7 @@ package gson
 
 import "strconv"
 import "strings"
+import "fmt"
 import "unicode/utf8"
 
 // MaxJsonpointerLen size of json-pointer path
@@ -84,11 +85,22 @@ func parsePointer(in []byte, segments [][]byte) int {
 		return segments[j][:0], j
 	}
 
+	// convert the i/p string from json to golang native.
+	var jsonstr, str [2048]byte
+	if len(in) > len(str)-2 {
+		fmsg := fmt.Errorf("input json pointer greater than %v", len(str))
+		panic(fmsg)
+	}
+	jsonstr[0] = '"'
+	i := copy(jsonstr[1:], in)
+	jsonstr[i+1] = '"'
+
 	var ch rune
 
+	_, i = scanString(bytes2str(jsonstr[:i+2]), str[:])
 	u, segment, escape := [6]byte{}, segments[j][:0], false
 
-	for _, ch = range bytes2str(in[1:]) {
+	for _, ch = range bytes2str(str[1:i]) {
 		if ch == '~' {
 			escape = true
 
@@ -140,7 +152,14 @@ func encodePointer(p []string, out []byte) int {
 			}
 		}
 	}
-	return n
+
+	// to json string
+	var jsonstr [2048]byte
+	bs, err := encodeString(out[:n], jsonstr[:0])
+	if err != nil {
+		panic(err)
+	}
+	return copy(out, bs[1:len(bs)-1])
 }
 
 func allpaths(doc interface{}, pointers []string, prefix []byte) []string {
