@@ -25,6 +25,7 @@ func TestParsePointer(t *testing.T) {
 		[2]interface{}{"/m~0n", []string{"m~n"}},
 		[2]interface{}{"/g~1n~1r", []string{"g/n/r"}},
 		[2]interface{}{"/g/汉语/r", []string{"g", "汉语", "r"}},
+		[2]interface{}{"/dict/", []string{"dict", ""}},
 	}
 
 	// test ParseJsonPointer

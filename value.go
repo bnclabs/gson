@@ -57,3 +57,19 @@ func (val *Value) Set(jptr *Jsonpointer, item interface{}) (newval, oldval inter
 func (val *Value) Delete(jptr *Jsonpointer) (newval, deleted interface{}) {
 	return valDel(jptr.Segments(), val.data)
 }
+
+// Append an item to the end of an array.
+// returns `newval`, is gauranteed to be updated,
+//      val := NewValue([]interface{}{"hello", "world"})
+//      newval, _ = val.Append("", "welcome")
+func (val *Value) Append(jptr *Jsonpointer, item interface{}) interface{} {
+	return valAppend(jptr.Segments(), val.data, item)
+}
+
+// Prepend an item to the beginning of an array.
+// returns `newval`, is gauranteed to be updated,
+//      val := NewValue([]interface{}{"hello", "world"})
+//      newval, _ = val.Append("", "welcome")
+func (val *Value) Prepend(jptr *Jsonpointer, item interface{}) interface{} {
+	return valPrepend(jptr.Segments(), val.data, item)
+}

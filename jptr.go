@@ -124,7 +124,9 @@ func parsePointer(in []byte, segments [][]byte) int {
 			segment = append(segment, u[:sz]...)
 		}
 	}
-	segment, j = updateseg(segment, j)
+	if len(segment) > 0 {
+		segment, j = updateseg(segment, j)
+	}
 	if in[len(in)-1] == '/' {
 		_, j = updateseg(segment, j)
 	}

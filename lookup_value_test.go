@@ -4,16 +4,35 @@ package gson
 
 import "testing"
 import "reflect"
+import "fmt"
 import "encoding/json"
 
-func TestPointerGet(t *testing.T) {
-	txt := `{"a": 10, "arr": [1,2], "dict": {"a":10, "b":20}}`
+var _ = fmt.Sprintf("dummy print")
+
+func TestValueGet(t *testing.T) {
+	var ref map[string]interface{}
+
+	txt := `{"a": 10, "arr": [1,2], "nestd":[[23]], ` +
+		`"dict": {"a":10, "b":20, "": 2}, "": 1}`
+	json.Unmarshal([]byte(txt), &ref)
+
 	testcases := [][2]interface{}{
 		[2]interface{}{"/a", 10.0},
 		[2]interface{}{"/arr/0", 1.0},
 		[2]interface{}{"/arr/1", 2.0},
+		[2]interface{}{"/arr/-", 2.0},
+		[2]interface{}{"/nestd", []interface{}{[]interface{}{23.0}}},
+		[2]interface{}{"/nestd/-", []interface{}{23.0}},
+		[2]interface{}{"/nestd/-/0", 23.0},
 		[2]interface{}{"/dict/a", 10.0},
 		[2]interface{}{"/dict/b", 20.0},
+		[2]interface{}{"/dict/b", 20.0},
+		[2]interface{}{"/", 1.0},
+		[2]interface{}{
+			"/dict",
+			map[string]interface{}{"a": 10.0, "b": 20.0, "": 2.0}},
+		[2]interface{}{"/dict/", 2.0},
+		[2]interface{}{"", ref},
 	}
 	config := NewDefaultConfig()
 	_, value := config.NewJson([]byte(txt), -1).Tovalue()
@@ -33,32 +52,21 @@ func TestPointerGet(t *testing.T) {
 	}
 }
 
-func TestPointerSetExample(t *testing.T) {
-	config := NewDefaultConfig()
-	val := config.NewValue([]interface{}{"hello"})
-	ptr := config.NewJsonpointer("/-")
-	val.Set(ptr, "world")
-	nitem, oitem := val.Set(ptr, "world")
-	if !reflect.DeepEqual(oitem, "world") {
-		t.Errorf("for %v expected %v, got %v", ptr.Path(), "world", oitem)
-	} else if v := nitem.([]interface{}); !reflect.DeepEqual(v[0], "hello") {
-		t.Errorf("for %v expected %v, got %v", ptr.Path(), "hello", v[0])
-	} else if !reflect.DeepEqual(v[1], "world") {
-		t.Errorf("for %v expected %v, got %v", ptr.Path(), "world", v[1])
-	}
-}
+func TestValueSet(t *testing.T) {
+	var refobj map[string]interface{}
+	txt := `{"a": 10, "arr": [1,2], "-": [[1]], "nestd": [[23]], ` +
+		`"dict": {"a":10, "b":20}}`
+	ref := `{"b":1,"a":11,"arr":[10,30],"-":[[30]], "nestd":[[23]],` +
+		`"dict":{"a":1,"b":2}}`
+	json.Unmarshal([]byte(txt), &refobj)
 
-func TestPointerSet(t *testing.T) {
-	txt := `{"a": 10, "arr": [1,2], "-": [[1]], "dict": {"a":10, "b":20}}`
-	ref := `{"b":1,"a":11,"arr":[10,20,30],"-":[[1,30],30],"dict":{"a":1,"b":2}}`
 	testcases := [][3]interface{}{
 		[3]interface{}{"/a", 11.0, 10.0},
 		[3]interface{}{"/b", 1.0, 1.0},
 		[3]interface{}{"/arr/0", 10.0, 1.0},
 		[3]interface{}{"/arr/1", 20.0, 2.0},
-		[3]interface{}{"/arr/-", 30.0, 30.0},
-		[3]interface{}{"/-/-", 30.0, 30.0},
-		[3]interface{}{"/-/0/-", 30.0, 30.0},
+		[3]interface{}{"/arr/-", 30.0, 20.0},
+		[3]interface{}{"/-/-/0", 30.0, 1.0},
 		[3]interface{}{"/dict/a", 1.0, 10.0},
 		[3]interface{}{"/dict/b", 2.0, 20.0},
 	}
@@ -91,32 +99,31 @@ func TestPointerSet(t *testing.T) {
 	} else if !reflect.DeepEqual(refval, val.data) {
 		t.Errorf("expected %v, got %v", refval, val.data)
 	}
-}
 
-func TestPointerDelExample(t *testing.T) {
-	config := NewDefaultConfig()
-	val := config.NewValue([]interface{}{"hello", "world"})
-	ptr := config.NewJsonpointer("/1")
-
-	value, deleted := val.Delete(ptr)
-	if !reflect.DeepEqual(deleted, "world") {
-		t.Errorf("for %v expected %v, got %v", ptr, "world", deleted)
-	} else if v := value.([]interface{}); len(v) != 1 {
-		t.Errorf("for %v expected length %v, got %v", ptr, 1, len(v))
-	} else if !reflect.DeepEqual(v[0], "hello") {
-		t.Errorf("for %v expected %v, got %v", ptr, "hello", v[0])
+	// corner case
+	config = NewDefaultConfig()
+	val = config.NewValue([]interface{}{"hello"})
+	ptr = config.NewJsonpointer("/-")
+	nval, oitem := val.Set(ptr, "world")
+	if !reflect.DeepEqual(oitem, "hello") {
+		t.Errorf("for %v expected %v, got %v", ptr.Path(), "hello", oitem)
+	} else if v := nval.([]interface{}); !reflect.DeepEqual(v[0], "world") {
+		t.Errorf("for %v expected %v, got %v", ptr.Path(), "world", v[0])
 	}
 }
 
-func TestPointerDel(t *testing.T) {
-	txt := `{"a": 10, "-": [1], "arr": [1,2], "dict": {"a":10, "b":20}}`
+func TestValueDel(t *testing.T) {
+	txt := `{"a": 10, "-": [1], "arr": [1,2],  "nestd": [[23]], ` +
+		`"dict": {"a":10, "b":20, "": 30}}`
 	testcases := [][2]interface{}{
 		[2]interface{}{"/a", 10.0},
 		[2]interface{}{"/arr/1", 2.0},
 		[2]interface{}{"/arr/0", 1.0},
 		[2]interface{}{"/-/0", 1.0},
+		[2]interface{}{"/nestd/-/0", 23.0},
 		[2]interface{}{"/dict/a", 10.0},
 		[2]interface{}{"/dict/b", 20.0},
+		[2]interface{}{"/dict/", 30.0},
 	}
 
 	config := NewDefaultConfig()
@@ -130,16 +137,137 @@ func TestPointerDel(t *testing.T) {
 		ptr.ResetPath(tcase[0].(string))
 		value, deleted := val.Delete(ptr)
 		if !reflect.DeepEqual(deleted, tcase[1]) {
-			t.Errorf("for %v expected %v, got %v", ptr, tcase[1], deleted)
+			t.Errorf("for %v expected %v, got %v", tcase[0], tcase[1], deleted)
 		}
 		val = config.NewValue(value)
 	}
 
-	remtxt := `{"arr": [], "-": [], "dict":{}}"`
+	remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
 	_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
 	if !reflect.DeepEqual(val.data, remvalue) {
 		t.Errorf("expected %v, got %v", remvalue, val.data)
 	}
+
+	// corner case
+	config = NewDefaultConfig()
+	val = config.NewValue([]interface{}{"hello", "world"})
+	ptr = config.NewJsonpointer("/1")
+
+	value, deleted := val.Delete(ptr)
+	if !reflect.DeepEqual(deleted, "world") {
+		t.Errorf("for %v expected %v, got %v", ptr, "world", deleted)
+	} else if v := value.([]interface{}); len(v) != 1 {
+		t.Errorf("for %v expected length %v, got %v", ptr, 1, len(v))
+	} else if !reflect.DeepEqual(v[0], "hello") {
+		t.Errorf("for %v expected %v, got %v", ptr, "hello", v[0])
+	}
+}
+
+func TestValueAppend(t *testing.T) {
+	var ref interface{}
+
+	txt := `{"a": 10, "-": [1], "arr": [1,2]}`
+	reftxt := `{"a": 10, "-": [1,10], "arr": [1,2,10]}`
+	json.Unmarshal([]byte(reftxt), &ref)
+	testcases := []string{"/-", "/arr"}
+
+	config := NewDefaultConfig()
+	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	val := config.NewValue(value)
+	ptr := config.NewJsonpointer("")
+
+	for _, tcase := range testcases {
+		t.Logf("%v", tcase)
+		val = config.NewValue(val.Append(ptr.ResetPath(tcase), 10.0))
+	}
+
+	if !reflect.DeepEqual(val.data, ref) {
+		t.Errorf("expected %v, got %v", ref, val.data)
+	}
+
+	// Append an array
+	txt, reftxt = `[]`, `[10,20]`
+	json.Unmarshal([]byte(reftxt), &ref)
+
+	config = NewDefaultConfig()
+	_, value = config.NewJson([]byte(txt), -1).Tovalue()
+	val = config.NewValue(value)
+	ptr = config.NewJsonpointer("")
+	val = config.NewValue(val.Append(ptr, 10.0))
+	val = config.NewValue(val.Append(ptr, 20.0))
+
+	if !reflect.DeepEqual(val.data, ref) {
+		t.Errorf("expected %v, got %v", ref, val.data)
+	}
+
+	// panic case
+	config = NewDefaultConfig()
+	_, value = config.NewJson([]byte(`{"a": 10}`), -1).Tovalue()
+	val = config.NewValue(value)
+	fn := func(jptr *Jsonpointer, v interface{}) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		val.Append(ptr, v)
+	}
+	fn(config.NewJsonpointer("/a"), 10)
+	fn(config.NewJsonpointer(""), 10)
+}
+
+func TestValuePrepend(t *testing.T) {
+	var ref interface{}
+
+	txt := `{"a": 10, "-": [1], "arr": [1,2]}`
+	reftxt := `{"a": 10, "-": [10,1], "arr": [10,1,2]}`
+	json.Unmarshal([]byte(reftxt), &ref)
+	testcases := []string{"/-", "/arr"}
+
+	config := NewDefaultConfig()
+	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	val := config.NewValue(value)
+	ptr := config.NewJsonpointer("")
+
+	for _, tcase := range testcases {
+		t.Logf("%v", tcase)
+		ptr.ResetPath(tcase)
+		val = config.NewValue(val.Prepend(ptr.ResetPath(tcase), 10.0))
+	}
+
+	if !reflect.DeepEqual(val.data, ref) {
+		t.Errorf("expected %v, got %v", ref, val.data)
+	}
+
+	// Prepend an array
+	txt, reftxt = `[]`, `[20,10]`
+	json.Unmarshal([]byte(reftxt), &ref)
+
+	config = NewDefaultConfig()
+	_, value = config.NewJson([]byte(txt), -1).Tovalue()
+	val = config.NewValue(value)
+	ptr = config.NewJsonpointer("")
+	val = config.NewValue(val.Prepend(ptr, 10.0))
+	val = config.NewValue(val.Prepend(ptr, 20.0))
+
+	if !reflect.DeepEqual(val.data, ref) {
+		t.Errorf("expected %v, got %v", ref, val.data)
+	}
+
+	// panic case
+	config = NewDefaultConfig()
+	_, value = config.NewJson([]byte(`{"a": 10}`), -1).Tovalue()
+	val = config.NewValue(value)
+	fn := func(jptr *Jsonpointer, v interface{}) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		val.Prepend(ptr, v)
+	}
+	fn(config.NewJsonpointer("/a"), 10)
+	fn(config.NewJsonpointer(""), 10)
 }
 
 func BenchmarkValueGet(b *testing.B) {
@@ -175,11 +303,41 @@ func BenchmarkValueDelete(b *testing.B) {
 	val := config.NewValue(value)
 
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
-	ptrs := config.NewJsonpointer("/projects/Sherri/members/-")
+	ptra := config.NewJsonpointer("/projects/Sherri/members")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		val.Delete(ptrd)
-		val.Set(ptrs, 10)
+		val.Append(ptra, "delete")
+	}
+}
+
+func BenchmarkValueAppend(b *testing.B) {
+	config := NewDefaultConfig()
+	data := testdataFile("testdata/typical.json")
+	_, value := config.NewJson(data, -1).Tovalue()
+	val := config.NewValue(value)
+	ptra := config.NewJsonpointer("/projects/Sherri/members")
+	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		val.Append(ptra, "bench")
+		val.Delete(ptrd)
+	}
+}
+
+func BenchmarkValuePrepend(b *testing.B) {
+	config := NewDefaultConfig()
+	data := testdataFile("testdata/typical.json")
+	_, value := config.NewJson(data, -1).Tovalue()
+	val := config.NewValue(value)
+	ptrp := config.NewJsonpointer("/projects/Sherri/members")
+	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		val.Prepend(ptrp, "bench")
+		val.Delete(ptrd)
 	}
 }
