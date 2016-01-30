@@ -75,9 +75,9 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 	case *big.Int: // tag-2 (positive) or tag-3 (negative)
 		n += valbignum2cbor(v, out, config)
 	case CborTagFraction: // tag-4
-		n += valdecimal2cbor(v, out)
+		n += valdecimal2cbor(v, out, config)
 	case CborTagFloat: // tag-5
-		n += valbigfloat2cbor(v, out)
+		n += valbigfloat2cbor(v, out, config)
 	case CborTagBytes: // tag-24
 		n += valcbor2cbor(v, out)
 	case *regexp.Regexp: // tag-35
@@ -394,19 +394,39 @@ func valbignum2cbor(num *big.Int, buf []byte, config *Config) int {
 	return n
 }
 
-func valdecimal2cbor(item interface{}, buf []byte) int {
+func valdecimal2cbor(item interface{}, buf []byte, config *Config) int {
+	var sl [2]interface{}
+
 	n := tag2cbor(tagDecimalFraction, buf)
-	x := item.(CborTagFraction)
-	n += valint642cbor(x[0], buf[n:])
-	n += valint642cbor(x[1], buf[n:])
+	switch v := item.(type) {
+	case CborTagFraction:
+		sl[0], sl[1] = v[0], v[1]
+		n += value2cbor(sl[:], buf[n:], config)
+	case [2]int64:
+		sl[0], sl[1] = v[0], v[1]
+		n += value2cbor(sl[:], buf[n:], config)
+	case []int64:
+		sl[0], sl[1] = v[0], v[1]
+		n += value2cbor(sl[:], buf[n:], config)
+	}
 	return n
 }
 
-func valbigfloat2cbor(item interface{}, buf []byte) int {
+func valbigfloat2cbor(item interface{}, buf []byte, config *Config) int {
+	var sl [2]interface{}
+
 	n := tag2cbor(tagBigFloat, buf)
-	x := item.(CborTagFloat)
-	n += valint642cbor(x[0], buf[n:])
-	n += valint642cbor(x[1], buf[n:])
+	switch v := item.(type) {
+	case CborTagFloat:
+		sl[0], sl[1] = v[0], v[1]
+		n += value2cbor(sl[:], buf[n:], config)
+	case [2]int64:
+		sl[0], sl[1] = v[0], v[1]
+		n += value2cbor(sl[:], buf[n:], config)
+	case []int64:
+		sl[0], sl[1] = v[0], v[1]
+		n += value2cbor(sl[:], buf[n:], config)
+	}
 	return n
 }
 

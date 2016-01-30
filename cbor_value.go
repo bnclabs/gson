@@ -263,33 +263,43 @@ func cbor2bignumval(buf []byte, config *Config) (interface{}, int) {
 }
 
 func cbor2decimalval(buf []byte, config *Config) (interface{}, int) {
-	e, x := cbor2value(buf, config)
-	m, y := cbor2value(buf[x:], config)
+	x, n := cbor2value(buf, config)
+	arr := x.([]interface{})
+	if len(arr) != 2 {
+		panic("malformed tagDecimalFraction")
+	}
+	e, m := arr[0], arr[1]
+
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
-			return CborTagFraction([2]int64{int64(a), int64(b)}), x + y
+			return CborTagFraction([2]int64{int64(a), int64(b)}), n
 		}
-		return CborTagFraction([2]int64{int64(a), m.(int64)}), x + y
+		return CborTagFraction([2]int64{int64(a), m.(int64)}), n
 
 	} else if b, ok := m.(uint64); ok {
-		return CborTagFraction([2]int64{e.(int64), int64(b)}), x + y
+		return CborTagFraction([2]int64{e.(int64), int64(b)}), n
 	}
-	return CborTagFraction([2]int64{e.(int64), m.(int64)}), x + y
+	return CborTagFraction([2]int64{e.(int64), m.(int64)}), n
 }
 
 func cbor2bigfloatval(buf []byte, config *Config) (interface{}, int) {
-	e, x := cbor2value(buf, config)
-	m, y := cbor2value(buf[x:], config)
+	x, n := cbor2value(buf, config)
+	arr := x.([]interface{})
+	if len(arr) != 2 {
+		panic("malformed tagBigFloat")
+	}
+	e, m := arr[0], arr[1]
+
 	if a, ok := e.(uint64); ok {
 		if b, ok := m.(uint64); ok {
-			return CborTagFloat([2]int64{int64(a), int64(b)}), x + y
+			return CborTagFloat([2]int64{int64(a), int64(b)}), n
 		}
-		return CborTagFloat([2]int64{int64(a), m.(int64)}), x + y
+		return CborTagFloat([2]int64{int64(a), m.(int64)}), n
 
 	} else if b, ok := m.(uint64); ok {
-		return CborTagFloat([2]int64{e.(int64), int64(b)}), x + y
+		return CborTagFloat([2]int64{e.(int64), int64(b)}), n
 	}
-	return CborTagFloat([2]int64{e.(int64), m.(int64)}), x + y
+	return CborTagFloat([2]int64{e.(int64), m.(int64)}), n
 }
 
 func cbor2cborval(buf []byte, config *Config) (interface{}, int) {
