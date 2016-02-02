@@ -1,232 +1,199 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// +build ignore
-
 package gson
 
 import "strconv"
 import "bytes"
 
-//import "fmt"
+import "fmt"
 
-func cborContainerLen(doc []byte) (mjr byte, n int) {
-	n = 0
-	mjr, inf := cborMajor(doc[n]), cborInfo(doc[n])
-	if mjr == cborType4 || mjr == cborType5 {
-		if inf == cborIndefiniteLength {
-			return mjr, 1
-		}
-		panic("cbor pointer len-prefix not supported")
+func cborGet(doc []byte, segments [][]byte, item []byte) int {
+	_, _, start, end := cborLookup(doc, segments)
+	if start < 0 {
+		key := bytes2str(segments[len(segments)-1])
+		panic(fmt.Sprintf("key %v not found", key))
 	}
-	panic("cbor pointer lookup malformedDocument")
+	return copy(item, doc[start:end])
 }
 
-func cborPartial(part, doc []byte) (start, end int, key bool) {
-	var err error
-	var index int
-	mjr, n := cborContainerLen(doc)
-	//fmt.Println("partial", string(part), part, len(doc), n, doc, mjr)
-	if mjr == cborType4 { // array
-		if index, err = strconv.Atoi(bytes2str(part)); err != nil {
-			panic("cbor pointer segment lookup invalidArrayOffset")
-		}
-		n += cborArrayIndex(doc[n:], index)
-		m := cborItemsEnd(doc[n:])
-		//fmt.Println("partial-arr", index, n, n+m, doc[n:n+m], string(part))
-		return n, n + m, false
+func cborSet(doc []byte, segments [][]byte, item, newdoc, olditem []byte) (int, int) {
+	var x int
 
-	} else if mjr == cborType5 { // map
-		m, found := cborMapIndex(doc[n:], part)
-		if !found { // key not found
-			return n + m, n + m, found
-		}
-		n += m
-		m = cborItemsEnd(doc[n:])    // key
-		p := cborItemsEnd(doc[n+m:]) // value
-		//fmt.Println("partial-map", n, n+m, n+m+p, doc[n+m:n+m+p], string(part), found)
-		return n, n + m + p, found
+	cont, _, start, end := cborLookup(doc, segments)
+
+	m := copy(newdoc, doc[:cont])
+
+	if start < 0 {
+		x, m = addlength(m, cont, doc, newdoc)
+		m += copy(newdoc[m:], segments[len(segments)-1])
+		m += copy(newdoc[m:], item)
+		m += copy(newdoc[m:], doc[x:])
+		return m, 0
 	}
-	panic("cbor pointer segment lookup invalidPointer")
+	m += copy(newdoc[m:], doc[cont:start])
+	m += copy(newdoc[m:], item)
+	m += copy(newdoc[m:], doc[end:])
+	n := copy(olditem, doc[start:end])
+	return m, n
 }
 
-func cborLookup(cborptr, doc []byte) (start, end int, key bool) {
-	i, n, m := 1, 0, len(doc)
-	start, end = n, m
-	if i >= len(cborptr) || cborptr[i] == brkstp { // cborptr is empty ""
-		return start, end, false
+func cborDel(doc []byte, segments [][]byte, newdoc, deleted []byte) (int, int) {
+	var x int
+
+	cont, keyn, start, end := cborLookup(doc, segments)
+
+	m := copy(newdoc, doc[:cont])
+
+	major, _ := cborMajor(doc[cont]), cborInfo(doc[cont])
+	switch major {
+	case cborType4:
+		if keyn >= 0 {
+			panic("cborType4 expected keyn to be -1")
+		}
+		x, m = addlength(m, cont, doc, newdoc)
+		m += copy(newdoc[m:], doc[x:start])
+		m += copy(newdoc[m:], doc[end:])
+		n := copy(deleted, doc[start:end])
+		return m, n
+
+	case cborType5:
+		if keyn < 0 {
+			panic("cborType5 expected keyn to be > 0")
+		}
+		x, m = addlength(m, cont, doc, newdoc)
+		m += copy(newdoc[m:], doc[x:keyn])
+		m += copy(newdoc[m:], doc[end:])
+		n := copy(deleted, doc[start:end])
+		return m, n
 	}
-	var k, keyln int
-	byt := cborHdr(cborType6, cborInfo24)
-	for {
-		doc = doc[n:m]
-		if cborptr[i] != byt && cborptr[i+1] != tagJsonString {
-			panic("cbor pointer lookup invalidPointer")
-		}
-		i += 2
-		ln, j := cborItemLength(cborptr[i:])
-		n, m, key = cborPartial(cborptr[i+j:i+j+ln], doc)
-		i += j + ln
-		start += n
-		end = start + (m - n)
-		//fmt.Println("lookup", i, cborptr[i] == brkstp, start, n, m, k, keyln)
-		if i >= len(cborptr) || cborptr[i] == brkstp {
-			break
-		}
-		if key {
-			keyln, k = cborItemLength(doc[n:])
-			n, start = n+k+keyln, start+k+keyln
-		}
-	}
-	return start, end, key
+	panic("unreachable code")
 }
 
-func cborArrayIndex(arr []byte, index int) int {
-	count, prev, n := 0, 0, 0
-	for arr[n] != brkstp {
-		if count == index {
-			return n
-		} else if index >= 0 && arr[n] == brkstp {
-			panic("cbor pointer array index invalidArrayOffset")
-		}
-		prev = n
-		n += cborItemsEnd(arr[n:])
-		count++
+func cborPrepend(doc []byte, segments [][]byte, item, newdoc []byte) int {
+	var x int
+
+	_, _, start, _ := cborLookup(doc, segments)
+	major, _ := cborMajor(doc[start]), cborInfo(doc[start])
+	if major != cborType4 {
+		panic("cannot prepend to non array containers")
 	}
-	if index == -1 && arr[n] == brkstp {
-		return prev
-	}
-	panic("cbor pointer array index ivalidArrayOffset")
+	m := copy(newdoc, doc[:start])
+	x, m = addlength(m, start, doc, newdoc)
+	m += copy(newdoc[m:], item)
+	m += copy(newdoc[m:], doc[x:])
+	return m
 }
 
-func cborMapIndex(buf []byte, part []byte) (int, bool) {
-	n := 0
-	for n < len(buf) {
-		start := n
-		if buf[n] == brkstp { // key-not-found
-			return n + 1, false
-		}
-		// get key
-		if cborMajor(buf[n]) != cborType3 {
-			panic("cbor pointer map index expectedKey")
-		}
-		ln, j := cborItemLength(buf[n:])
-		n += j
-		m := n + ln
-		//fmt.Println("mapIndex-", n, m, string(buf[n:m]), start, part)
-		if bytes.Compare(part, buf[n:m]) == 0 {
-			return start, true
-		}
-		p := cborItemsEnd(buf[m:]) // value
-		//fmt.Println("mapIndex", n, m, p, string(buf[n:m]), start)
-		n = m + p
+func cborAppend(doc []byte, segments [][]byte, item, newdoc []byte) int {
+	var x int
+
+	_, _, start, end := cborLookup(doc, segments)
+	major, info := cborMajor(doc[start]), cborInfo(doc[start])
+	if major != cborType4 {
+		panic("cannot append to non array containers")
 	}
-	panic("cbor pointer map index malformedDocument")
+	m := copy(newdoc, doc[:start])
+	x, m = addlength(m, start, doc, newdoc)
+	if info == cborIndefiniteLength {
+		m += copy(newdoc[m:], doc[x:end-1])
+		m += copy(newdoc[m:], item)
+		newdoc[m] = doc[end]
+		m++
+	} else {
+		m += copy(newdoc[m:], doc[x:end])
+		m += copy(newdoc[m:], item)
+	}
+	return m
 }
 
-func cborItemsEnd(buf []byte) int {
-	mjr, inf := cborMajor(buf[0]), cborInfo(buf[0])
-	if mjr == cborType0 || mjr == cborType1 { // integer item
-		if inf < cborInfo24 {
-			return 1
-		}
-		return (1 << (inf - cborInfo24)) + 1
+func cborLookup(doc []byte, segments [][]byte) (cont, keyn, start, end int) {
+	var ln int
 
-	} else if mjr == cborType3 { // string item
-		ln, j := cborItemLength(buf)
-		return j + ln
-
-	} else if mjr == cborType4 { // array item
-		_, n := cborContainerLen(buf)
-		//fmt.Println("itemIndex-arr", n, buf[n] == brkstp)
-		if buf[n] == brkstp {
-			return n + 1
-		}
-		n += cborArrayIndex(buf[n:], -1)
-		return n + cborItemsEnd(buf[n:]) + 1 // skip brkstp
-
-	} else if mjr == cborType5 { // map item
-		_, n := cborContainerLen(buf)
-		//fmt.Println("itemIndex-map", n)
-		for n < len(buf) {
-			if buf[n] == brkstp {
-				return n + 1
+nextseg:
+	for i, segment := range segments {
+		major, info := cborMajor(doc[start]), cborInfo(doc[start])
+		switch major {
+		case cborType4:
+			idx, count := segment2idx(segment), 0
+			cont, keyn = start, -1
+			if info == cborIndefiniteLength {
+				for end = start; doc[end] != brkstp; count++ {
+					_, n := cborItem(doc[end:])
+					start, end = end, end+n
+					if count == idx {
+						continue nextseg
+					}
+				}
+				panic(fmt.Sprintf("index %v overflow", idx))
 			}
-			n += cborItemsEnd(buf[n:]) // key
-			n += cborItemsEnd(buf[n:]) // value
+			ln, end = cborItemLength(doc)
+			for ; count < ln; count++ {
+				_, n := cborItem(doc[end:])
+				start, end = end, end+n
+				if count == idx {
+					continue nextseg
+				}
+			}
+			panic(fmt.Sprintf("index %v overflow", idx))
+
+		case cborType5:
+			cont = start
+			if info == cborIndefiniteLength {
+				for end = start; doc[end] != brkstp; {
+					_, m := cborItem(doc[end:])
+					_, n := cborItem(doc[end+m:])
+					keyn, start, end = end, end+m, end+m+n
+					if bytes.Compare(doc[keyn:start], segment) == 0 {
+						continue nextseg
+					}
+				}
+				if i == (len(segments) - 1) { // leaf
+					return cont, -1, -1, -1
+				}
+				panic(fmt.Sprintf("key %v not found", bytes2str(segment)))
+			}
+			ln, end = cborItemLength(doc)
+			for i := 0; i < ln; i++ {
+				_, m := cborItem(doc[end:])
+				_, n := cborItem(doc[end+m:])
+				keyn, start, end = end, end+m, end+m+n
+				if bytes.Compare(doc[keyn:start], segment) == 0 {
+					continue nextseg
+				}
+			}
+			if i == (len(segments) - 1) { // leaf
+				return cont, -1, -1, -1
+			}
+			panic(fmt.Sprintf("key %v not found", bytes2str(segment)))
 		}
-
-	} else if mjr == cborType7 {
-		if inf == cborSimpleTypeNil || inf == cborSimpleTypeFalse ||
-			inf == cborSimpleTypeTrue {
-			return 1
-		} else if inf == cborFlt32 { // item float32
-			return 1 + 4
-		} else if inf == cborFlt64 { // item float64
-			return 1 + 8
-		}
-		panic("cbor pointer lookup invalidDocument")
 	}
-	panic("cbor pointer lookup invalidDocument")
+	return
 }
 
-func cborSkipkey(doc []byte) int {
-	ln, j := cborItemLength(doc)
-	return j + ln
+func segment2idx(segment []byte) int {
+	idx, err := strconv.Atoi(bytes2str(segment))
+	if err != nil {
+		fmsg := "pointer %v expected to be array index"
+		panic(fmt.Sprintf(fmsg, bytes2str(segment)))
+	} else if idx < 0 {
+		panic(fmt.Sprintf("array index %v can be < 0", idx))
+	}
+	return idx
 }
 
-func cborGet(doc, cborptr, item []byte) int {
-	n, m, key := cborLookup(cborptr, doc)
-	if n == m {
-		panic("cbor pointer get noKey")
-	} else if key { // if lookup in into a map, skip key
-		n += cborSkipkey(doc[n:])
-	}
-	copy(item, doc[n:m])
-	return m - n
-}
+func addlength(m, cont int, doc, newdoc []byte) (int, int) {
+	var x, ln int
 
-func cborSet(doc, cborptr, item, newdoc, old []byte) (int, int) {
-	n, m, key := cborLookup(cborptr, doc)
-	if key {
-		n += cborSkipkey(doc[n:])
-	}
-	ln := len(item)
-	copy(newdoc, doc[:n])
-	copy(newdoc[n:], item)
-	copy(newdoc[n+ln:], doc[m:])
-	copy(old, doc[n:m])
-	return (n + ln + len(doc[m:])), m - n
-}
+	major, info := cborMajor(doc[cont]), cborInfo(doc[cont])
 
-func cborPrepend(doc, cborptr, item, newdoc []byte, config *Config) int {
-	n, _, key := cborLookup(cborptr, doc)
-	//fmt.Println(n, key)
-	if key { // n points to {key,value} pair
-		n += cborSkipkey(doc[n:])
+	if info == cborIndefiniteLength {
+		newdoc[m] = doc[cont]
+		m += 1
+	} else {
+		ln, x = cborItemLength(doc[cont:])
+		y := valuint642cbor(uint64(ln-1), newdoc[m:])
+		newdoc[m] = (newdoc[m] & 0x1f) | major // fix the type from type0->type4
+		m += y
 	}
-	// n now points to value which can be an array or map.
-	mjr := cborMajor(doc[n])
-	if mjr != cborType4 && mjr != cborType5 {
-		panic("cbor pointer prepend invalidPointer")
-	}
-	// copy every thing before value
-	n++ // including mjr+indefiniteLength
-	copy(newdoc, doc[:n])
-	ln := len(item)
-	copy(newdoc[n:], item)
-	copy(newdoc[n+ln:], doc[n:])
-	return n + ln + len(doc[n:])
-}
-
-func cborDel(doc, cborptr, newdoc, deleted []byte) (int, int) {
-	n, m, key := cborLookup(cborptr, doc)
-	copy(newdoc, doc[:n])
-	copy(newdoc[n:], doc[m:])
-	// copy deleted value to o/p buffer.
-	p := n
-	if key {
-		p += cborSkipkey(doc[n:])
-	}
-	copy(deleted, doc[p:m])
-	return n + len(doc[m:]), m - p
+	return x, m
 }

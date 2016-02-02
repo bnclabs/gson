@@ -2,6 +2,8 @@
 
 package gson
 
+import "fmt"
+
 const ( // major types (3 most significant bits in the first byte)
 	cborType0 byte = iota << 5 // unsigned integer
 	cborType1                  // negative integer
@@ -241,4 +243,95 @@ func cborInfo(b byte) byte {
 
 func cborHdr(major, info byte) byte {
 	return (major & 0xe0) | (info & 0x1f)
+}
+
+func cborItem(doc []byte) (start, end int) {
+	var ln, n int
+
+	major, info := cborMajor(doc[0]), cborInfo(doc[0])
+	switch major {
+	case cborType0, cborType1:
+		if info < cborInfo24 {
+			return start, 1
+		}
+		switch info {
+		case cborInfo24:
+			return start, 2
+		case cborInfo25:
+			return start, 3
+		case cborInfo26:
+			return start, 5
+		case cborInfo27:
+			return start, 9
+		default:
+			panic(fmt.Sprintf("invalid major, info {%v,%v}", major, info))
+		}
+
+	case cborType2, cborType3:
+		if info == cborIndefiniteLength {
+			for end = 1; doc[end] != brkstp; end += n {
+				_, n = cborItem(doc[end:])
+			}
+			return start, end + 1
+
+		}
+		ln, n = cborItemLength(doc)
+		return start, start + n + ln
+
+	case cborType4:
+		if info == cborIndefiniteLength {
+			for end = 1; doc[end] != brkstp; end += n {
+				_, n = cborItem(doc[end:])
+			}
+			return start, end + 1
+		}
+		ln, end = cborItemLength(doc)
+		for i := 0; i < ln; i++ {
+			_, n = cborItem(doc[end:])
+			end += n
+		}
+		return start, end
+
+	case cborType5:
+		if info == cborIndefiniteLength {
+			for end = 1; doc[end] != brkstp; {
+				_, n = cborItem(doc[end:])
+				end += n
+				_, n = cborItem(doc[end:])
+				end += n
+			}
+			return start, end + 1
+		}
+		ln, end = cborItemLength(doc)
+		for i := 0; i < ln; i++ {
+			_, n = cborItem(doc[end:])
+			end += n
+			_, n = cborItem(doc[end:])
+			end += n
+		}
+		return start, end
+
+	case cborType6:
+		_, end = cborItemLength(doc)
+		_, n = cborItem(doc[end:])
+		end += n
+
+	case cborType7:
+		if info < 23 {
+			return start, 1
+		}
+		switch info {
+		case cborSimpleTypeByte:
+			return start, 2
+		case cborFlt16:
+			return start, 3
+		case cborFlt32:
+			return start, 5
+		case cborFlt64:
+			return start, 9
+		default:
+			panic(fmt.Sprintf("invalid major, info {%v,%v}", major, info))
+		}
+	}
+	panic("unreachable code")
 }
