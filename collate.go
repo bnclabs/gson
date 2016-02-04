@@ -64,12 +64,13 @@ type Collate struct {
 	n      int
 }
 
-// Bytes return a reference slice to encapsulated buffer.
+// Bytes return reference to byte-slice of valid buffer.
 func (clt *Collate) Bytes() []byte {
 	return clt.data[:clt.n]
 }
 
-// Reset buffer to zero-length.
+// Reset overwrite buffer with data, or if data is nil,
+// reset buffer to zero-length.
 func (clt *Collate) Reset(data []byte) *Collate {
 	if data == nil {
 		clt.n = 0

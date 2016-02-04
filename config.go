@@ -73,17 +73,6 @@ const (
 	Decimal
 )
 
-// ContainerEncoding method to use for collection types, arrays and maps.
-type ContainerEncoding byte
-
-const (
-	// LengthPrefix to cbor-encode number of items in the collection type.
-	LengthPrefix ContainerEncoding = iota + 1
-
-	// Stream to cbor-encode collection types as indefinite sequence of items.
-	Stream
-)
-
 // MaxKeys maximum number of keys allowed in a property object.
 const MaxKeys = 1024
 
@@ -92,10 +81,10 @@ const MaxKeys = 1024
 // them with desired settings and don't change them afterwards.
 type Config struct {
 	nk      NumberKind
-	ct      ContainerEncoding
 	maxKeys int
 	pools   mempools
 
+	cborConfig
 	jsonConfig
 	collateConfig
 	jptrConfig
@@ -114,19 +103,21 @@ type Config struct {
 }
 
 // NewDefaultConfig returns a new configuration with default settings:
-//		FloatNumber			Stream
+//		FloatNumber         Stream
 //		MaxKeys
-//		UnicodeSpace		+strict
-//		+doMissing			-arrayLenPrefix
+//		UnicodeSpace        +strict
+//		+doMissing          -arrayLenPrefix
 //		+propertyLenPrefix
 //		MaxJsonpointerLen
-//		MaxStringLen		MaxKeys
-//		MaxCollateLen		MaxJsonpointerLen
+//		MaxStringLen        MaxKeys
+//		MaxCollateLen       MaxJsonpointerLen
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:      FloatNumber,
-		ct:      Stream,
 		maxKeys: MaxKeys,
+		cborConfig: cborConfig{
+			ct: Stream,
+		},
 		jsonConfig: jsonConfig{
 			ws:     UnicodeSpace,
 			strict: true,
@@ -159,7 +150,7 @@ func (config Config) SetNumberKind(nk NumberKind) *Config {
 	return &config
 }
 
-// ContainerEncoding setting to encode / decode arrays and maps.
+// SetContainerEncoding setting to encode / decode cbor arrays and maps.
 func (config Config) SetContainerEncoding(ct ContainerEncoding) *Config {
 	config.ct = ct
 	return &config
@@ -179,12 +170,16 @@ func (config Config) SetJptrlen(n int) *Config {
 }
 
 // ResetPools will create a new set of pools with specified size.
+//	   strlen  - maximum length of string value inside JSON document
+//	   numkeys - maximum number of keys that a property object can have
+//	   itemlen - maximum length of collated value.
+//	   ptrlen  - maximum length of json-pointer can take
 func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
 	return &config
 }
 
-// NewCbor to create a Cbor instance.
+// NewCbor create a new Cbor instance.
 func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
 	if ln == -1 {
 		ln = len(buffer)
@@ -192,7 +187,7 @@ func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
 	return &Cbor{config: config, data: buffer, n: ln}
 }
 
-// NewJson to create a Json instance.
+// NewJson create a new Json instance.
 func (config *Config) NewJson(buffer []byte, ln int) *Json {
 	if ln == -1 {
 		ln = len(buffer)
@@ -200,7 +195,7 @@ func (config *Config) NewJson(buffer []byte, ln int) *Json {
 	return &Json{config: config, data: buffer, n: ln}
 }
 
-// NewCollate to create a Collate instance
+// NewCollate create a new Collate instance.
 func (config *Config) NewCollate(buffer []byte, ln int) *Collate {
 	if ln == -1 {
 		ln = len(buffer)
@@ -208,14 +203,9 @@ func (config *Config) NewCollate(buffer []byte, ln int) *Collate {
 	return &Collate{config: config, data: buffer, n: ln}
 }
 
-// NewValue to create a Value instance
+// NewValue create a new Value instance.
 func (config *Config) NewValue(value interface{}) *Value {
 	return &Value{config: config, data: value}
-}
-
-// MapsliceToCbor to encode key,value pairs into cbor
-func (config *Config) MapsliceToCbor(items [][2]interface{}, out []byte) int {
-	return mapl2cbor(items, out, config)
 }
 
 // NewJsonpointer create a instance of Jsonpointer allocate necessary memory.

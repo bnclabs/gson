@@ -4,6 +4,21 @@ package gson
 
 import "fmt"
 
+// ContainerEncoding method to encode arrays and maps into cbor.
+type ContainerEncoding byte
+
+const (
+	// LengthPrefix to encode number of items in the collection type.
+	LengthPrefix ContainerEncoding = iota + 1
+
+	// Stream to encode collection types as indefinite sequence of items.
+	Stream
+)
+
+type cborConfig struct {
+	ct ContainerEncoding
+}
+
 const ( // major types (3 most significant bits in the first byte)
 	cborType0 byte = iota << 5 // unsigned integer
 	cborType1                  // negative integer
@@ -117,12 +132,13 @@ type Cbor struct {
 	n      int
 }
 
-// Bytes return a reference slice to encapsulated cbor-buffer.
+// Bytes return reference to byte-slice of valid cbor-buffer.
 func (cbr *Cbor) Bytes() []byte {
 	return cbr.data[:cbr.n]
 }
 
-// Reset buffer to zero-length.
+// Reset overwrite buffer with data, or if data is nil,
+// reset buffer to zero-length.
 func (cbr *Cbor) Reset(data []byte) *Cbor {
 	if data == nil {
 		cbr.n = 0
@@ -172,6 +188,12 @@ func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 	return cbr
 }
 
+// MapsliceToCbor to encode key,value pairs into cbor buffer.
+func (cbr *Cbor) MapsliceToCbor(items [][2]interface{}) *Cbor {
+	cbr.n += mapl2cbor(items, cbr.data[cbr.n:cap(cbr.data)], cbr.config)
+	return cbr
+}
+
 // Get field or nested field specified by json-pointer.
 func (cbr *Cbor) Get(jptr *Jsonpointer, item *Cbor) *Cbor {
 	config, segments := cbr.config, jptr.Segments()
@@ -193,7 +215,7 @@ func (cbr *Cbor) Set(jptr *Jsonpointer, item, newdoc, old *Cbor) *Cbor {
 	return newdoc
 }
 
-// Prepend item into a array or property container specified by json-pointer.
+// Prepend item to the beginning of an array field specified by json-pointer.
 func (cbr *Cbor) Prepend(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
 	config, segments := cbr.config, jptr.Segments()
 	newdocb := newdoc.data[:cap(newdoc.data)]
@@ -202,7 +224,7 @@ func (cbr *Cbor) Prepend(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
 	return newdoc
 }
 
-// Append item into a array or property container specified by json-pointer.
+// Append item at the end of an array field specified by json-pointer.
 func (cbr *Cbor) Append(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
 	config, segments := cbr.config, jptr.Segments()
 	newdocb := newdoc.data[:cap(newdoc.data)]

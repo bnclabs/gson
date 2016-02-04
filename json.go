@@ -41,12 +41,13 @@ type Json struct {
 	n      int
 }
 
-// Bytes return a reference slice to encapsulated buffer.
+// Bytes return reference to byte-slice of valid json-buffer.
 func (jsn *Json) Bytes() []byte {
 	return jsn.data[:jsn.n]
 }
 
-// Reset buffer to zero-length.
+// Reset overwrite buffer with data, or if data is nil,
+// reset buffer to zero-length.
 func (jsn *Json) Reset(data []byte) *Json {
 	if data == nil {
 		jsn.n = 0

@@ -58,7 +58,7 @@ func (val *Value) Delete(jptr *Jsonpointer) (newval, deleted interface{}) {
 	return valDel(jptr.Segments(), val.data)
 }
 
-// Append an item to the end of an array.
+// Append item to end of an array pointed by json-pointer.
 // returns `newval`, is gauranteed to be updated,
 //      val := NewValue([]interface{}{"hello", "world"})
 //      newval, _ = val.Append("", "welcome")
