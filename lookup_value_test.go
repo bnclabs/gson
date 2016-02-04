@@ -112,19 +112,13 @@ func TestValueSet(t *testing.T) {
 	}
 }
 
-func TestValueDel(t *testing.T) {
-	txt := `{"a": 10, "-": [1], "arr": [1,2],  "nestd": [[23]], ` +
-		`"dict": {"a":10, "b":20, "": 30}}`
-	testcases := [][2]interface{}{
-		[2]interface{}{"/a", 10.0},
-		[2]interface{}{"/arr/1", 2.0},
-		[2]interface{}{"/arr/0", 1.0},
-		[2]interface{}{"/-/0", 1.0},
-		[2]interface{}{"/nestd/-/0", 23.0},
-		[2]interface{}{"/dict/a", 10.0},
-		[2]interface{}{"/dict/b", 20.0},
-		[2]interface{}{"/dict/", 30.0},
-	}
+func TestValuePrepend(t *testing.T) {
+	var ref interface{}
+
+	txt := `{"a": 10, "-": [1], "arr": [1,2]}`
+	reftxt := `{"a": 10, "-": [10,1], "arr": [10,1,2]}`
+	json.Unmarshal([]byte(reftxt), &ref)
+	testcases := []string{"/-", "/arr"}
 
 	config := NewDefaultConfig()
 	_, value := config.NewJson([]byte(txt), -1).Tovalue()
@@ -133,34 +127,43 @@ func TestValueDel(t *testing.T) {
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase)
-
-		ptr.ResetPath(tcase[0].(string))
-		value, deleted := val.Delete(ptr)
-		if !reflect.DeepEqual(deleted, tcase[1]) {
-			t.Errorf("for %v expected %v, got %v", tcase[0], tcase[1], deleted)
-		}
-		val = config.NewValue(value)
+		ptr.ResetPath(tcase)
+		val = config.NewValue(val.Prepend(ptr.ResetPath(tcase), 10.0))
 	}
 
-	remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
-	_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
-	if !reflect.DeepEqual(val.data, remvalue) {
-		t.Errorf("expected %v, got %v", remvalue, val.data)
+	if !reflect.DeepEqual(val.data, ref) {
+		t.Errorf("expected %v, got %v", ref, val.data)
 	}
 
-	// corner case
+	// Prepend an array
+	txt, reftxt = `[]`, `[20,10]`
+	json.Unmarshal([]byte(reftxt), &ref)
+
 	config = NewDefaultConfig()
-	val = config.NewValue([]interface{}{"hello", "world"})
-	ptr = config.NewJsonpointer("/1")
+	_, value = config.NewJson([]byte(txt), -1).Tovalue()
+	val = config.NewValue(value)
+	ptr = config.NewJsonpointer("")
+	val = config.NewValue(val.Prepend(ptr, 10.0))
+	val = config.NewValue(val.Prepend(ptr, 20.0))
 
-	value, deleted := val.Delete(ptr)
-	if !reflect.DeepEqual(deleted, "world") {
-		t.Errorf("for %v expected %v, got %v", ptr, "world", deleted)
-	} else if v := value.([]interface{}); len(v) != 1 {
-		t.Errorf("for %v expected length %v, got %v", ptr, 1, len(v))
-	} else if !reflect.DeepEqual(v[0], "hello") {
-		t.Errorf("for %v expected %v, got %v", ptr, "hello", v[0])
+	if !reflect.DeepEqual(val.data, ref) {
+		t.Errorf("expected %v, got %v", ref, val.data)
 	}
+
+	// panic case
+	config = NewDefaultConfig()
+	_, value = config.NewJson([]byte(`{"a": 10}`), -1).Tovalue()
+	val = config.NewValue(value)
+	fn := func(jptr *Jsonpointer, v interface{}) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("expected panic")
+			}
+		}()
+		val.Prepend(ptr, v)
+	}
+	fn(config.NewJsonpointer("/a"), 10)
+	fn(config.NewJsonpointer(""), 10)
 }
 
 func TestValueAppend(t *testing.T) {
@@ -216,13 +219,19 @@ func TestValueAppend(t *testing.T) {
 	fn(config.NewJsonpointer(""), 10)
 }
 
-func TestValuePrepend(t *testing.T) {
-	var ref interface{}
-
-	txt := `{"a": 10, "-": [1], "arr": [1,2]}`
-	reftxt := `{"a": 10, "-": [10,1], "arr": [10,1,2]}`
-	json.Unmarshal([]byte(reftxt), &ref)
-	testcases := []string{"/-", "/arr"}
+func TestValueDelete(t *testing.T) {
+	txt := `{"a": 10, "-": [1], "arr": [1,2],  "nestd": [[23]], ` +
+		`"dict": {"a":10, "b":20, "": 30}}`
+	testcases := [][2]interface{}{
+		[2]interface{}{"/a", 10.0},
+		[2]interface{}{"/arr/1", 2.0},
+		[2]interface{}{"/arr/0", 1.0},
+		[2]interface{}{"/-/0", 1.0},
+		[2]interface{}{"/nestd/-/0", 23.0},
+		[2]interface{}{"/dict/a", 10.0},
+		[2]interface{}{"/dict/b", 20.0},
+		[2]interface{}{"/dict/", 30.0},
+	}
 
 	config := NewDefaultConfig()
 	_, value := config.NewJson([]byte(txt), -1).Tovalue()
@@ -231,43 +240,34 @@ func TestValuePrepend(t *testing.T) {
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase)
-		ptr.ResetPath(tcase)
-		val = config.NewValue(val.Prepend(ptr.ResetPath(tcase), 10.0))
+
+		ptr.ResetPath(tcase[0].(string))
+		value, deleted := val.Delete(ptr)
+		if !reflect.DeepEqual(deleted, tcase[1]) {
+			t.Errorf("for %v expected %v, got %v", tcase[0], tcase[1], deleted)
+		}
+		val = config.NewValue(value)
 	}
 
-	if !reflect.DeepEqual(val.data, ref) {
-		t.Errorf("expected %v, got %v", ref, val.data)
+	remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
+	_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
+	if !reflect.DeepEqual(val.data, remvalue) {
+		t.Errorf("expected %v, got %v", remvalue, val.data)
 	}
 
-	// Prepend an array
-	txt, reftxt = `[]`, `[20,10]`
-	json.Unmarshal([]byte(reftxt), &ref)
-
+	// corner case
 	config = NewDefaultConfig()
-	_, value = config.NewJson([]byte(txt), -1).Tovalue()
-	val = config.NewValue(value)
-	ptr = config.NewJsonpointer("")
-	val = config.NewValue(val.Prepend(ptr, 10.0))
-	val = config.NewValue(val.Prepend(ptr, 20.0))
+	val = config.NewValue([]interface{}{"hello", "world"})
+	ptr = config.NewJsonpointer("/1")
 
-	if !reflect.DeepEqual(val.data, ref) {
-		t.Errorf("expected %v, got %v", ref, val.data)
+	value, deleted := val.Delete(ptr)
+	if !reflect.DeepEqual(deleted, "world") {
+		t.Errorf("for %v expected %v, got %v", ptr, "world", deleted)
+	} else if v := value.([]interface{}); len(v) != 1 {
+		t.Errorf("for %v expected length %v, got %v", ptr, 1, len(v))
+	} else if !reflect.DeepEqual(v[0], "hello") {
+		t.Errorf("for %v expected %v, got %v", ptr, "hello", v[0])
 	}
-
-	// panic case
-	config = NewDefaultConfig()
-	_, value = config.NewJson([]byte(`{"a": 10}`), -1).Tovalue()
-	val = config.NewValue(value)
-	fn := func(jptr *Jsonpointer, v interface{}) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		val.Prepend(ptr, v)
-	}
-	fn(config.NewJsonpointer("/a"), 10)
-	fn(config.NewJsonpointer(""), 10)
 }
 
 func BenchmarkValueGet(b *testing.B) {
@@ -296,19 +296,18 @@ func BenchmarkValueSet(b *testing.B) {
 	}
 }
 
-func BenchmarkValueDelete(b *testing.B) {
+func BenchmarkValuePrepend(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
 	_, value := config.NewJson(data, -1).Tovalue()
 	val := config.NewValue(value)
-
+	ptrp := config.NewJsonpointer("/projects/Sherri/members")
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
-	ptra := config.NewJsonpointer("/projects/Sherri/members")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		val.Prepend(ptrp, "bench")
 		val.Delete(ptrd)
-		val.Append(ptra, "delete")
 	}
 }
 
@@ -327,17 +326,18 @@ func BenchmarkValueAppend(b *testing.B) {
 	}
 }
 
-func BenchmarkValuePrepend(b *testing.B) {
+func BenchmarkValueDelete(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
 	_, value := config.NewJson(data, -1).Tovalue()
 	val := config.NewValue(value)
-	ptrp := config.NewJsonpointer("/projects/Sherri/members")
+
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
+	ptra := config.NewJsonpointer("/projects/Sherri/members")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		val.Prepend(ptrp, "bench")
 		val.Delete(ptrd)
+		val.Append(ptra, "delete")
 	}
 }

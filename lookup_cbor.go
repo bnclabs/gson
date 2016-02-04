@@ -7,7 +7,7 @@ import "bytes"
 
 import "fmt"
 
-func cborGet(doc []byte, segments [][]byte, item []byte) int {
+func cborGet(doc []byte, segments [][]byte, item []byte, config *Config) int {
 	_, _, start, end := cborLookup(doc, segments)
 	if start < 0 {
 		key := bytes2str(segments[len(segments)-1])
@@ -16,7 +16,10 @@ func cborGet(doc []byte, segments [][]byte, item []byte) int {
 	return copy(item, doc[start:end])
 }
 
-func cborSet(doc []byte, segments [][]byte, item, newdoc, olditem []byte) (int, int) {
+func cborSet(
+	doc []byte, segments [][]byte, item, newdoc, olditem []byte,
+	config *Config) (int, int) {
+
 	var x int
 
 	cont, _, start, end := cborLookup(doc, segments)
@@ -24,11 +27,13 @@ func cborSet(doc []byte, segments [][]byte, item, newdoc, olditem []byte) (int, 
 	m := copy(newdoc, doc[:cont])
 
 	if start < 0 {
-		x, m = addlength(m, cont, doc, newdoc)
-		m += copy(newdoc[m:], segments[len(segments)-1])
+		x, m = addlength(cont, m, doc, newdoc)
+		key := bytes2str(segments[len(segments)-1])
+		m += value2cbor(key, newdoc[m:], config)
 		m += copy(newdoc[m:], item)
 		m += copy(newdoc[m:], doc[x:])
-		return m, 0
+		n := copy(olditem, item)
+		return m, n
 	}
 	m += copy(newdoc[m:], doc[cont:start])
 	m += copy(newdoc[m:], item)
@@ -37,7 +42,53 @@ func cborSet(doc []byte, segments [][]byte, item, newdoc, olditem []byte) (int, 
 	return m, n
 }
 
-func cborDel(doc []byte, segments [][]byte, newdoc, deleted []byte) (int, int) {
+func cborPrepend(
+	doc []byte, segments [][]byte, item, newdoc []byte, config *Config) int {
+
+	var x int
+
+	_, _, start, _ := cborLookup(doc, segments)
+	major, _ := cborMajor(doc[start]), cborInfo(doc[start])
+	if major != cborType4 {
+		panic("cannot prepend to non array containers")
+	}
+
+	m := copy(newdoc, doc[:start])
+	x, m = addlength(start, m, doc, newdoc)
+	m += copy(newdoc[m:], item)
+	m += copy(newdoc[m:], doc[x:])
+	return m
+}
+
+func cborAppend(
+	doc []byte, segments [][]byte, item, newdoc []byte, config *Config) int {
+
+	var x int
+
+	_, _, start, end := cborLookup(doc, segments)
+	major, info := cborMajor(doc[start]), cborInfo(doc[start])
+	if major != cborType4 {
+		panic("cannot append to non array containers")
+	}
+
+	m := copy(newdoc, doc[:start])
+	x, m = addlength(start, m, doc, newdoc)
+	if info == cborIndefiniteLength {
+		m += copy(newdoc[m:], doc[x:end-1])
+		m += copy(newdoc[m:], item)
+		m += copy(newdoc[m:], doc[end-1:])
+		return m
+	}
+	m += copy(newdoc[m:], doc[x:end])
+	m += copy(newdoc[m:], item)
+	m += copy(newdoc[m:], doc[end:])
+	return m
+}
+
+func cborDel(
+	doc []byte, segments [][]byte, newdoc, deleted []byte,
+	config *Config) (int, int) {
+
 	var x int
 
 	cont, keyn, start, end := cborLookup(doc, segments)
@@ -50,7 +101,7 @@ func cborDel(doc []byte, segments [][]byte, newdoc, deleted []byte) (int, int) {
 		if keyn >= 0 {
 			panic("cborType4 expected keyn to be -1")
 		}
-		x, m = addlength(m, cont, doc, newdoc)
+		x, m = deletelength(cont, m, doc, newdoc)
 		m += copy(newdoc[m:], doc[x:start])
 		m += copy(newdoc[m:], doc[end:])
 		n := copy(deleted, doc[start:end])
@@ -60,7 +111,7 @@ func cborDel(doc []byte, segments [][]byte, newdoc, deleted []byte) (int, int) {
 		if keyn < 0 {
 			panic("cborType5 expected keyn to be > 0")
 		}
-		x, m = addlength(m, cont, doc, newdoc)
+		x, m = deletelength(cont, m, doc, newdoc)
 		m += copy(newdoc[m:], doc[x:keyn])
 		m += copy(newdoc[m:], doc[end:])
 		n := copy(deleted, doc[start:end])
@@ -69,45 +120,9 @@ func cborDel(doc []byte, segments [][]byte, newdoc, deleted []byte) (int, int) {
 	panic("unreachable code")
 }
 
-func cborPrepend(doc []byte, segments [][]byte, item, newdoc []byte) int {
-	var x int
-
-	_, _, start, _ := cborLookup(doc, segments)
-	major, _ := cborMajor(doc[start]), cborInfo(doc[start])
-	if major != cborType4 {
-		panic("cannot prepend to non array containers")
-	}
-	m := copy(newdoc, doc[:start])
-	x, m = addlength(m, start, doc, newdoc)
-	m += copy(newdoc[m:], item)
-	m += copy(newdoc[m:], doc[x:])
-	return m
-}
-
-func cborAppend(doc []byte, segments [][]byte, item, newdoc []byte) int {
-	var x int
-
-	_, _, start, end := cborLookup(doc, segments)
-	major, info := cborMajor(doc[start]), cborInfo(doc[start])
-	if major != cborType4 {
-		panic("cannot append to non array containers")
-	}
-	m := copy(newdoc, doc[:start])
-	x, m = addlength(m, start, doc, newdoc)
-	if info == cborIndefiniteLength {
-		m += copy(newdoc[m:], doc[x:end-1])
-		m += copy(newdoc[m:], item)
-		newdoc[m] = doc[end]
-		m++
-	} else {
-		m += copy(newdoc[m:], doc[x:end])
-		m += copy(newdoc[m:], item)
-	}
-	return m
-}
-
 func cborLookup(doc []byte, segments [][]byte) (cont, keyn, start, end int) {
 	var ln int
+	end = len(doc)
 
 nextseg:
 	for i, segment := range segments {
@@ -117,7 +132,7 @@ nextseg:
 			idx, count := segment2idx(segment), 0
 			cont, keyn = start, -1
 			if info == cborIndefiniteLength {
-				for end = start; doc[end] != brkstp; count++ {
+				for end = start + 1; doc[end] != brkstp; count++ {
 					_, n := cborItem(doc[end:])
 					start, end = end, end+n
 					if count == idx {
@@ -139,11 +154,12 @@ nextseg:
 		case cborType5:
 			cont = start
 			if info == cborIndefiniteLength {
-				for end = start; doc[end] != brkstp; {
+				for end = start + 1; doc[end] != brkstp; {
 					_, m := cborItem(doc[end:])
 					_, n := cborItem(doc[end+m:])
 					keyn, start, end = end, end+m, end+m+n
-					if bytes.Compare(doc[keyn:start], segment) == 0 {
+					x, y := cborItemLength(doc[keyn:])
+					if bytes.Compare(doc[keyn+y:keyn+y+x], segment) == 0 {
 						continue nextseg
 					}
 				}
@@ -157,7 +173,8 @@ nextseg:
 				_, m := cborItem(doc[end:])
 				_, n := cborItem(doc[end+m:])
 				keyn, start, end = end, end+m, end+m+n
-				if bytes.Compare(doc[keyn:start], segment) == 0 {
+				x, y := cborItemLength(doc[keyn:])
+				if bytes.Compare(doc[keyn+y:keyn+y+x], segment) == 0 {
 					continue nextseg
 				}
 			}
@@ -181,19 +198,32 @@ func segment2idx(segment []byte) int {
 	return idx
 }
 
-func addlength(m, cont int, doc, newdoc []byte) (int, int) {
+func addlength(cont, m int, doc, newdoc []byte) (int, int) {
 	var x, ln int
 
 	major, info := cborMajor(doc[cont]), cborInfo(doc[cont])
 
 	if info == cborIndefiniteLength {
 		newdoc[m] = doc[cont]
-		m += 1
-	} else {
-		ln, x = cborItemLength(doc[cont:])
-		y := valuint642cbor(uint64(ln-1), newdoc[m:])
-		newdoc[m] = (newdoc[m] & 0x1f) | major // fix the type from type0->type4
-		m += y
+		return cont + 1, m + 1
 	}
-	return x, m
+	ln, x = cborItemLength(doc[cont:])
+	y := valuint642cbor(uint64(ln+1), newdoc[m:])
+	newdoc[m] = (newdoc[m] & 0x1f) | major // fix the type from type0->type4
+	return cont + x, m + y
+}
+
+func deletelength(cont, m int, doc, newdoc []byte) (int, int) {
+	var x, ln int
+
+	major, info := cborMajor(doc[cont]), cborInfo(doc[cont])
+
+	if info == cborIndefiniteLength {
+		newdoc[m] = doc[cont]
+		return cont + 1, m + 1
+	}
+	ln, x = cborItemLength(doc[cont:])
+	y := valuint642cbor(uint64(ln-1), newdoc[m:])
+	newdoc[m] = (newdoc[m] & 0x1f) | major // fix the type from type0->type4
+	return x + cont, m + y
 }

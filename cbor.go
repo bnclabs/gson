@@ -172,64 +172,56 @@ func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 	return cbr
 }
 
-// JsonPointerToCbor converts json path in RFC-6901 into cbor format.
-//func (cbor *Cbor) EncodeJsonpointer(jsonptr []byte) *Cbor {
-//	if len(jsonptr) > 0 && jsonptr[0] != '/' {
-//		panic("cbor expectedJsonPointer")
-//	}
-//	cbor.n = jptrToCbor(jsonptr, cbor.data)
-//	return cbor
-//}
+// Get field or nested field specified by json-pointer.
+func (cbr *Cbor) Get(jptr *Jsonpointer, item *Cbor) *Cbor {
+	config, segments := cbr.config, jptr.Segments()
+	doc, itemb := cbr.Bytes(), item.data[:cap(item.data)]
+	item.n = cborGet(doc, segments, itemb, config)
+	return item
+}
 
-// ToJsonpointer converts cbor encoded path into json path RFC-6901.
-//func (cbr *Cbor) ToJsonpointer(out []byte) int {
-//	if cbr.n > 0 {
-//		if !cbr.IsIndefiniteText() {
-//			panic("cbor expectedCborPointer")
-//		}
-//		return cborToJptr(cbr.data[:cbr.n], out)
-//	}
-//	return 0
-//}
+// Set field or nested field specified by json-pointer.
+func (cbr *Cbor) Set(jptr *Jsonpointer, item, newdoc, old *Cbor) *Cbor {
+	config, segments := cbr.config, jptr.Segments()
+	if len(segments) == 0 {
+		panic("cbor.Set(): empty pointer")
+	}
+	olditemb := old.data[:cap(old.data)]
+	newdocb := newdoc.data[:cap(newdoc.data)]
+	doc, itemb := cbr.Bytes(), item.Bytes()
+	newdoc.n, old.n = cborSet(doc, segments, itemb, newdocb, olditemb, config)
+	return newdoc
+}
 
-// Get field or nested field specified by cbor-pointer.
-//func (cbr *Cbor) Get(jptr *Jsonpointer, item *Cbor) *Cbor {
-//	if len(jptr.path) == 1 && jptr.path[0] == '/' {
-//		item.n = copy(item.data, cbr.data[:cbr.n])
-//		return item
-//	}
-//	item.n = cborGet(cbr.data[:cbr.n], jptr, item.data)
-//	return item
-//}
+// Prepend item into a array or property container specified by json-pointer.
+func (cbr *Cbor) Prepend(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
+	config, segments := cbr.config, jptr.Segments()
+	newdocb := newdoc.data[:cap(newdoc.data)]
+	doc, itemb := cbr.Bytes(), item.Bytes()
+	newdoc.n = cborPrepend(doc, segments, itemb, newdocb, config)
+	return newdoc
+}
 
-// Set field or nested field specified by cbor-pointer.
-//func (cbr *Cbor) Set(jptr *Jsonpointer, item, newdoc, old *Cbor) *Cbor {
-//	if len(jptr.path) == 1 && jptr.path[0] == '/' {
-//		newdoc.n = copy(newdoc.data, item.data[:item.n])
-//		old.n = copy(old.data, cbr.data[:cbr.n])
-//		return cbr
-//	}
-//	docdata, itemdata := cbr.data[:cbr.n], item.data[:item.n]
-//	newdoc.n, old.n = cborSet(docdata, jptr, itemdata, newdoc.data, old.data)
-//	return cbr
-//}
+// Append item into a array or property container specified by json-pointer.
+func (cbr *Cbor) Append(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
+	config, segments := cbr.config, jptr.Segments()
+	newdocb := newdoc.data[:cap(newdoc.data)]
+	doc, itemb := cbr.Bytes(), item.Bytes()
+	newdoc.n = cborAppend(doc, segments, itemb, newdocb, config)
+	return newdoc
+}
 
-// Prepend item into a array or property container specified by cbor-pointer.
-//func (cbr *Cbor) Prepend(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor {
-//	docdata, itemdata := cbr.data[:cbr.n], item.data[:item.n]
-//	newdoc.n = cborPrepend(docdata, jptr, itemdata, newdoc.data, cbr.config)
-//	return cbr
-//}
-
-// Delete field or nested field specified by cbor-pointer.
-//func (cbr *Cbor) Delete(jptr *Jsonpointer, newdoc, deleted *Cbor) *Cbor {
-//	if len(jptr.path) == 1 && jptr.path[0] == '/' {
-//		panic("cbor emptyPointer")
-//	}
-//	docdata = cbr.data[:cbr.n]
-//	newdoc.n, deleted.n = cborDel(docdata, jptr, newdoc.data, deleted.data)
-//	return cbr
-//}
+// Delete field or nested field specified by json-pointer.
+func (cbr *Cbor) Delete(jptr *Jsonpointer, newdoc, deleted *Cbor) *Cbor {
+	config, segments := cbr.config, jptr.Segments()
+	if len(segments) == 0 {
+		panic("cbor.Set(): empty pointer")
+	}
+	newdocb := newdoc.data[:cap(newdoc.data)]
+	doc, deletedb := cbr.Bytes(), deleted.data[:cap(deleted.data)]
+	newdoc.n, deleted.n = cborDel(doc, segments, newdocb, deletedb, config)
+	return newdoc
+}
 
 //---- help functions.
 
