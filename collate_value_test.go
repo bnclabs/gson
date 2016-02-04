@@ -118,6 +118,19 @@ func TestVal2CollateNumber(t *testing.T) {
 		t.Errorf("expected %v, got %v", objf, value)
 	}
 
+	// as int64 using FloatNumber32 configuration
+	obji, ref = int64(10), `\x05>>21-\x00`
+	config = config.SetNumberKind(FloatNumber32)
+	clt = config.NewCollate(make([]byte, 1024), 0)
+
+	config.NewValue(obji).Tocollate(clt)
+	out = fmt.Sprintf("%q", clt.Bytes())
+	if out = out[1 : len(out)-1]; out != ref {
+		t.Errorf("expected %v, got %v", ref, out)
+	} else if value := clt.Tovalue(); !reflect.DeepEqual(value, float64(10.0)) {
+		t.Errorf("expected %v, got %v", obji, value)
+	}
+
 	// as int64 using Decimal configuration, expect a panic
 	func() {
 		defer func() {

@@ -179,7 +179,13 @@ func cbor2valt2(buf []byte, config *Config) (interface{}, int) {
 }
 
 func cbor2valt2indefinite(buf []byte, config *Config) (interface{}, int) {
-	return CborIndefinite(buf[0]), 1
+	value, n := make([][]byte, 0), 1
+	for buf[n] != brkstp {
+		val, m := cbor2value(buf[n:], config)
+		n += m
+		value = append(value, val.([]byte))
+	}
+	return value, n
 }
 
 func cbor2valt3(buf []byte, config *Config) (interface{}, int) {
@@ -190,7 +196,13 @@ func cbor2valt3(buf []byte, config *Config) (interface{}, int) {
 }
 
 func cbor2valt3indefinite(buf []byte, config *Config) (interface{}, int) {
-	return CborIndefinite(buf[0]), 1
+	value, n := make([]string, 0), 1
+	for buf[n] != brkstp {
+		val, m := cbor2value(buf[n:], config)
+		n += m
+		value = append(value, val.(string))
+	}
+	return value, n
 }
 
 func cbor2valt4(buf []byte, config *Config) (interface{}, int) {

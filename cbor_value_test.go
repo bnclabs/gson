@@ -235,16 +235,6 @@ func TestCborTagBytes(t *testing.T) {
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
 		t.Errorf("expected %v, got %v", val.data, rv)
 	}
-
-	// test byte-start
-	buf := make([]byte, 10)
-	if n := bytesStart(buf); n != 1 {
-		t.Errorf("fail code bytes-start len: %v wanted 1", n)
-	} else if val, m := cbor2value(buf, config); m != n {
-		t.Errorf("fail code bytes-start size: %v wanted %v", m, n)
-	} else if !reflect.DeepEqual(val, CborIndefinite(0x5f)) {
-		t.Errorf("fail code bytes-start: %v wanted 0x5f", buf[0])
-	}
 }
 
 func TestCborText(t *testing.T) {
@@ -254,16 +244,6 @@ func TestCborText(t *testing.T) {
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
 		t.Errorf("expected %v, got %v", val.data, rv)
-	}
-
-	// test text-start
-	buf := make([]byte, 10)
-	if n := textStart(buf); n != 1 {
-		t.Errorf("fail code text-start len: %v wanted 1", n)
-	} else if val, m := cbor2value(buf, config); m != n {
-		t.Errorf("fail code text-start size: %v wanted %v", m, n)
-	} else if !reflect.DeepEqual(val, CborIndefinite(0x7f)) {
-		t.Errorf("fail code text-start: %x wanted 0x7f", buf[0])
 	}
 }
 

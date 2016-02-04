@@ -28,8 +28,7 @@ func (config Config) SetSpaceKind(ws SpaceKind) *Config {
 }
 
 // Strict setting to enforce strict transforms.
-// TODO: describe this more.
-func (config Config) Strict(what bool) *Config {
+func (config Config) SetStrict(what bool) *Config {
 	config.strict = what
 	return &config
 }

@@ -83,7 +83,7 @@ func (clt *Collate) Reset(data []byte) *Collate {
 // Tovalue convert to golang native value.
 func (clt *Collate) Tovalue() interface{} {
 	if clt.n == 0 {
-		return nil
+		panic("cannot convert empty binary-collate to value")
 	}
 	value, _ /*rb*/ := collate2gson(clt.data[:clt.n], clt.config)
 	return value
@@ -92,7 +92,7 @@ func (clt *Collate) Tovalue() interface{} {
 // Tojson convert to json encoded text.
 func (clt *Collate) Tojson(jsn *Json) *Json {
 	if clt.n == 0 {
-		return nil
+		panic("cannot convert empty binary-collate to json")
 	}
 	in := clt.data[:clt.n]
 	_ /*rb*/, m /*wb*/ := collate2json(in, jsn.data[jsn.n:], clt.config)
@@ -103,7 +103,7 @@ func (clt *Collate) Tojson(jsn *Json) *Json {
 // Tocbor convert to cbor encoded value.
 func (clt *Collate) Tocbor(cbr *Cbor) *Cbor {
 	if clt.n == 0 {
-		return nil
+		panic("cannot convert empty binary-collate to cbor")
 	}
 	in := clt.data[:clt.n]
 	_ /*rb*/, m /*wb*/ := collate2cbor(in, cbr.data[cbr.n:], clt.config)

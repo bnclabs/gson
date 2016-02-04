@@ -150,12 +150,18 @@ func (cbr *Cbor) Reset(data []byte) *Cbor {
 
 // Tovalue convert to golang native value.
 func (cbr *Cbor) Tovalue() interface{} {
+	if cbr.n == 0 {
+		panic("cannot convert empty cbor bytes to value")
+	}
 	value, _ /*rb*/ := cbor2value(cbr.data[:cbr.n], cbr.config)
 	return value
 }
 
 // Tojson convert to json encoded value.
 func (cbr *Cbor) Tojson(jsn *Json) *Json {
+	if cbr.n == 0 {
+		panic("cannot convert empty cbor bytes to json")
+	}
 	in := cbr.data[:cbr.n]
 	_ /*rb*/, m /*wb*/ := cbor2json(in, jsn.data[jsn.n:], cbr.config)
 	jsn.n += m
@@ -164,17 +170,13 @@ func (cbr *Cbor) Tojson(jsn *Json) *Json {
 
 // Tocollate convert to binary-collation.
 func (cbr *Cbor) Tocollate(clt *Collate) *Collate {
+	if cbr.n == 0 {
+		panic("cannot convert empty cbor bytes to binary-collation")
+	}
 	in := cbr.data[:cbr.n]
 	_ /*rb*/, m /*wb*/ := cbor2collate(in, clt.data[clt.n:], cbr.config)
 	clt.n += m
 	return clt
-}
-
-// EncodeSimpletype to encode simple type into cbor buffer.
-// Code points 0..19 and 32..255 are un-assigned.
-func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
-	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:])
-	return cbr
 }
 
 // EncodeSmallint to encode tiny integers between -23..+23 into cbor buffer.
@@ -188,9 +190,38 @@ func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 	return cbr
 }
 
-// MapsliceToCbor to encode key,value pairs into cbor buffer.
-func (cbr *Cbor) MapsliceToCbor(items [][2]interface{}) *Cbor {
+// EncodeSimpletype to encode simple type into cbor buffer.
+// Code points 0..19 and 32..255 are un-assigned.
+func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
+	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:])
+	return cbr
+}
+
+// EncodeMapslice to encode key,value pairs into cbor buffer.
+func (cbr *Cbor) EncodeMapslice(items [][2]interface{}) *Cbor {
 	cbr.n += mapl2cbor(items, cbr.data[cbr.n:cap(cbr.data)], cbr.config)
+	return cbr
+}
+
+// EncodeBytechunks chunks of bytes as indefinite stream.
+func (cbr *Cbor) EncodeBytechunks(chunks [][]byte) *Cbor {
+	cbr.n += bytesStart(cbr.data[cbr.n:cap(cbr.data)])
+	for _, chunk := range chunks {
+		cbr.n += valbytes2cbor(chunk, cbr.data[cbr.n:])
+	}
+	cbr.data[cbr.n] = cborType7 | cborItemBreak
+	cbr.n++
+	return cbr
+}
+
+// EncodeTextchunks chunks of text as indefinite stream.
+func (cbr *Cbor) EncodeTextchunks(chunks []string) *Cbor {
+	cbr.n += textStart(cbr.data[cbr.n:cap(cbr.data)])
+	for _, chunk := range chunks {
+		cbr.n += valtext2cbor(chunk, cbr.data[cbr.n:])
+	}
+	cbr.data[cbr.n] = cborType7 | cborItemBreak
+	cbr.n++
 	return cbr
 }
 
@@ -329,6 +360,7 @@ func cborItem(doc []byte) (start, end int) {
 		_, end = cborItemLength(doc)
 		_, n = cborItem(doc[end:])
 		end += n
+		return start, end
 
 	case cborType7:
 		if info < 23 {

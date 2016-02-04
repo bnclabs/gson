@@ -10,6 +10,16 @@ var _ = fmt.Sprintf("dummy")
 // All test cases are folded into cbor_json_test.go, contains only few
 // missing testcases (if any) and benchmarks.
 
+func TestStrictFloat(t *testing.T) {
+	config := NewDefaultConfig().SetNumberKind(IntNumber).SetStrict(false)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	jsn := config.NewJson([]byte("10.2"), -1)
+	jsn.Tocbor(cbr)
+	if value := cbr.Tovalue(); value != 10.2 {
+		t.Errorf("expected %v, got %v", 10.2, value)
+	}
+}
+
 func BenchmarkJson2CborNull(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("null"), -1)

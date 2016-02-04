@@ -175,6 +175,9 @@ func (config Config) SetJptrlen(n int) *Config {
 //	   itemlen - maximum length of collated value.
 //	   ptrlen  - maximum length of json-pointer can take
 func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
+	config.memConfig = memConfig{
+		strlen: strlen, numkeys: numkeys, itemlen: itemlen, ptrlen: ptrlen,
+	}
 	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
 	return &config
 }

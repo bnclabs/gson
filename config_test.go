@@ -120,6 +120,59 @@ func TestCborToCollate(t *testing.T) {
 	}
 }
 
+func TestResetPool(t *testing.T) {
+	config := NewDefaultConfig().ResetPools(1, 2, 3, 4)
+	if config.strlen != 1 {
+		t.Errorf("expected %v, got %v", 1, config.strlen)
+	} else if config.numkeys != 2 {
+		t.Errorf("expected %v, got %v", 2, config.numkeys)
+	} else if config.itemlen != 3 {
+		t.Errorf("expected %v, got %v", 3, config.itemlen)
+	} else if config.ptrlen != 4 {
+		t.Errorf("expected %v, got %v", 4, config.ptrlen)
+	}
+}
+
+func TestNewCollate(t *testing.T) {
+	config := NewDefaultConfig()
+	clt := config.NewCollate(make([]byte, 123), -1)
+	if clt.n != 123 {
+		t.Errorf("expected %v, got %v", 123, clt.n)
+	}
+}
+
+func TestConfigString(t *testing.T) {
+	config := NewDefaultConfig()
+	s := config.String()
+	if !strings.Contains(s, "nk:") {
+		t.Errorf("expected config string, %v", s)
+	}
+}
+
+func TestNumberKindString(t *testing.T) {
+	if s := SmartNumber32.String(); s != "SmartNumber32" {
+		t.Errorf("expected %v, got %v", "SmartNumber32", s)
+	} else if s := SmartNumber.String(); s != "SmartNumber" {
+		t.Errorf("expected %v, got %v", "SmartNumber", s)
+	} else if s := IntNumber.String(); s != "IntNumber" {
+		t.Errorf("expected %v, got %v", "IntNumber", s)
+	} else if s := FloatNumber32.String(); s != "FloatNumber32" {
+		t.Errorf("expected %v, got %v", "FloatNumber32", s)
+	} else if s := FloatNumber.String(); s != "FloatNumber" {
+		t.Errorf("expected %v, got %v", "FloatNumber", s)
+	} else if s := Decimal.String(); s != "Decimal" {
+		t.Errorf("expected %v, got %v", "Decimal", s)
+	}
+}
+
+func TestContainerEncodingString(t *testing.T) {
+	if s := LengthPrefix.String(); s != "LengthPrefix" {
+		t.Errorf("expected %v, got %v", "LengthPrefix", s)
+	} else if s := Stream.String(); s != "Stream" {
+		t.Errorf("expected %v, got %v", "Stream", s)
+	}
+}
+
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -226,6 +279,7 @@ func init() {
 		"a\xffb",
 		"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e"}...)
 }
+
 func fixFloats(val interface{}) interface{} {
 	switch v := val.(type) {
 	case float64:
