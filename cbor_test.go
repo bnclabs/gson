@@ -104,7 +104,7 @@ func TestCborItem(t *testing.T) {
 		},
 	}
 	fn := func(ptr *Jsonpointer, ref interface{}, cbr, item *Cbor) {
-		t.Logf("%v", ptr.Path())
+		t.Logf("%v", string(ptr.Path()))
 
 		cbr.Get(ptr, item)
 		if value := item.Tovalue(); reflect.DeepEqual(value, ref) {
@@ -159,7 +159,7 @@ func TestCborItem(t *testing.T) {
 		[2]interface{}{"/7", []string{"sound", "ok", "horn"}},
 	}
 
-	t.Logf("%v", cbr.Bytes())
+	t.Logf("%v", string(cbr.Bytes()))
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0].(string))

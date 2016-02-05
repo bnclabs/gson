@@ -26,7 +26,7 @@ func valGet(segments [][]byte, doc interface{}) interface{} {
 
 	case map[string]interface{}:
 		if doc, ok := val[segment]; !ok {
-			panic("valGet(): gson pointer-invalidKey")
+			panic(fmt.Sprintf("valGet(): gson %v pointer-invalidKey", segment))
 		} else {
 			return valGet(segments[1:], doc)
 		}

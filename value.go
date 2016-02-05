@@ -8,6 +8,11 @@ type Value struct {
 	data   interface{}
 }
 
+// Data returns the golang data.
+func (val *Value) Data() interface{} {
+	return val.data
+}
+
 // Tojson encode golang native value to json text.
 func (val *Value) Tojson(jsn *Json) *Json {
 	jsn.n += value2json(val.data, jsn.data[jsn.n:], val.config)
