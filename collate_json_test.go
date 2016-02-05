@@ -192,20 +192,23 @@ func TestJson2CollateString(t *testing.T) {
 
 	// normal string
 	inp, refcode = `"hello world"`, `\x06hello world\x00\x00`
-	config = NewDefaultConfig()
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	dotest := func(config *Config) {
+		clt = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
-	out = fmt.Sprintf("%q", clt.Bytes())
-	if out = out[1 : len(out)-1]; out != refcode {
-		t.Errorf("expected %v, got %v", refcode, out)
-	}
+		config.NewJson([]byte(inp), -1).Tocollate(clt)
+		out = fmt.Sprintf("%q", clt.Bytes())
+		if out = out[1 : len(out)-1]; out != refcode {
+			t.Errorf("expected %v, got %v", refcode, out)
+		}
 
-	jsn = config.NewJson(make([]byte, 1024), 0)
-	clt.Tojson(jsn)
-	if s := string(jsn.Bytes()); s != inp {
-		t.Errorf("expected %v, got %v", inp, s)
+		jsn = config.NewJson(make([]byte, 1024), 0)
+		clt.Tojson(jsn)
+		if s := string(jsn.Bytes()); s != inp {
+			t.Errorf("expected %v, got %v", inp, s)
+		}
 	}
+	dotest(NewDefaultConfig().SetStrict(true))
+	dotest(NewDefaultConfig().SetStrict(false))
 
 	// missing string
 	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`
@@ -444,7 +447,20 @@ func BenchmarkColl2JsonMiss(b *testing.B) {
 }
 
 func BenchmarkColl2JsonStr(b *testing.B) {
-	config := NewDefaultConfig()
+	config := NewDefaultConfig().SetStrict(false)
+	clt := config.NewCollate(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 1024), 0)
+
+	config.NewJson([]byte(`"hello world"`), -1).Tocollate(clt)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		clt.Tojson(jsn.Reset(nil))
+	}
+}
+
+func BenchmarkColl2JsonStrS(b *testing.B) {
+	config := NewDefaultConfig().SetStrict(true)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	jsn := config.NewJson(make([]byte, 1024), 0)
 

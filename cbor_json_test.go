@@ -64,32 +64,34 @@ func TestCbor2Json(t *testing.T) {
 		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`,
 	}
 
-	config := NewDefaultConfig()
+	dotest := func(config *Config) {
+		jsn := config.NewJson(make([]byte, 1024), 0)
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		jsnback := config.NewJson(make([]byte, 1024), 0)
 
-	jsn := config.NewJson(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
-	jsnback := config.NewJson(make([]byte, 1024), 0)
+		var ref1, ref2 interface{}
 
-	var ref1, ref2 interface{}
+		for _, tcase := range testcases {
+			t.Logf("testcase - %v", tcase)
+			json.Unmarshal([]byte(tcase), &ref1)
 
-	for _, tcase := range testcases {
-		t.Logf("testcase - %v", tcase)
-		json.Unmarshal([]byte(tcase), &ref1)
+			jsn.Reset([]byte(tcase))
+			jsn.Tocbor(cbr.Reset(nil))
 
-		jsn.Reset([]byte(tcase))
-		jsn.Tocbor(cbr.Reset(nil))
+			t.Logf("%v %v", len(cbr.Bytes()), cbr.Bytes())
 
-		t.Logf("%v %v", len(cbr.Bytes()), cbr.Bytes())
+			cbr.Tojson(jsnback.Reset(nil))
+			if err := json.Unmarshal(jsnback.Bytes(), &ref2); err != nil {
+				t.Errorf("json.Unmarshal() failed for cbor %v: %v", tcase, err)
+			}
 
-		cbr.Tojson(jsnback.Reset(nil))
-		if err := json.Unmarshal(jsnback.Bytes(), &ref2); err != nil {
-			t.Errorf("json.Unmarshal() failed for cbor %v: %v", tcase, err)
-		}
-
-		if !reflect.DeepEqual(ref1, ref2) {
-			t.Errorf("mismatch %v, got %v", ref1, ref2)
+			if !reflect.DeepEqual(ref1, ref2) {
+				t.Errorf("mismatch %v, got %v", ref1, ref2)
+			}
 		}
 	}
+	dotest(NewDefaultConfig().SetStrict(false))
+	dotest(NewDefaultConfig().SetStrict(true))
 }
 
 func TestCbor2JsonLengthPrefix(t *testing.T) {
@@ -161,6 +163,7 @@ func TestCbor2JsonNum(t *testing.T) {
 		}()
 		config := NewDefaultConfig()
 		config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
+		config = config.SetStrict(true)
 		jsn := config.NewJson(make([]byte, 1024), 0)
 		cbr := config.NewCbor(make([]byte, 1024), 0)
 		jsn.Reset([]byte("10.2"))
@@ -435,7 +438,20 @@ func BenchmarkCbor2JsonBool(b *testing.B) {
 }
 
 func BenchmarkCbor2JsonStr(b *testing.B) {
-	config := NewDefaultConfig()
+	config := NewDefaultConfig().SetStrict(false)
+	jsn := config.NewJson([]byte(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`), -1)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	jsn.Tocbor(cbr)
+
+	for i := 0; i < b.N; i++ {
+		cbr.Tojson(jsn.Reset(nil))
+	}
+	b.SetBytes(int64(len(cbr.Bytes())))
+}
+
+func BenchmarkCbor2JsonStrS(b *testing.B) {
+	config := NewDefaultConfig().SetStrict(true)
 	jsn := config.NewJson([]byte(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`), -1)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 

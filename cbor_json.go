@@ -116,19 +116,19 @@ func cbor2jsont1info27(buf, out []byte, config *Config) (int, int) {
 func cbor2jsont3(buf, out []byte, config *Config) (int, int) {
 	ln, n := cborItemLength(buf)
 
-	// TODO: To make it complaint with golang's stdlib, comment out
-	// the following line and un-comment the next 6 lines.
+	if config.strict {
+		config.buf.Reset()
+		if err := config.enc.Encode(bytes2str(buf[n : n+ln])); err != nil {
+			panic(err)
+		}
+		s := config.buf.Bytes()
+		return n + ln, copy(out, s[:len(s)-1]) // -1 to strip \n
+	}
+
 	out1, err := encodeString(buf[n:n+ln], out[:0])
 	if err != nil {
 		panic(err)
 	}
-	//config.buf.Reset()
-	//if err := config.enc.Encode(bytes2str(buf[n : n+ln])); err != nil {
-	//	panic(err)
-	//}
-	//s := config.buf.Bytes()
-	//copy(out, s[:len(s)-1]) // -1 to strip \n
-
 	return n + ln, len(out1)
 }
 

@@ -105,7 +105,7 @@ type Config struct {
 // NewDefaultConfig returns a new configuration with default settings:
 //		FloatNumber         Stream
 //		MaxKeys
-//		UnicodeSpace        +strict
+//		UnicodeSpace        -strict
 //		+doMissing          -arrayLenPrefix
 //		+propertyLenPrefix
 //		MaxJsonpointerLen
@@ -120,7 +120,7 @@ func NewDefaultConfig() *Config {
 		},
 		jsonConfig: jsonConfig{
 			ws:     UnicodeSpace,
-			strict: true,
+			strict: false,
 		},
 		collateConfig: collateConfig{
 			doMissing:         true,

@@ -1,5 +1,3 @@
-* document `strict` configuration.
-* can we use `strict` for using golang's encodeString ?
 * improve code documentation and README.
 * test cases for cbor_json.go:tag2json().
 

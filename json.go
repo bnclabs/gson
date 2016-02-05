@@ -14,7 +14,7 @@ const (
 )
 
 type jsonConfig struct {
-	// if `strict` is false then configurations with IntNumber
+	// if `strict` is false, for configurations with IntNumber
 	// will parse floating numbers and then convert it to int64.
 	// else will panic when detecting floating numbers.
 	strict bool
@@ -27,7 +27,10 @@ func (config Config) SetSpaceKind(ws SpaceKind) *Config {
 	return &config
 }
 
-// Strict setting to enforce strict transforms.
+// Strict setting to enforce strict transforms to and from JSON.
+// If set to true,
+//   a. IntNumber configuration float numbers in JSON text still are parsed.
+//   b. Use golang stdlib encoding/json for transforming strings to JSON.
 func (config Config) SetStrict(what bool) *Config {
 	config.strict = what
 	return &config

@@ -124,6 +124,7 @@ func TestScanIntegers(t *testing.T) {
 func TestScanMalformed(t *testing.T) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(IntNumber).SetSpaceKind(AnsiSpace)
+	config = config.SetStrict(true)
 
 	for _, tcase := range scaninvalid {
 		func() {
