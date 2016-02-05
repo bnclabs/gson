@@ -7,7 +7,6 @@ package gson
 
 import "strconv"
 import "fmt"
-import "encoding/json"
 
 func gson2collate(obj interface{}, code []byte, config *Config) int {
 	if obj == nil {
@@ -70,18 +69,18 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n++
 		return n
 
-	case json.Number:
-		n := 0
-		code[n] = TypeNumber
-		n++
-		f, err := strconv.ParseFloat(string(value), 64)
-		if err != nil {
-			panic(err)
-		}
-		n += normalizeFloat(f, code[n:], config.nk)
-		code[n] = Terminator
-		n++
-		return n
+	//case json.Number:
+	//	n := 0
+	//	code[n] = TypeNumber
+	//	n++
+	//	f, err := strconv.ParseFloat(string(value), 64)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	n += normalizeFloat(f, code[n:], config.nk)
+	//	code[n] = Terminator
+	//	n++
+	//	return n
 
 	case Missing:
 		if config.doMissing && MissingLiteral.Equal(string(value)) {

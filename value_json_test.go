@@ -37,17 +37,45 @@ func TestBool2Json(t *testing.T) {
 func TestNumber2Json(t *testing.T) {
 	testcases := []interface{}{
 		10.0, -10.0, 0.1, -0.1, 10.1, -10.1, -10E-1, -10e+1, 10E-1, 10e+1,
+		byte(10), int8(-10), int16(1024), uint16(1024), int32(-1048576),
+		uint32(1048576), int(-1048576), uint(1048576),
+		int64(-1099511627776), uint64(1099511627776),
 	}
 	config := NewDefaultConfig()
 	jsn := config.NewJson(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
-		var out interface{}
+		var ref, out interface{}
 
 		config.NewValue(tcase).Tojson(jsn.Reset(nil))
-		if json.Unmarshal(jsn.Bytes(), &out); !reflect.DeepEqual(out, tcase) {
-			t.Errorf("expected %v, got %v", tcase, out)
+		json.Unmarshal(jsn.Bytes(), &out)
+		data, _ := json.Marshal(tcase)
+		json.Unmarshal(data, &ref)
+		if !reflect.DeepEqual(out, ref) {
+			t.Errorf("expected %v, got %v", ref, out)
 		}
+	}
+
+	// convert float32
+	var ref, out float32
+	config.NewValue(float32(109.951162)).Tojson(jsn.Reset(nil))
+	json.Unmarshal(jsn.Bytes(), &out)
+	data, _ := json.Marshal(float32(109.951162))
+	json.Unmarshal(data, &ref)
+	if !reflect.DeepEqual(out, ref) {
+		t.Errorf("expected %v, got %v", ref, out)
+	}
+}
+
+func TestMaptoJson(t *testing.T) {
+	txt := `{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`
+	config := NewDefaultConfig()
+	jsn := config.NewJson(make([]byte, 1024), 0)
+
+	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	config.NewValue(GolangMap2cborMap(value)).Tojson(jsn)
+	if _, val := jsn.Tovalue(); !reflect.DeepEqual(value, val) {
+		t.Errorf("expected %v, got %v", value, val)
 	}
 }
 

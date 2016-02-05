@@ -141,7 +141,8 @@ nextseg:
 				}
 				panic(fmt.Sprintf("index %v overflow", idx))
 			}
-			ln, end = cborItemLength(doc)
+			ln, end = cborItemLength(doc[start:])
+			end += start
 			for ; count < ln; count++ {
 				_, n := cborItem(doc[end:])
 				start, end = end, end+n
@@ -168,7 +169,8 @@ nextseg:
 				}
 				panic(fmt.Sprintf("key %v not found", bytes2str(segment)))
 			}
-			ln, end = cborItemLength(doc)
+			ln, end = cborItemLength(doc[start:])
+			end += start
 			for i := 0; i < ln; i++ {
 				_, m := cborItem(doc[end:])
 				_, n := cborItem(doc[end+m:])
@@ -178,7 +180,7 @@ nextseg:
 					continue nextseg
 				}
 			}
-			if i == (len(segments) - 1) { // leaf
+			if i == (len(segments) - 1) { // missing
 				return cont, -1, -1, -1
 			}
 			panic(fmt.Sprintf("key %v not found", bytes2str(segment)))

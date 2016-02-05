@@ -623,7 +623,6 @@ func TestDecimalFraction(t *testing.T) {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 64), 0)
 
-	// for positive
 	refs := []CborTagFraction{
 		CborTagFraction([2]int64{int64(-10), int64(-23)}),
 		CborTagFraction([2]int64{int64(-10), int64(23)}),

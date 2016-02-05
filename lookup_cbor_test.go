@@ -31,26 +31,29 @@ func TestCborGet(t *testing.T) {
 		[2]interface{}{"/dict/", 2.0},
 		[2]interface{}{"", ref},
 	}
-	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
-	item := config.NewCbor(make([]byte, 1024), 0)
+	dotest := func(config *Config) {
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		item := config.NewCbor(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	ptr := config.NewJsonpointer("")
+		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		ptr := config.NewJsonpointer("")
 
-	t.Logf("%v", txt)
-	t.Logf("%v", cbr.Bytes())
+		t.Logf("%v", txt)
+		t.Logf("%v", cbr.Bytes())
 
-	for _, tcase := range testcases {
-		t.Logf("%v", tcase[0].(string))
+		for _, tcase := range testcases {
+			t.Logf("%v", tcase[0].(string))
 
-		ptr = ptr.ResetPath(tcase[0].(string))
-		value := cbr.Get(ptr, item.Reset(nil)).Tovalue()
-		if !reflect.DeepEqual(value, tcase[1]) {
-			fmsg := "for %q expected %v, got %v"
-			t.Errorf(fmsg, string(ptr.Path()), tcase[1], value)
+			ptr = ptr.ResetPath(tcase[0].(string))
+			value := cbr.Get(ptr, item.Reset(nil)).Tovalue()
+			if !reflect.DeepEqual(value, tcase[1]) {
+				fmsg := "for %q expected %v, got %v"
+				t.Errorf(fmsg, string(ptr.Path()), tcase[1], value)
+			}
 		}
 	}
+	dotest(NewDefaultConfig().SetContainerEncoding(LengthPrefix))
+	dotest(NewDefaultConfig().SetContainerEncoding(Stream))
 }
 
 func TestCborSet(t *testing.T) {
@@ -70,50 +73,80 @@ func TestCborSet(t *testing.T) {
 		[3]interface{}{"/dict/a", 1.0, 10.0},
 		[3]interface{}{"/dict/b", 2.0, 20.0},
 	}
-	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
-	item := config.NewCbor(make([]byte, 1024), 0)
-	newcbr := config.NewCbor(make([]byte, 1024), 0)
-	old := config.NewCbor(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	ptr := config.NewJsonpointer("")
+	dotest := func(config *Config) {
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		item := config.NewCbor(make([]byte, 1024), 0)
+		newcbr := config.NewCbor(make([]byte, 1024), 0)
+		old := config.NewCbor(make([]byte, 1024), 0)
 
-	for _, tcase := range testcases {
-		t.Logf("%v", tcase[0].(string))
+		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		ptr := config.NewJsonpointer("")
 
-		ptr.ResetPath(tcase[0].(string))
-		config.NewValue(tcase[1]).Tocbor(item.Reset(nil))
-		cbr.Set(ptr, item, newcbr.Reset(nil), old.Reset(nil))
-		cbr, newcbr = newcbr, cbr
+		for _, tcase := range testcases {
+			t.Logf("%v", tcase[0].(string))
 
-		if olditem := old.Tovalue(); !reflect.DeepEqual(olditem, tcase[2]) {
-			fmsg := "for %q expected %v, got %v"
-			t.Errorf(fmsg, string(ptr.Path()), tcase[2], olditem)
+			ptr.ResetPath(tcase[0].(string))
+			config.NewValue(tcase[1]).Tocbor(item.Reset(nil))
+			cbr.Set(ptr, item, newcbr.Reset(nil), old.Reset(nil))
+			cbr, newcbr = newcbr, cbr
+
+			if olditem := old.Tovalue(); !reflect.DeepEqual(olditem, tcase[2]) {
+				fmsg := "for %q expected %v, got %v"
+				t.Errorf(fmsg, string(ptr.Path()), tcase[2], olditem)
+			}
+
+			value := cbr.Get(ptr, old.Reset(nil)).Tovalue()
+			if !reflect.DeepEqual(value, tcase[1]) {
+				fmsg := "for %q expected %v, got %v"
+				t.Errorf(fmsg, string(ptr.Path()), tcase[1], value)
+			}
 		}
-
-		value := cbr.Get(ptr, old.Reset(nil)).Tovalue()
-		if !reflect.DeepEqual(value, tcase[1]) {
-			fmsg := "for %q expected %v, got %v"
-			t.Errorf(fmsg, string(ptr.Path()), tcase[1], value)
+		var refval interface{}
+		if err := json.Unmarshal([]byte(ref), &refval); err != nil {
+			t.Fatalf("unmarshal: %v", err)
+		} else if value := cbr.Tovalue(); !reflect.DeepEqual(refval, value) {
+			t.Errorf("expected %v, got %v", refval, value)
 		}
 	}
-
-	var refval interface{}
-	if err := json.Unmarshal([]byte(ref), &refval); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	} else if value := cbr.Tovalue(); !reflect.DeepEqual(refval, value) {
-		t.Errorf("expected %v, got %v", refval, value)
-	}
+	dotest(NewDefaultConfig().SetContainerEncoding(LengthPrefix))
+	dotest(NewDefaultConfig().SetContainerEncoding(Stream))
 }
 
 func TestCborPrepend(t *testing.T) {
 	var ref interface{}
 
-	txt := `{"a": 10, "-": [1], "arr": [1,2]}`
-	reftxt := `{"a": 10, "-": [10,1], "arr": [10,1,2]}`
+	txt := `{"a": 10, "-": [1], "arr": [1,2], "nestd": [[3]]}`
+	reftxt := `{"a": 10, "-": [10,1], "arr": [10,1,2], "nestd": [[10, 3]]}`
 	json.Unmarshal([]byte(reftxt), &ref)
-	testcases := []string{"/-", "/arr"}
+	testcases := []string{"/-", "/arr", "/nestd/0"}
+
+	dotest := func(config *Config) {
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		newcbr := config.NewCbor(make([]byte, 1024), 0)
+		item := config.NewCbor(make([]byte, 1024), 0)
+
+		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewValue(10.0).Tocbor(item)
+		ptr := config.NewJsonpointer("")
+
+		for _, tcase := range testcases {
+			t.Logf("%v", tcase)
+			ptr.ResetPath(tcase)
+			cbr.Prepend(ptr, item, newcbr.Reset(nil))
+			cbr, newcbr = newcbr, cbr
+		}
+
+		if value := cbr.Tovalue(); !reflect.DeepEqual(value, ref) {
+			t.Errorf("expected %v, got %v", ref, value)
+		}
+	}
+	dotest(NewDefaultConfig().SetContainerEncoding(Stream))
+	dotest(NewDefaultConfig().SetContainerEncoding(LengthPrefix))
+
+	// Prepend an array
+	txt, reftxt = `[]`, `[20,10]`
+	json.Unmarshal([]byte(reftxt), &ref)
 
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 1024), 0)
@@ -121,31 +154,7 @@ func TestCborPrepend(t *testing.T) {
 	item := config.NewCbor(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	config.NewValue(10.0).Tocbor(item)
 	ptr := config.NewJsonpointer("")
-
-	for _, tcase := range testcases {
-		t.Logf("%v", tcase)
-		ptr.ResetPath(tcase)
-		cbr.Prepend(ptr, item, newcbr.Reset(nil))
-		cbr, newcbr = newcbr, cbr
-	}
-
-	if value := cbr.Tovalue(); !reflect.DeepEqual(value, ref) {
-		t.Errorf("expected %v, got %v", ref, value)
-	}
-
-	// Prepend an array
-	txt, reftxt = `[]`, `[20,10]`
-	json.Unmarshal([]byte(reftxt), &ref)
-
-	config = NewDefaultConfig()
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	newcbr = config.NewCbor(make([]byte, 1024), 0)
-	item = config.NewCbor(make([]byte, 1024), 0)
-
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	ptr = config.NewJsonpointer("")
 
 	cbr.Prepend(ptr, config.NewValue(10.0).Tocbor(item.Reset(nil)), newcbr)
 	newcbr.Prepend(ptr, config.NewValue(20.0).Tocbor(item.Reset(nil)), cbr)
@@ -176,10 +185,37 @@ func TestCborPrepend(t *testing.T) {
 func TestCborAppend(t *testing.T) {
 	var ref interface{}
 
-	txt := `{"a": 10, "-": [1], "arr": [1,2]}`
-	reftxt := `{"a": 10, "-": [1,10], "arr": [1,2,10]}`
+	txt := `{"a": 10, "-": [1], "arr": [1,2], "nestd": [[3]]}`
+	reftxt := `{"a": 10, "-": [1,10], "arr": [1,2,10], "nestd": [[3,10]]}`
 	json.Unmarshal([]byte(reftxt), &ref)
-	testcases := []string{"/-", "/arr"}
+	testcases := []string{"/-", "/arr", "/nestd/0"}
+
+	dotest := func(config *Config) {
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		newcbr := config.NewCbor(make([]byte, 1024), 0)
+		item := config.NewCbor(make([]byte, 1024), 0)
+
+		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewValue(10.0).Tocbor(item)
+		ptr := config.NewJsonpointer("")
+
+		for _, tcase := range testcases {
+			t.Logf("%v", tcase)
+			ptr.ResetPath(tcase)
+			cbr.Append(ptr, item, newcbr.Reset(nil))
+			cbr, newcbr = newcbr, cbr
+		}
+
+		if value := cbr.Tovalue(); !reflect.DeepEqual(value, ref) {
+			t.Errorf("expected %v, got %v", ref, value)
+		}
+	}
+	dotest(NewDefaultConfig().SetContainerEncoding(Stream))
+	dotest(NewDefaultConfig().SetContainerEncoding(LengthPrefix))
+
+	// Append an array
+	txt, reftxt = `[]`, `[10,20]`
+	json.Unmarshal([]byte(reftxt), &ref)
 
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 1024), 0)
@@ -187,31 +223,7 @@ func TestCborAppend(t *testing.T) {
 	item := config.NewCbor(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	config.NewValue(10.0).Tocbor(item)
 	ptr := config.NewJsonpointer("")
-
-	for _, tcase := range testcases {
-		t.Logf("%v", tcase)
-		ptr.ResetPath(tcase)
-		cbr.Append(ptr, item, newcbr.Reset(nil))
-		cbr, newcbr = newcbr, cbr
-	}
-
-	if value := cbr.Tovalue(); !reflect.DeepEqual(value, ref) {
-		t.Errorf("expected %v, got %v", ref, value)
-	}
-
-	// Append an array
-	txt, reftxt = `[]`, `[10,20]`
-	json.Unmarshal([]byte(reftxt), &ref)
-
-	config = NewDefaultConfig()
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	newcbr = config.NewCbor(make([]byte, 1024), 0)
-	item = config.NewCbor(make([]byte, 1024), 0)
-
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	ptr = config.NewJsonpointer("")
 
 	cbr.Append(ptr, config.NewValue(10.0).Tocbor(item.Reset(nil)), newcbr)
 	newcbr.Append(ptr, config.NewValue(20.0).Tocbor(item.Reset(nil)), cbr)
@@ -253,41 +265,43 @@ func TestCborDelete(t *testing.T) {
 		[2]interface{}{"/dict/", 30.0},
 	}
 
+	dotest := func(config *Config) {
+		cbr := config.NewCbor(make([]byte, 1024), 0)
+		newcbr := config.NewCbor(make([]byte, 1024), 0)
+		deleted := config.NewCbor(make([]byte, 1024), 0)
+
+		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		ptr := config.NewJsonpointer("")
+
+		for _, tcase := range testcases {
+			t.Logf("%v", tcase)
+
+			ptr.ResetPath(tcase[0].(string))
+			cbr.Delete(ptr, newcbr.Reset(nil), deleted.Reset(nil))
+			if value := deleted.Tovalue(); !reflect.DeepEqual(value, tcase[1]) {
+				t.Errorf("for %v expected %v, got %v", tcase[0], tcase[1], value)
+			}
+			cbr, newcbr = newcbr, cbr
+		}
+		remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
+		_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
+		if value := cbr.Tovalue(); !reflect.DeepEqual(remvalue, value) {
+			t.Errorf("expected %v, got %v", remvalue, value)
+		}
+	}
+	dotest(NewDefaultConfig().SetContainerEncoding(LengthPrefix))
+	dotest(NewDefaultConfig().SetContainerEncoding(Stream))
+
+	// corner case
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	newcbr := config.NewCbor(make([]byte, 1024), 0)
 	deleted := config.NewCbor(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
-	ptr := config.NewJsonpointer("")
-
-	for _, tcase := range testcases {
-		t.Logf("%v", tcase)
-
-		ptr.ResetPath(tcase[0].(string))
-		cbr.Delete(ptr, newcbr.Reset(nil), deleted.Reset(nil))
-		if value := deleted.Tovalue(); !reflect.DeepEqual(value, tcase[1]) {
-			t.Errorf("for %v expected %v, got %v", tcase[0], tcase[1], value)
-		}
-		cbr, newcbr = newcbr, cbr
-	}
-
-	remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
-	_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
-	if value := cbr.Tovalue(); !reflect.DeepEqual(remvalue, value) {
-		t.Errorf("expected %v, got %v", remvalue, value)
-	}
-
-	// corner case
-	config = NewDefaultConfig()
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	newcbr = config.NewCbor(make([]byte, 1024), 0)
-	deleted = config.NewCbor(make([]byte, 1024), 0)
-
 	config.NewValue([]interface{}{"hello", "world"}).Tocbor(cbr)
-	ptr = config.NewJsonpointer("/1")
+	ptr := config.NewJsonpointer("/1")
 
-	remvalue = cbr.Delete(ptr, newcbr, deleted).Tovalue()
+	remvalue := cbr.Delete(ptr, newcbr, deleted).Tovalue()
 	if value := deleted.Tovalue(); !reflect.DeepEqual(value, "world") {
 		t.Errorf("for %v expected %v, got %v", ptr, "world", deleted)
 	} else if v := remvalue.([]interface{}); len(v) != 1 {

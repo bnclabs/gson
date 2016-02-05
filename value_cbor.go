@@ -338,13 +338,6 @@ func mapl2cbor(items [][2]interface{}, buf []byte, config *Config) int {
 	return n
 }
 
-func mapitem2cbor(item [2]interface{}, buf []byte, config *Config) int {
-	n := 0
-	n += value2cbor(item[0], buf[n:], config)
-	n += value2cbor(item[1], buf[n:], config)
-	return n
-}
-
 func mapStart(buf []byte) int {
 	// indefinite length map
 	buf[0] = cborHdr(cborType5, byte(cborIndefiniteLength))
@@ -403,39 +396,21 @@ func valbignum2cbor(num *big.Int, buf []byte, config *Config) int {
 	return n
 }
 
-func valdecimal2cbor(item interface{}, buf []byte, config *Config) int {
+func valdecimal2cbor(v CborTagFraction, buf []byte, config *Config) int {
 	var sl [2]interface{}
 
 	n := tag2cbor(tagDecimalFraction, buf)
-	switch v := item.(type) {
-	case CborTagFraction:
-		sl[0], sl[1] = v[0], v[1]
-		n += value2cbor(sl[:], buf[n:], config)
-	case [2]int64:
-		sl[0], sl[1] = v[0], v[1]
-		n += value2cbor(sl[:], buf[n:], config)
-	case []int64:
-		sl[0], sl[1] = v[0], v[1]
-		n += value2cbor(sl[:], buf[n:], config)
-	}
+	sl[0], sl[1] = v[0], v[1]
+	n += value2cbor(sl[:], buf[n:], config)
 	return n
 }
 
-func valbigfloat2cbor(item interface{}, buf []byte, config *Config) int {
+func valbigfloat2cbor(v CborTagFloat, buf []byte, config *Config) int {
 	var sl [2]interface{}
 
 	n := tag2cbor(tagBigFloat, buf)
-	switch v := item.(type) {
-	case CborTagFloat:
-		sl[0], sl[1] = v[0], v[1]
-		n += value2cbor(sl[:], buf[n:], config)
-	case [2]int64:
-		sl[0], sl[1] = v[0], v[1]
-		n += value2cbor(sl[:], buf[n:], config)
-	case []int64:
-		sl[0], sl[1] = v[0], v[1]
-		n += value2cbor(sl[:], buf[n:], config)
-	}
+	sl[0], sl[1] = v[0], v[1]
+	n += value2cbor(sl[:], buf[n:], config)
 	return n
 }
 

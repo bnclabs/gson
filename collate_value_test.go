@@ -78,6 +78,21 @@ func TestVal2CollateNumber(t *testing.T) {
 		t.Errorf("expected %v, got %v", obji, value)
 	}
 
+	// as float32 using FloatNumber configuration: FIXME
+	objf32, ref := float32(10.2), `\x05>>210199999809265137-\x00`
+	config = config.SetNumberKind(FloatNumber)
+	clt = config.NewCollate(make([]byte, 1024), 0)
+
+	config.NewValue(objf32).Tocollate(clt)
+	out = fmt.Sprintf("%q", clt.Bytes())
+	if out = out[1 : len(out)-1]; out != ref {
+		t.Errorf("expected %v, got %v", ref, out)
+	}
+	value := clt.Tovalue().(float64)
+	if !reflect.DeepEqual(value, 10.199999809265137) {
+		t.Errorf("expected %v, got %v", 10.199999809265137, float64(value))
+	}
+
 	// as float64 using IntNumber configuration
 	objf, ref = float64(10.2), `\x05>>210\x00`
 	objr := int64(10)
@@ -103,6 +118,20 @@ func TestVal2CollateNumber(t *testing.T) {
 		t.Errorf("expected %v, got %v", ref, out)
 	} else if value := clt.Tovalue(); !reflect.DeepEqual(value, obji) {
 		t.Errorf("expected %v, got %v", obji, value)
+	}
+
+	// as uint64 using IntNumber configuration
+	obju, ref := uint64(10), `\x05>>210\x00`
+	config = config.SetNumberKind(IntNumber)
+	clt = config.NewCollate(make([]byte, 1024), 0)
+
+	config.NewValue(obju).Tocollate(clt)
+	out = fmt.Sprintf("%q", clt.Bytes())
+	if out = out[1 : len(out)-1]; out != ref {
+		t.Errorf("expected %v, got %v", ref, out)
+	}
+	if value := clt.Tovalue().(int64); !reflect.DeepEqual(uint64(value), obju) {
+		t.Errorf("expected %v, got %v", obju, value)
 	}
 
 	// as float64 using Decimal configuration
