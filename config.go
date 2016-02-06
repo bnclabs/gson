@@ -1,6 +1,6 @@
 //  Copyright (c) 2015 Couchbase, Inc.
 
-// Package Gson provides a toolkit for JSON representation, collation
+// Package gson provides a toolkit for JSON representation, collation
 // and transformation.
 //
 // Package provides APIs to convert data representation from one format
@@ -144,7 +144,7 @@ func NewDefaultConfig() *Config {
 	return config
 }
 
-// NumberKind setting to interpret number values.
+// SetNumberKind setting to interpret number values.
 func (config Config) SetNumberKind(nk NumberKind) *Config {
 	config.nk = nk
 	return &config

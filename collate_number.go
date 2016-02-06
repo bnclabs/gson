@@ -294,7 +294,7 @@ func collateFloat(text, code []byte) int {
 			continue
 		}
 		mantissa[3+p] = x
-		p += 1
+		p++
 	}
 	mant = mantissa[:3+p]
 
@@ -303,7 +303,7 @@ func collateFloat(text, code []byte) int {
 	if err != nil {
 		panic(err)
 	}
-	expi += 1
+	expi++
 	if prefix == negPrefix {
 		expi = -expi
 	}

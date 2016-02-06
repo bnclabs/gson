@@ -142,7 +142,7 @@ func BenchmarkListPtrsTyp(b *testing.B) {
 	_, value := config.NewJson(data, -1).Tovalue()
 	val := config.NewValue(value)
 
-	pointers := make([]string, 0)
+	pointers := []string{}
 
 	b.SetBytes(int64(len(data)))
 	b.ResetTimer()

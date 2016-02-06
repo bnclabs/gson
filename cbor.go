@@ -98,15 +98,15 @@ const ( // pre-defined tag values
 	// unassigned 55800..
 )
 
-// CborTagEpoch, codepoint-1, followed by int64 of seconds since
+// CborTagEpoch codepoint-1, followed by int64 of seconds since
 // 1970-01-01T00:00Z in UTC time.
 type CborTagEpoch int64
 
-// CborTagEpochMicro, codepoint-1, followed by float64 of seconds/us since
+// CborTagEpochMicro codepoint-1, followed by float64 of seconds/us since
 // 1970-01-01T00:00Z in UTC time.
 type CborTagEpochMicro float64
 
-// CborTagFraction, codepoint-4, followed by [2]int64{e,m} => m*(10**e).
+// CborTagFraction codepoint-4, followed by [2]int64{e,m} => m*(10**e).
 type CborTagFraction [2]int64
 
 // CborTagFloat codepoint-5, followed by [2]int64{e,m} => m*(2**e).
@@ -115,10 +115,10 @@ type CborTagFloat [2]int64
 // CborTagBytes codepoint-24, bytes in cbor format.
 type CborTagBytes []byte
 
-// CborTagPrefix, codepoint-5579, followed by byte-string.
+// CborTagPrefix codepoint-5579, followed by byte-string.
 type CborTagPrefix []byte
 
-var brkstp byte = cborHdr(cborType7, cborItemBreak)
+var brkstp = cborHdr(cborType7, cborItemBreak)
 
 var hdrIndefiniteBytes = cborHdr(cborType2, cborIndefiniteLength)
 var hdrIndefiniteText = cborHdr(cborType3, cborIndefiniteLength)

@@ -21,13 +21,13 @@ type jsonConfig struct {
 	ws     SpaceKind
 }
 
-// SpaceKind setting to interpret whitespaces in json text.
+// SetSpaceKind setting to interpret whitespaces in json text.
 func (config Config) SetSpaceKind(ws SpaceKind) *Config {
 	config.ws = ws
 	return &config
 }
 
-// Strict setting to enforce strict transforms to and from JSON.
+// SetStrict setting to enforce strict transforms to and from JSON.
 // If set to true,
 //   a. IntNumber configuration float numbers in JSON text still are parsed.
 //   b. Use golang stdlib encoding/json for transforming strings to JSON.
@@ -68,7 +68,7 @@ func (jsn *Json) Tovalue() (*Json, interface{}) {
 	return nil, value
 }
 
-// ToValues parse json text to one or more go native values.
+// Tovalues parse json text to one or more go native values.
 func (jsn *Json) Tovalues() []interface{} {
 	var values []interface{}
 	var tok interface{}
