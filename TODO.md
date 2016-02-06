@@ -1,4 +1,5 @@
 * document json pointer lookups in README and gettingstarted
+* fix tools/validate/container_test.go
 * test cases for cbor_json.go:tag2json().
 
 JSON:
