@@ -82,16 +82,16 @@ func (jsn *Json) Tovalues() []interface{} {
 
 // Tocbor convert json encoded value into cbor encoded binary string.
 func (jsn *Json) Tocbor(cbr *Cbor) *Cbor {
-	in := bytes2str(jsn.data[:jsn.n])
-	_ /*remning*/, m := json2cbor(in, cbr.data[cbr.n:], jsn.config)
+	in, out := bytes2str(jsn.data[:jsn.n]), cbr.data[cbr.n:cap(cbr.data)]
+	_ /*remning*/, m := json2cbor(in, out, jsn.config)
 	cbr.n += m
 	return cbr
 }
 
 // Tocollate convert json encoded value into binary-collation.
 func (jsn *Json) Tocollate(clt *Collate) *Collate {
-	in := bytes2str(jsn.data[:jsn.n])
-	_ /*remn*/, m := json2collate(in, clt.data[clt.n:], jsn.config)
+	in, out := bytes2str(jsn.data[:jsn.n]), clt.data[clt.n:cap(clt.data)]
+	_ /*remn*/, m := json2collate(in, out, jsn.config)
 	clt.n += m
 	return clt
 }

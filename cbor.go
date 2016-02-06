@@ -162,8 +162,8 @@ func (cbr *Cbor) Tojson(jsn *Json) *Json {
 	if cbr.n == 0 {
 		panic("cannot convert empty cbor bytes to json")
 	}
-	in := cbr.data[:cbr.n]
-	_ /*rb*/, m /*wb*/ := cbor2json(in, jsn.data[jsn.n:], cbr.config)
+	in, out := cbr.data[:cbr.n], jsn.data[jsn.n:cap(jsn.data)]
+	_ /*rb*/, m /*wb*/ := cbor2json(in, out, cbr.config)
 	jsn.n += m
 	return jsn
 }
@@ -173,8 +173,8 @@ func (cbr *Cbor) Tocollate(clt *Collate) *Collate {
 	if cbr.n == 0 {
 		panic("cannot convert empty cbor bytes to binary-collation")
 	}
-	in := cbr.data[:cbr.n]
-	_ /*rb*/, m /*wb*/ := cbor2collate(in, clt.data[clt.n:], cbr.config)
+	in, out := cbr.data[:cbr.n], clt.data[clt.n:cap(clt.data)]
+	_ /*rb*/, m /*wb*/ := cbor2collate(in, out, cbr.config)
 	clt.n += m
 	return clt
 }

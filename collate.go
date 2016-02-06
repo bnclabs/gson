@@ -94,8 +94,8 @@ func (clt *Collate) Tojson(jsn *Json) *Json {
 	if clt.n == 0 {
 		panic("cannot convert empty binary-collate to json")
 	}
-	in := clt.data[:clt.n]
-	_ /*rb*/, m /*wb*/ := collate2json(in, jsn.data[jsn.n:], clt.config)
+	in, out := clt.data[:clt.n], jsn.data[jsn.n:cap(jsn.data)]
+	_ /*rb*/, m /*wb*/ := collate2json(in, out, clt.config)
 	jsn.n += m
 	return jsn
 }
@@ -105,8 +105,8 @@ func (clt *Collate) Tocbor(cbr *Cbor) *Cbor {
 	if clt.n == 0 {
 		panic("cannot convert empty binary-collate to cbor")
 	}
-	in := clt.data[:clt.n]
-	_ /*rb*/, m /*wb*/ := collate2cbor(in, cbr.data[cbr.n:], clt.config)
+	in, out := clt.data[:clt.n], cbr.data[cbr.n:cap(cbr.data)]
+	_ /*rb*/, m /*wb*/ := collate2cbor(in, out, clt.config)
 	cbr.n += m
 	return cbr
 }

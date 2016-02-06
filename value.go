@@ -15,19 +15,22 @@ func (val *Value) Data() interface{} {
 
 // Tojson encode golang native value to json text.
 func (val *Value) Tojson(jsn *Json) *Json {
-	jsn.n += value2json(val.data, jsn.data[jsn.n:], val.config)
+	out := jsn.data[jsn.n:cap(jsn.data)]
+	jsn.n += value2json(val.data, out, val.config)
 	return jsn
 }
 
 // Tocbor encode golang native into cbor binary.
 func (val *Value) Tocbor(cbr *Cbor) *Cbor {
-	cbr.n += value2cbor(val.data, cbr.data[cbr.n:], val.config)
+	out := cbr.data[cbr.n:cap(cbr.data)]
+	cbr.n += value2cbor(val.data, out, val.config)
 	return cbr
 }
 
 // Tocollate encode golang native into binary-collation.
 func (val *Value) Tocollate(clt *Collate) *Collate {
-	clt.n += gson2collate(val.data, clt.data[clt.n:], val.config)
+	out := clt.data[clt.n:cap(clt.data)]
+	clt.n += gson2collate(val.data, out, val.config)
 	return clt
 }
 
