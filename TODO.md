@@ -1,4 +1,4 @@
-* improve code documentation and README.
+* document json pointer lookups in README and gettingstarted
 * test cases for cbor_json.go:tag2json().
 
 JSON:
