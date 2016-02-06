@@ -30,7 +30,7 @@ func TestBool2Json(t *testing.T) {
 
 	config.NewValue(false).Tojson(jsn.Reset(nil))
 	if s := string(jsn.Bytes()); s != "false" {
-		t.Errorf("expected %q, got %q", "false")
+		t.Errorf("expected %q, got %q", "false", s)
 	}
 }
 
