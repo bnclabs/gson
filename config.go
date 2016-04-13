@@ -103,9 +103,9 @@ type Config struct {
 }
 
 // NewDefaultConfig returns a new configuration with default settings:
-//		FloatNumber         Stream
+//		+FloatNumber        +Stream
 //		MaxKeys
-//		UnicodeSpace        -strict
+//		+UnicodeSpace       -strict
 //		+doMissing          -arrayLenPrefix
 //		+propertyLenPrefix
 //		MaxJsonpointerLen
