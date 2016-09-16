@@ -6,6 +6,9 @@
 JSON:
 
 * support for encoding/json.Number
+* JSON numbers are by default treated as float64. since there is ordering
+  between integer and floating point, try to handle this situation when
+  converting JSON to collate, JSON to value and JSON to cbor.
 
 CBOR:
 
