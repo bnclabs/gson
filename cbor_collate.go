@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 // transform cbor encoded data into binary-collation.
 // cnf: NumberKind, doMissing, arrayLenPrefix, propertyLenPrefix
 

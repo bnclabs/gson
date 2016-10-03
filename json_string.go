@@ -1,7 +1,3 @@
-// Copyright 2010 The Go Authors.  All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 // Package json implements encoding and decoding of JSON objects as defined in
 // RFC 4627. The mapping between JSON objects and Go values is described
 // in the documentation for the Marshal and Unmarshal functions.

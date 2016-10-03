@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 // Package gson provides a toolkit for JSON representation, collation
 // and transformation.
 //

@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 // transform golang native value into json encoded value.
 // cnf: -
 

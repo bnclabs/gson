@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 package gson
 
 // transform json encoded value into cbor encoded value.

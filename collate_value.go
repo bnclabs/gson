@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 // transform collated value into golang native value.
 // cnf: NumberKind, arrayLenPrefix, propertyLenPrefix
 

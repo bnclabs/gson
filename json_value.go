@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 // transform json encoded data into golang native value.
 // cnf: SpaceKind, NumberKind, strict
 

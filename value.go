@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 package gson
 
 // Value abstractions for golang-native value.

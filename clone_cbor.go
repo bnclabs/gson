@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 package gson
 
 func cborclone(in, out []byte, config *Config) int {

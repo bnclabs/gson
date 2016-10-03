@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 package gson
 
 // SpaceKind to skip white-spaces in JSON text.

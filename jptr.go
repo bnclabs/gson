@@ -1,5 +1,3 @@
-//  Copyright (c) 2015 Couchbase, Inc.
-
 // implements rfc-6901 to parse json-pointer text and
 // work with golang arrays and maps
 
