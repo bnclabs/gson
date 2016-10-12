@@ -15,8 +15,3 @@ script:
   - go test ./...
   - go test -run=xxx -test.bench=. -test.benchmem=true ./...
   - $HOME/gopath/bin/goveralls -service=travis-ci
-  - cd tools/collate_validate
-  - ./check.sh
-  - cd ../../tools/validate
-  - ./check.sh
-  - cd ../..

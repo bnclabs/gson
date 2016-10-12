@@ -1,3 +1,10 @@
-clean:
-	rm -f tools/collate_validate/collate_validate
-	rm -f tools/validate/validate
+build:
+	go build
+
+test:
+	go test -race -timeout 4000s -test.run=. -test.bench=. -test.benchmem=true
+
+coverage:
+	go test -coverprofile=coverage.out
+	go tool cover -html=coverage.out
+	rm -rf coverage.out
