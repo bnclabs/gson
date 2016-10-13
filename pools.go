@@ -16,9 +16,9 @@ type memConfig struct {
 }
 
 type mempools struct {
-	prefixPool *sync.Pool // maximum length of json pointer
-	stringPool *sync.Pool // scratch pad for string objects
-	keysPool   *sync.Pool // property keys
+	prefixPool *sync.Pool // for computing list of possible pointers
+	stringPool *sync.Pool
+	keysPool   *sync.Pool
 	keypool    *sync.Pool
 	codepool   *sync.Pool
 }
