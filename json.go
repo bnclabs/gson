@@ -12,9 +12,8 @@ const (
 )
 
 type jsonConfig struct {
-	// if `strict` is false, for configurations with IntNumber
-	// will parse floating numbers and then convert it to int64.
-	// else will panic when detecting floating numbers.
+	// if `strict` use encoding/json for string conversion, else use custom
+	// encoder that is memory optimized.
 	strict bool
 	ws     SpaceKind
 }
