@@ -1,4 +1,5 @@
 *.swp
+*.swo
 .vimsession
 tools/collate_validate/collate_validate
 tools/validate/validate
