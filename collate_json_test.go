@@ -367,7 +367,7 @@ func BenchmarkColl2JsonFalse(b *testing.B) {
 }
 
 func BenchmarkColl2JsonF64(b *testing.B) {
-	config := NewDefaultConfig()
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	jsn := config.NewJson(make([]byte, 1024), 0)
 

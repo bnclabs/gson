@@ -348,6 +348,8 @@ func collated2Float(code, text []byte) (int, int) {
 	copy(mantissa[1:], code[n:])
 	x, y := collated2SD(mantissa[:1+len(code[n:])], text)
 	if y > 3 {
+		var newexp [64]byte
+
 		// adjust 0.xyz as x.yz
 		text[1] = text[3]
 		copy(text[3:], text[4:y])
@@ -358,7 +360,8 @@ func collated2Float(code, text []byte) (int, int) {
 		if err != nil {
 			panic(err)
 		}
-		j := copy(text[y+1:], strconv.Itoa(i-1))
+		nexp := strconv.AppendInt(newexp[:0], int64(i-1), 10)
+		j := copy(text[y+1:], nexp)
 		return n + x - 1, y + 1 + j
 	}
 	text[y] = 'e'

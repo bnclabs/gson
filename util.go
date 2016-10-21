@@ -169,36 +169,10 @@ func collateInt64(value int64, code []byte) int {
 }
 
 func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {
-	parse := func(text []byte, m []byte) (dotat int, expat int, exp int, mant []byte) {
-		var err error
-		dotat, expat = -1, -1
-		for i, ch := range text {
-			if ch == '.' {
-				dotat = i
-			} else if ch == 'e' || ch == 'E' {
-				expat = i
-			} else if expat > -1 && ch == '+' {
-				expat = i
-			} else if expat == -1 {
-				if len(m) > 0 || (ch != '0' && ch != '+') {
-					m = append(m, ch)
-				}
-			}
-		}
-		mant = m
-		if expat > -1 {
-			exp, err = strconv.Atoi(bytes2str(text[expat+1:]))
-			if err != nil {
-				panic(err)
-			}
-		}
-		return
-	}
-
 	var mantissa, scratch [64]byte
 	_, y := collated2Float(code, scratch[:])
 	if nk == SmartNumber {
-		_, _, exp, mant := parse(scratch[:y], mantissa[:0])
+		_, _, exp, mant := parseFloat(scratch[:y], mantissa[:0])
 		if exp >= 15 {
 			x := len(mant) - exp - 1
 			if mant[0] == '+' || mant[0] == '-' {
@@ -226,6 +200,33 @@ func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {
 	}
 	return 0, 0, f, 3
 
+}
+
+func parseFloat(text []byte, m []byte) (int, int, int, []byte) {
+	var err error
+	var exp int
+
+	dotat, expat := -1, -1
+	for i, ch := range text {
+		if ch == '.' {
+			dotat = i
+		} else if ch == 'e' || ch == 'E' {
+			expat = i
+		} else if expat > -1 && ch == '+' {
+			expat = i
+		} else if expat == -1 {
+			if len(m) > 0 || (ch != '0' && ch != '+') {
+				m = append(m, ch)
+			}
+		}
+	}
+	if expat > -1 {
+		exp, err = strconv.Atoi(bytes2str(text[expat+1:]))
+		if err != nil {
+			panic(err)
+		}
+	}
+	return dotat, expat, exp, m
 }
 
 func collated2Json(code []byte, text []byte, nk NumberKind) int {
