@@ -92,13 +92,13 @@ Transforms
   as well.
 
 ```text
-BenchmarkJson2ValNil    10000000         207 ns/op   19.28 MB/s            0 B/op       0 allocs/op
-BenchmarkJson2ValBool    5000000         262 ns/op   15.25 MB/s            1 B/op       1 allocs/op
-BenchmarkJson2ValNum     3000000         582 ns/op   15.46 MB/s            8 B/op       1 allocs/op
-BenchmarkJson2ValString     2000      632553 ns/op    0.05 MB/s      1048730 B/op       8 allocs/op
-BenchmarkJson2ValArr5       2000      634392 ns/op    0.05 MB/s      1048938 B/op      15 allocs/op
-BenchmarkJson2ValMap5       1000     1329876 ns/op    0.05 MB/s      2097768 B/op      28 allocs/op
-BenchmarkJson2ValTyp         100    17402659 ns/op    0.08 MB/s     28321828 B/op     290 allocs/op
+BenchmarkJson2ValNil      50000000     31 ns/op  129.17 MB/s      0 B/op    0 allocs/op
+BenchmarkJson2ValBool     30000000     57 ns/op   70.03 MB/s      1 B/op    1 allocs/op
+BenchmarkJson2ValNum      10000000    136 ns/op   66.08 MB/s      8 B/op    1 allocs/op
+BenchmarkJson2ValString    3000000    480 ns/op   66.65 MB/s     84 B/op    3 allocs/op
+BenchmarkJson2ValArr5      1000000   1049 ns/op   28.58 MB/s    393 B/op    9 allocs/op
+BenchmarkJson2ValMap5      1000000   1912 ns/op   32.41 MB/s    690 B/op   14 allocs/op
+BenchmarkJson2ValTyp         50000  27432 ns/op   53.04 MB/s  19528 B/op  128 allocs/op
 ```
 
 **value to json**
@@ -106,13 +106,13 @@ BenchmarkJson2ValTyp         100    17402659 ns/op    0.08 MB/s     28321828 B/o
 to convert value back to json text.
 
 ```
-BenchmarkVal2JsonNil     10000000    198 ns/op  20.19 MB/s  0 B/op  0 allocs/op
-BenchmarkVal2JsonBool    10000000    216 ns/op  18.48 MB/s  0 B/op  0 allocs/op
-BenchmarkVal2JsonNum       500000   2376 ns/op   3.79 MB/s  0 B/op  0 allocs/op
-BenchmarkVal2JsonString   1000000   1349 ns/op  28.15 MB/s  0 B/op  0 allocs/op
-BenchmarkVal2JsonArr5     1000000   2167 ns/op  13.38 MB/s  0 B/op  0 allocs/op
-BenchmarkVal2JsonMap5      300000   4394 ns/op  11.61 MB/s  0 B/op  0 allocs/op
-BenchmarkVal2JsonTyp        20000  66023 ns/op  17.96 MB/s  0 B/op  0 allocs/op
+BenchmarkVal2JsonNil     100000000    148 ns/op   270.85 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonBool     50000000     25 ns/op   154.84 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonNum      10000000    168 ns/op    53.26 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonString   10000000    167 ns/op   227.38 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonArr5      5000000    262 ns/op   110.33 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonMap5      3000000    537 ns/op    94.91 MB/s    0 B/op    0 allocs/op
+BenchmarkVal2JsonTyp        200000   6713 ns/op   176.65 MB/s    0 B/op    0 allocs/op
 ```
 
 **value to cbor**
@@ -156,15 +156,15 @@ BenchmarkVal2JsonTyp        20000  66023 ns/op  17.96 MB/s  0 B/op  0 allocs/op
 * all other types shall cause a panic.
 
 ```text
-BenchmarkVal2CborNull    10000000    155 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborTrue    10000000    170 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborUint64   5000000    365 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborFlt64    5000000    368 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborTBytes   3000000    471 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborText     3000000    585 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborArr5     1000000   1330 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborMap5      500000   3550 ns/op  0 B/op  0 allocs/op
-BenchmarkVal2CborTyp        50000  38530 ns/op  0 B/op  0 allocs/op
+BenchmarkVal2CborNull      100000000    14 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborTrue      50000000     25 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborUint64-8  50000000     32 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborFlt64     50000000     29 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborTBytes    30000000     45 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborText      30000000     51 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborArr5      10000000    198 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborMap5       3000000    449 ns/op    0 B/op    0 allocs/op
+BenchmarkVal2CborTyp         500000   3586 ns/op    0 B/op    0 allocs/op
 
 ```
 
@@ -178,15 +178,15 @@ BenchmarkVal2CborTyp        50000  38530 ns/op  0 B/op  0 allocs/op
   this package using `IsIndefinite*()` and `IsBreakstop()` APIs.
 
 ```text
-BenchmarkCbor2ValNull    10000000    214 ns/op     0 B/op   0 allocs/op
-BenchmarkCbor2ValTrue     5000000    262 ns/op     1 B/op   1 allocs/op
-BenchmarkCbor2ValUint64   3000000    451 ns/op     8 B/op   1 allocs/op
-BenchmarkCbor2ValFlt64    3000000    452 ns/op     8 B/op   1 allocs/op
-BenchmarkCbor2ValBytes    2000000    639 ns/op    48 B/op   2 allocs/op
-BenchmarkCbor2ValText     2000000    677 ns/op    32 B/op   2 allocs/op
-BenchmarkCbor2ValArr5      500000   3363 ns/op   304 B/op  10 allocs/op
-BenchmarkCbor2ValMap5      200000   6540 ns/op   496 B/op  18 allocs/op
-BenchmarkCbor2ValTyp        20000  61061 ns/op  7786 B/op 140 allocs/op
+BenchmarkCbor2ValNull    50000000     38 ns/op    0 B/op    0 allocs/op
+BenchmarkCbor2ValTrue    20000000     64 ns/op    1 B/op    1 allocs/op
+BenchmarkCbor2ValUint64  20000000     69 ns/op    8 B/op    1 allocs/op
+BenchmarkCbor2ValFlt64   20000000     77 ns/op    8 B/op    1 allocs/op
+BenchmarkCbor2ValBytes   10000000    170 ns/op   48 B/op    2 allocs/op
+BenchmarkCbor2ValText    10000000    163 ns/op   32 B/op    2 allocs/op
+BenchmarkCbor2ValArr5     1000000   1047 ns/op  304 B/op   10 allocs/op
+BenchmarkCbor2ValMap5     1000000   2020 ns/op  496 B/op   18 allocs/op
+BenchmarkCbor2ValTyp       100000  19255 ns/op  784 B/op  140 allocs/op
 ```
 
 **json to cbor**
@@ -212,14 +212,14 @@ BenchmarkCbor2ValTyp        20000  61061 ns/op  7786 B/op 140 allocs/op
    utf8 cbor-text.
 
 ```text
-BenchmarkJson2CborNull  5000000    310 ns/op  12.89 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborBool  5000000    309 ns/op  16.15 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborInt   2000000    974 ns/op   9.24 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborFlt   2000000    869 ns/op  11.50 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborStr   1000000   1791 ns/op  21.21 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborArr    500000   2659 ns/op  11.28 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborMap    200000   7895 ns/op   7.85 MB/s  0 B/op  0 allocs/op
-BenchmarkJson2CborTyp     20000  77367 ns/op  18.81 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborNull  50000000    31 ns/op 127 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborBool  50000000    31 ns/op 160 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborInt   20000000   102 ns/op  87 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborFlt   20000000   111 ns/op  89 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborStr   10000000   206 ns/op 183 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborArr    5000000   371 ns/op  80 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborMap    2000000   982 ns/op  63 MB/s  0 B/op  0 allocs/op
+BenchmarkJson2CborTyp     200000  9273 ns/op 156 MB/s  0 B/op  0 allocs/op
 ```
 
 **cbor to json**
@@ -242,14 +242,14 @@ BenchmarkJson2CborTyp     20000  77367 ns/op  18.81 MB/s  0 B/op  0 allocs/op
 * simple type float16 are not supported.
 
 ```text
-BenchmarkCbor2JsonNull  3000000    394 ns/op   2.54 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonBool  3000000    414 ns/op   2.41 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonInt   1000000   1643 ns/op   5.48 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonFlt    500000   2732 ns/op   3.29 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonStr    500000   2662 ns/op  12.39 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonArr    500000   3592 ns/op   5.57 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonMap    200000   9336 ns/op   5.68 MB/s  0 B/op  0 allocs/op
-BenchmarkCbor2JsonTyp     20000  72542 ns/op  15.11 MB/s  0 B/op  0 allocs/op
+BenchmarkCbor2JsonNull  30000000    50 ns/op   19 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonBool  30000000    48 ns/op   20 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonInt   10000000   140 ns/op   64 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonFlt   10000000   239 ns/op   37 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonStr   10000000   187 ns/op  175 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonArr    5000000   392 ns/op   50 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonMap    1000000  1003 ns/op   52 MB/s  0 B/op   0 allocs/op
+BenchmarkCbor2JsonTyp     200000  6871 ns/op  159 MB/s  0 B/op   0 allocs/op
 ```
 
 **value to collate**
@@ -266,15 +266,14 @@ BenchmarkCbor2JsonTyp     20000  72542 ns/op  15.11 MB/s  0 B/op  0 allocs/op
   missing.
 
 ```text
-BenchmarkVal2CollNil    10000000     202 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollTrue   10000000     198 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollFalse  10000000     199 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollF64      200000    6887 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollI64      300000    3862 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollStr     2000000     772 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollArr      200000    6708 ns/op      0 B/op   0 allocs/op
-BenchmarkVal2CollMap       50000   26696 ns/op  16416 B/op   2 allocs/op
-BenchmarkVal2CollTyp       10000  174548 ns/op  49250 B/op   6 allocs/op
+BenchmarkVal2CollNil    100000000     13 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollTrue    50000000     25 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollF64      2000000    692 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollI64      3000000    405 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollStr     30000000     58 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollArr      2000000    707 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollMap      1000000   1458 ns/op   0 B/op  0 allocs/op
+BenchmarkVal2CollTyp       100000  13511 ns/op   0 B/op  0 allocs/op
 ```
 
 **collate to value**
@@ -284,14 +283,14 @@ BenchmarkVal2CollTyp       10000  174548 ns/op  49250 B/op   6 allocs/op
   from its collated from can be converted back to value.
 
 ```text
-BenchmarkColl2ValNil   10000000     128 ns/op     0 B/op    0 allocs/op
-BenchmarkColl2ValTrue  10000000     190 ns/op     1 B/op    1 allocs/op
-BenchmarkColl2ValF64     300000    4355 ns/op   144 B/op    4 allocs/op
-BenchmarkColl2ValI64     500000    3129 ns/op   144 B/op    4 allocs/op
-BenchmarkColl2ValStr    1000000    1428 ns/op    32 B/op    2 allocs/op
-BenchmarkColl2ValArr     200000    6248 ns/op   336 B/op   10 allocs/op
-BenchmarkColl2ValMap     100000   12240 ns/op   616 B/op   20 allocs/op
-BenchmarkColl2ValTyp      10000  148687 ns/op  8648 B/op  145 allocs/op
+BenchmarkColl2ValNil   100000000    10 ns/op     0 B/op    0 allocs/op
+BenchmarkColl2ValTrue  50000000     35 ns/op     1 B/op    1 allocs/op
+BenchmarkColl2ValF64    3000000    499 ns/op   144 B/op    4 allocs/op
+BenchmarkColl2ValI64    5000000    396 ns/op   144 B/op    4 allocs/op
+BenchmarkColl2ValStr   10000000    183 ns/op    32 B/op    2 allocs/op
+BenchmarkColl2ValArr    2000000    968 ns/op   336 B/op   10 allocs/op
+BenchmarkColl2ValMap    1000000   2222 ns/op   616 B/op   20 allocs/op
+BenchmarkColl2ValTyp     100000  22437 ns/op  8648 B/op  145 allocs/op
 ```
 
 **json to collate**
@@ -310,14 +309,15 @@ BenchmarkColl2ValTyp      10000  148687 ns/op  8648 B/op  145 allocs/op
   collating it.
 
 ```text
-BenchmarkJson2CollNil   5000000       332 ns/op         0 B/op    0 allocs/op
-BenchmarkJson2CollTrue  5000000       323 ns/op         0 B/op    0 allocs/op
-BenchmarkJson2CollF64    200000      8057 ns/op         0 B/op    0 allocs/op
-BenchmarkJson2CollI64    300000      4368 ns/op         0 B/op    0 allocs/op
-BenchmarkJson2CollStr      2000    635015 ns/op   1048647 B/op    5 allocs/op
-BenchmarkJson2CollArr      2000    645310 ns/op   1048645 B/op    5 allocs/op
-BenchmarkJson2CollMap      1000   1372242 ns/op   2138328 B/op   16 allocs/op
-BenchmarkJson2CollTyp       100  17937836 ns/op  28436440 B/op  163 allocs/op
+BenchmarkJson2CollNil   50000000     34 ns/op   0 B/op   0 allocs/op
+BenchmarkJson2CollTrue  50000000     35 ns/op   0 B/op   0 allocs/op
+BenchmarkJson2CollF64    2000000    850 ns/op   0 B/op   0 allocs/op
+BenchmarkJson2CollI64    3000000    469 ns/op   0 B/op   0 allocs/op
+BenchmarkJson2CollStr   10000000    223 ns/op   0 B/op   0 allocs/op
+BenchmarkJson2CollArr    1000000   1238 ns/op   1 B/op   0 allocs/op
+BenchmarkJson2CollMap    1000000   2179 ns/op   2 B/op   0 allocs/op
+BenchmarkJson2CollTyp     100000  22750 ns/op   3 B/op   0 allocs/op
+
 ```
 
 **collate to json**
@@ -326,14 +326,14 @@ BenchmarkJson2CollTyp       100  17937836 ns/op  28436440 B/op  163 allocs/op
   types are converted back to json.
 
 ```text
-BenchmarkColl2JsonNil    5000000       254 ns/op        0 B/op    0 allocs/op
-BenchmarkColl2JsonTrue   5000000       260 ns/op        0 B/op    0 allocs/op
-BenchmarkColl2JsonF64     200000      8044 ns/op      129 B/op    3 allocs/op
-BenchmarkColl2JsonI64     300000      5108 ns/op      129 B/op    3 allocs/op
-BenchmarkColl2JsonStr       2000    628639 ns/op  1048647 B/op    5 allocs/op
-BenchmarkColl2JsonArr       2000    642285 ns/op  1048782 B/op    8 allocs/op
-BenchmarkColl2JsonMap        500   3796742 ns/op  6292014 B/op   37 allocs/op
-BenchmarkColl2JsonTyp         50  35517962 ns/op 58724887 B/op  333 allocs/op
+BenchmarkColl2JsonNil   100000000    19 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonTrue  100000000    19 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonF64   10000000    239 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonI64   10000000    228 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonStr   10000000    227 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonArr    3000000    568 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonMap    1000000   1774 ns/op    0 B/op   0 allocs/op
+BenchmarkColl2JsonTyp     100000  17297 ns/op    0 B/op   0 allocs/op
 ```
 
 **cbor to collate**
@@ -345,13 +345,15 @@ BenchmarkColl2JsonTyp         50  35517962 ns/op 58724887 B/op  333 allocs/op
 * LengthPrefix and Stream encoding for array and maps are supported.
 
 ```text
-BenchmarkCbor2CollNil   5000000      325 ns/op        0 B/op   0 allocs/op
-BenchmarkCbor2CollTrue  5000000      313 ns/op        0 B/op   0 allocs/op
-BenchmarkCbor2CollF64    200000     7246 ns/op        0 B/op   0 allocs/op
-BenchmarkCbor2CollStr   1000000     1060 ns/op        0 B/op   0 allocs/op
-BenchmarkCbor2CollArr    200000    10238 ns/op        0 B/op   0 allocs/op
-BenchmarkCbor2CollMap      2000   787087 ns/op  1089654 B/op   8 allocs/op
-BenchmarkCbor2CollTyp       500  2500523 ns/op  3269067 B/op  25 allocs/op
+BenchmarkCbor2CollNil   30000000      44 ns/op   0 B/op  0 allocs/op
+BenchmarkCbor2CollTrue  30000000      45 ns/op   0 B/op  0 allocs/op
+BenchmarkCbor2CollF64    2000000     666 ns/op   0 B/op  0 allocs/op
+BenchmarkCbor2CollI64    3000000     413 ns/op   0 B/op  0 allocs/op
+BenchmarkCbor2CollStr   20000000      68 ns/op   0 B/op  0 allocs/op
+BenchmarkCbor2CollArr    1000000    1056 ns/op   0 B/op  0 allocs/op
+BenchmarkCbor2CollMap    1000000    1805 ns/op   1 B/op  0 allocs/op
+BenchmarkCbor2CollTyp     100000   15447 ns/op  33 B/op  0 allocs/op
+
 ```
 
 **collate to cbor**
@@ -361,13 +363,14 @@ BenchmarkCbor2CollTyp       500  2500523 ns/op  3269067 B/op  25 allocs/op
   from its collated from can be converted back to cbor.
 
 ```text
-BenchmarkColl2CborNil   10000000       209 ns/op         0 B/op    0 allocs/op
-BenchmarkColl2CborTrue  10000000       218 ns/op         0 B/op    0 allocs/op
-BenchmarkColl2CborF64     300000      4692 ns/op       129 B/op    3 allocs/op
-BenchmarkColl2CborStr       2000    625580 ns/op   1049174 B/op    5 allocs/op
-BenchmarkColl2CborArr       2000    632711 ns/op   1049308 B/op    8 allocs/op
-BenchmarkColl2CborMap        500   3814868 ns/op   6296307 B/op   37 allocs/op
-BenchmarkColl2CborTyp         30  36413341 ns/op  59673817 B/op  337 allocs/op
+BenchmarkColl2CborNil   100000000     17 ns/op    0 B/op  0 allocs/op
+BenchmarkColl2CborTrue  100000000     17 ns/op    0 B/op  0 allocs/op
+BenchmarkColl2CborF64    10000000    177 ns/op    0 B/op  0 allocs/op
+BenchmarkColl2CborI64    10000000    166 ns/op    0 B/op  0 allocs/op
+BenchmarkColl2CborStr    10000000    210 ns/op    0 B/op  0 allocs/op
+BenchmarkColl2CborArr     3000000    481 ns/op    0 B/op  0 allocs/op
+BenchmarkColl2CborMap     1000000   1675 ns/op    2 B/op  0 allocs/op
+BenchmarkColl2CborTyp      100000  14260 ns/op   54 B/op  0 allocs/op
 ```
 
 Notes
