@@ -51,28 +51,33 @@ func TestCbor2CollateFalse(t *testing.T) {
 func TestCbor2CollateNumber(t *testing.T) {
 	testcases := [][3]interface{}{
 		[3]interface{}{"10.2", `\x05>>2102-\x00`, FloatNumber},
-		[3]interface{}{"10.2", `\x05>>2102-\x00`, FloatNumber32},
 		[3]interface{}{"10", `\x05>>21-\x00`, FloatNumber},
-		[3]interface{}{"10.2", `\x05>>210\x00`, IntNumber},
-		[3]interface{}{"10", `\x05>>210\x00`, IntNumber},
-		[3]interface{}{"-10", `\x05--789\x00`, IntNumber},
-		[3]interface{}{"25", `\x05>>225\x00`, IntNumber},
-		[3]interface{}{"-25", `\x05--774\x00`, IntNumber},
-		[3]interface{}{"200", `\x05>>3200\x00`, IntNumber},
-		[3]interface{}{"-200", `\x05--6799\x00`, IntNumber},
-		[3]interface{}{"32767", `\x05>>532767\x00`, IntNumber},
-		[3]interface{}{"-32767", `\x05--467232\x00`, IntNumber},
-		[3]interface{}{"2147483647", `\x05>>>2102147483647\x00`, IntNumber},
-		[3]interface{}{"-2147483648", `\x05---7897852516351\x00`, IntNumber},
+		[3]interface{}{"10.2", `\x05>>2102-\x00`, SmartNumber},
+		[3]interface{}{"10", `\x05>>21-\x00`, SmartNumber},
+		[3]interface{}{"10", `\x05>>21-\x00`, FloatNumber},
+		[3]interface{}{"-10", `\x05--78>\x00`, SmartNumber},
+		[3]interface{}{"-10", `\x05--78>\x00`, FloatNumber},
+		[3]interface{}{"200", `\x05>>32-\x00`, SmartNumber},
+		[3]interface{}{"200", `\x05>>32-\x00`, FloatNumber},
+		[3]interface{}{"-200", `\x05--67>\x00`, SmartNumber},
+		[3]interface{}{"-200", `\x05--67>\x00`, FloatNumber},
 		[3]interface{}{
-			"4294967297",
-			`\x05>>>2104294967297\x00`,
-			IntNumber},
+			"4294967297", `\x05>>>2104294967297-\x00`, FloatNumber},
 		[3]interface{}{
-			"-4294967297",
-			`\x05---7895705032702\x00`,
-			IntNumber},
-		[3]interface{}{"0.2", `\x05>2-\x00`, Decimal},
+			"-4294967297", `\x05---7895705032702>\x00`, FloatNumber},
+		[3]interface{}{
+			"4294967297", `\x05>>>2104294967297-\x00`, SmartNumber},
+		[3]interface{}{
+			"-4294967297", `\x05---7895705032702>\x00`, SmartNumber},
+		[3]interface{}{
+			"9007199254740992", `\x05>>>2169007199254740992-\x00`, FloatNumber},
+		[3]interface{}{
+			"-9007199254740993", `\x05---7830992800745259007>\x00`, FloatNumber},
+		[3]interface{}{
+			"9007199254740992", `\x05>>>2169007199254740992-\x00`, SmartNumber},
+
+		[3]interface{}{
+			"-9007199254740993", `\x05---7830992800745259006>\x00`, SmartNumber},
 	}
 
 	for _, tcase := range testcases {

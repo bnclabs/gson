@@ -64,7 +64,7 @@ func TestJson2CollateFalse(t *testing.T) {
 
 func TestJson2CollateNumber(t *testing.T) {
 	// as float64 using FloatNumber configuration
-	inp, refcode, reftxt := "10.2", `\x05>>2102-\x00`, "+0.102e+2"
+	inp, refcode, reftxt := "10.2", `\x05>>2102-\x00`, "1.02e+01"
 	config := NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -81,7 +81,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 
 	// as int64 using FloatNumber configuration
-	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "+0.1e+2"
+	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "1e+01"
 	config = NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
@@ -98,8 +98,8 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 
 	// as float64 using IntNumber configuration
-	inp, refcode, reftxt = "10.2", `\x05>>210\x00`, "+10"
-	config = NewDefaultConfig().SetNumberKind(IntNumber)
+	inp, refcode, reftxt = "10.2", `\x05>>2102-\x00`, "1.02e+01"
+	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(inp), -1).Tocollate(clt)
@@ -115,8 +115,8 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 
 	// as int64 using IntNumber configuration
-	inp, refcode, reftxt = "10", `\x05>>210\x00`, "+10"
-	config = NewDefaultConfig().SetNumberKind(IntNumber)
+	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "1e+01"
+	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(inp), -1).Tocollate(clt)
@@ -130,44 +130,6 @@ func TestJson2CollateNumber(t *testing.T) {
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v, got %v", reftxt, s)
 	}
-
-	// as float64 using Decimal configuration
-	inp, refcode, reftxt = "0.2", `\x05>2-\x00`, "+0.2"
-	config = NewDefaultConfig().SetNumberKind(Decimal)
-	clt = config.NewCollate(make([]byte, 1024), 0)
-
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
-	out = fmt.Sprintf("%q", string(clt.Bytes()))
-	if out = out[1 : len(out)-1]; out != refcode {
-		t.Errorf("expected %v, got %v", refcode, out)
-	}
-
-	jsn = config.NewJson(make([]byte, 1024), 0)
-	clt.Tojson(jsn)
-	if s := string(jsn.Bytes()); s != reftxt {
-		t.Errorf("expected %v, got %v", reftxt, s)
-	}
-
-	// as int64 using Decimal configuration, expect a panic
-	config = NewDefaultConfig().SetNumberKind(Decimal)
-	clt = config.NewCollate(make([]byte, 1024), 0)
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config.NewJson([]byte("10"), -1).Tocollate(clt.Reset(nil))
-	}()
-
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config.NewJson([]byte("10.2"), -1).Tocollate(clt.Reset(nil))
-	}()
 }
 
 func TestJson2CollateString(t *testing.T) {
@@ -254,7 +216,7 @@ func TestJson2CollateArray(t *testing.T) {
 			`\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`,
 			`\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
 				`\x06hello\x00\x00\x00`,
-			`[null,true,false,+0.1e+2,"hello"]`},
+			`[null,true,false,1e+01,"hello"]`},
 		[4]string{`[]`,
 			`\b\x00`,
 			`\b\a0\x00\x00`,
@@ -264,7 +226,7 @@ func TestJson2CollateArray(t *testing.T) {
 				`\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
 			`\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
 				`\b\a0\x00\x00\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
-			`[null,true,+0.1e+2,+0.102e+2,[],{"key":{}}]`},
+			`[null,true,1e+01,1.02e+01,[],{"key":{}}]`},
 	}
 
 	config = NewDefaultConfig()
@@ -321,7 +283,7 @@ func TestJson2CollateMap(t *testing.T) {
 			`\t\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c\x00\x00` +
 				`\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +
 				`\x06hello\x00\x00\x06f\x00\x00\b\x06world\x00\x00\x00\x00`,
-			`{"a":null,"b":true,"c":false,"d":+0.1e+2,"e":"hello","f":["world"]}`,
+			`{"a":null,"b":true,"c":false,"d":1e+01,"e":"hello","f":["world"]}`,
 		},
 	}
 	config := NewDefaultConfig()

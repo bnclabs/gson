@@ -52,23 +52,11 @@ import "encoding/json"
 type NumberKind byte
 
 const (
-	// SmartNumber32 to treat number as either integer or fall back to float32.
-	SmartNumber32 NumberKind = iota + 1
+	// FloatNumber to treat number as float64.
+	FloatNumber NumberKind = iota + 1
 
 	// SmartNumber to treat number as either integer or fall back to float64.
 	SmartNumber
-
-	// IntNumber to treat number as int64.
-	IntNumber
-
-	// FloatNumber32 to treat number as float32.
-	FloatNumber32
-
-	// FloatNumber to treat number as float64.
-	FloatNumber
-
-	// Decimal to collate input numbers as N, where -1 < N < 1
-	Decimal
 )
 
 // MaxKeys maximum number of keys allowed in a property object.
@@ -238,18 +226,10 @@ func (config *Config) String() string {
 
 func (nk NumberKind) String() string {
 	switch nk {
-	case SmartNumber32:
-		return "SmartNumber32"
 	case SmartNumber:
 		return "SmartNumber"
-	case IntNumber:
-		return "IntNumber"
-	case FloatNumber32:
-		return "FloatNumber32"
 	case FloatNumber:
 		return "FloatNumber"
-	case Decimal:
-		return "Decimal"
 	default:
 		panic("new number-kind")
 	}

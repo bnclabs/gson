@@ -9,7 +9,7 @@ var _ = fmt.Sprintf("dummy")
 // missing testcases (if any) and benchmarks.
 
 func TestStrictFloat(t *testing.T) {
-	config := NewDefaultConfig().SetNumberKind(IntNumber).SetStrict(false)
+	config := NewDefaultConfig().SetNumberKind(FloatNumber)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	jsn := config.NewJson([]byte("10.2"), -1)
 	jsn.Tocbor(cbr)

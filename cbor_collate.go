@@ -4,6 +4,8 @@
 package gson
 
 import "math"
+import "fmt"
+import "strconv"
 import "encoding/binary"
 
 func cbor2collate(in, out []byte, config *Config) (int, int) {
@@ -30,7 +32,7 @@ func collateCborFloat32(buf, out []byte, config *Config) (int, int) {
 	f, n := math.Float32frombits(uint32(item)), 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(float64(f), out[n:], config.nk)
+	n += collateFloat64(float64(f), out[n:])
 	out[n] = Terminator
 	n++
 	return 5, n
@@ -41,7 +43,7 @@ func collateCborFloat64(buf, out []byte, config *Config) (int, int) {
 	f, n := math.Float64frombits(item), 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeFloat(float64(f), out[n:], config.nk)
+	n += collateFloat64(float64(f), out[n:])
 	out[n] = Terminator
 	n++
 	return 9, n
@@ -51,7 +53,7 @@ func collateCborT0SmallInt(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeInt64(int64(cborInfo(buf[0])), out[n:], config.nk)
+	n += collateFloat64(float64(cborInfo(buf[0])), out[n:])
 	out[n] = Terminator
 	n++
 	return 1, n
@@ -61,7 +63,7 @@ func collateCborT1SmallInt(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeInt64(-int64(cborInfo(buf[0])+1), out[n:], config.nk)
+	n += collateFloat64(-float64(cborInfo(buf[0])+1), out[n:])
 	out[n] = Terminator
 	n++
 	return 1, n
@@ -71,7 +73,7 @@ func collateCborT0Info24(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeInt64(int64(buf[1]), out[n:], config.nk)
+	n += collateFloat64(float64(buf[1]), out[n:])
 	out[n] = Terminator
 	n++
 	return 2, n
@@ -81,7 +83,7 @@ func collateCborT1Info24(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeInt64(-int64(buf[1]+1), out[n:], config.nk)
+	n += collateFloat64(-float64(buf[1]+1), out[n:])
 	out[n] = Terminator
 	n++
 	return 2, n
@@ -91,8 +93,8 @@ func collateCborT0Info25(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	i := int64(binary.BigEndian.Uint16(buf[1:]))
-	n += normalizeInt64(i, out[n:], config.nk)
+	f := float64(binary.BigEndian.Uint16(buf[1:]))
+	n += collateFloat64(f, out[n:])
 	out[n] = Terminator
 	n++
 	return 3, n
@@ -102,8 +104,8 @@ func collateCborT1Info25(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	i := -int64(binary.BigEndian.Uint16(buf[1:]) + 1)
-	n += normalizeInt64(i, out[n:], config.nk)
+	f := -float64(binary.BigEndian.Uint16(buf[1:]) + 1)
+	n += collateFloat64(f, out[n:])
 	out[n] = Terminator
 	n++
 	return 3, n
@@ -113,8 +115,8 @@ func collateCborT0Info26(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	i := int64(binary.BigEndian.Uint32(buf[1:]))
-	n += normalizeInt64(i, out[n:], config.nk)
+	f := float64(binary.BigEndian.Uint32(buf[1:]))
+	n += collateFloat64(f, out[n:])
 	out[n] = Terminator
 	n++
 	return 5, n
@@ -124,8 +126,8 @@ func collateCborT1Info26(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	i := -int64(binary.BigEndian.Uint32(buf[1:]) + 1)
-	n += normalizeInt64(i, out[n:], config.nk)
+	f := -float64(binary.BigEndian.Uint32(buf[1:]) + 1)
+	n += collateFloat64(f, out[n:])
 	out[n] = Terminator
 	n++
 	return 5, n
@@ -135,8 +137,15 @@ func collateCborT0Info27(buf, out []byte, config *Config) (int, int) {
 	n := 0
 	out[n] = TypeNumber
 	n++
-	i := int64(binary.BigEndian.Uint64(buf[1:]))
-	n += normalizeInt64(i, out[n:], config.nk)
+	i := binary.BigEndian.Uint64(buf[1:])
+	switch config.nk {
+	case FloatNumber:
+		n += collateFloat64(float64(i), out[n:])
+	case SmartNumber:
+		n += collateUint64(i, out[n:])
+	default:
+		panic(fmt.Errorf("unknown number kind, %v", config.nk))
+	}
 	out[n] = Terminator
 	n++
 	return 9, n
@@ -150,7 +159,14 @@ func collateCborT1Info27(buf, out []byte, config *Config) (int, int) {
 	val, n := (int64(-x) - 1), 0
 	out[n] = TypeNumber
 	n++
-	n += normalizeInt64(val, out[n:], config.nk)
+	switch config.nk {
+	case FloatNumber:
+		n += collateFloat64(float64(val), out[n:])
+	case SmartNumber:
+		n += collateInt64(val, out[n:])
+	default:
+		panic(fmt.Errorf("unknown number kind, %v", config.nk))
+	}
 	out[n] = Terminator
 	n++
 	return 9, n
@@ -184,10 +200,13 @@ func collateCborT3(buf, out []byte, config *Config) (int, int) {
 }
 
 func collateCborLength(length int, out []byte, config *Config) int {
+	var text [64]byte
+	txt := strconv.AppendInt(text[:0], int64(length), 10)
+
 	n := 0
 	out[n] = TypeLength
 	n++
-	n += normalizeInt64(int64(length), out[n:], IntNumber)
+	n += collateInt(txt, out[n:])
 	out[n] = Terminator
 	n++
 	return n

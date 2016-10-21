@@ -26,7 +26,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(value, code[n:], config.nk)
+		n += collateFloat64(value, code[n:])
 		code[n] = Terminator
 		n++
 		return n
@@ -35,7 +35,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeFloat(float64(value), code[n:], config.nk)
+		n += collateFloat64(float64(value), code[n:])
 		code[n] = Terminator
 		n++
 		return n
@@ -44,7 +44,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeInt64(value, code[n:], config.nk)
+		n += collateInt64(value, code[n:])
 		code[n] = Terminator
 		n++
 		return n
@@ -53,7 +53,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeInt64(int64(value), code[n:], config.nk)
+		n += collateUint64(value, code[n:])
 		code[n] = Terminator
 		n++
 		return n
@@ -62,23 +62,10 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += normalizeInt64(int64(value), code[n:], config.nk)
+		n += collateInt64(int64(value), code[n:])
 		code[n] = Terminator
 		n++
 		return n
-
-	//case json.Number:
-	//	n := 0
-	//	code[n] = TypeNumber
-	//	n++
-	//	f, err := strconv.ParseFloat(string(value), 64)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//	n += normalizeFloat(f, code[n:], config.nk)
-	//	code[n] = Terminator
-	//	n++
-	//	return n
 
 	case Missing:
 		if config.doMissing && MissingLiteral.Equal(string(value)) {

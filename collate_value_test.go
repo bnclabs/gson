@@ -91,10 +91,10 @@ func TestVal2CollateNumber(t *testing.T) {
 		t.Errorf("expected %v, got %v", 10.199999809265137, float64(value))
 	}
 
-	// as float64 using IntNumber configuration
-	objf, ref = float64(10.2), `\x05>>210\x00`
-	objr := int64(10)
-	config = config.SetNumberKind(IntNumber)
+	// as float64 using FloatNumber configuration
+	objf, ref = float64(10.2), `\x05>>2102-\x00`
+	objr := float64(10.2)
+	config = config.SetNumberKind(FloatNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(objf).Tocollate(clt)
@@ -105,22 +105,22 @@ func TestVal2CollateNumber(t *testing.T) {
 		t.Errorf("expected %v, got %v", objr, value)
 	}
 
-	// as int64 using IntNumber configuration
-	obji, ref = int64(10), `\x05>>210\x00`
-	config = config.SetNumberKind(IntNumber)
+	// as int64 using SmartNumber configuration
+	obji, ref = int64(10), `\x05>>21-\x00`
+	config = config.SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(obji).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
 	if out = out[1 : len(out)-1]; out != ref {
 		t.Errorf("expected %v, got %v", ref, out)
-	} else if value := clt.Tovalue(); !reflect.DeepEqual(value, obji) {
+	} else if value := clt.Tovalue(); !reflect.DeepEqual(value, float64(obji)) {
 		t.Errorf("expected %v, got %v", obji, value)
 	}
 
-	// as uint64 using IntNumber configuration
-	obju, ref := uint64(10), `\x05>>210\x00`
-	config = config.SetNumberKind(IntNumber)
+	// as uint64 using SmartNumber configuration
+	obju, ref := uint64(10), `\x05>>21-\x00`
+	config = config.SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(obju).Tocollate(clt)
@@ -128,13 +128,13 @@ func TestVal2CollateNumber(t *testing.T) {
 	if out = out[1 : len(out)-1]; out != ref {
 		t.Errorf("expected %v, got %v", ref, out)
 	}
-	if value := clt.Tovalue().(int64); !reflect.DeepEqual(uint64(value), obju) {
+	if value := clt.Tovalue().(float64); !reflect.DeepEqual(uint64(value), obju) {
 		t.Errorf("expected %v, got %v", obju, value)
 	}
 
-	// as float64 using Decimal configuration
-	objf, ref = float64(0.2), `\x05>2-\x00`
-	config = config.SetNumberKind(Decimal)
+	// as float64 using SmartNumber configuration
+	objf, ref = float64(0.2), `\x05>02-\x00`
+	config = config.SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(objf).Tocollate(clt)
@@ -144,41 +144,6 @@ func TestVal2CollateNumber(t *testing.T) {
 	} else if value := clt.Tovalue(); !reflect.DeepEqual(value, objf) {
 		t.Errorf("expected %v, got %v", objf, value)
 	}
-
-	// as int64 using FloatNumber32 configuration
-	obji, ref = int64(10), `\x05>>21-\x00`
-	config = config.SetNumberKind(FloatNumber32)
-	clt = config.NewCollate(make([]byte, 1024), 0)
-
-	config.NewValue(obji).Tocollate(clt)
-	out = fmt.Sprintf("%q", clt.Bytes())
-	if out = out[1 : len(out)-1]; out != ref {
-		t.Errorf("expected %v, got %v", ref, out)
-	} else if value := clt.Tovalue(); !reflect.DeepEqual(value, float64(10.0)) {
-		t.Errorf("expected %v, got %v", obji, value)
-	}
-
-	// as int64 using Decimal configuration, expect a panic
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config = config.SetNumberKind(Decimal)
-		clt := config.NewCollate(make([]byte, 1024), 0)
-		config.NewValue(int64(10)).Tocollate(clt)
-	}()
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config = config.SetNumberKind(Decimal)
-		clt := config.NewCollate(make([]byte, 1024), 0)
-		config.NewValue(float64(10.2)).Tocollate(clt)
-	}()
 }
 
 func TestVal2CollateMissing(t *testing.T) {

@@ -91,24 +91,24 @@ func TestToJsonPointer(t *testing.T) {
 }
 
 func TestGsonToCollate(t *testing.T) {
-	config := NewDefaultConfig().SetNumberKind(IntNumber)
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	config.NewValue(map[string]interface{}{"a": 10, "b": 20}).Tocollate(clt)
-	ref := map[string]interface{}{"a": int64(10), "b": int64(20)}
+	ref := map[string]interface{}{"a": 10.0, "b": 20.0}
 	if value := clt.Tovalue(); !reflect.DeepEqual(ref, value) {
 		t.Errorf("expected %v, got %v", ref, value)
 	}
 }
 
 func TestCborToCollate(t *testing.T) {
-	config := NewDefaultConfig().SetNumberKind(IntNumber)
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	out := config.NewCbor(make([]byte, 1024), 0)
 
 	o := [][2]interface{}{
-		[2]interface{}{"a", uint64(10)},
-		[2]interface{}{"b", uint64(20)},
+		[2]interface{}{"a", 10.0},
+		[2]interface{}{"b", 20.0},
 	}
 	refm := CborMap2golangMap(o)
 
@@ -148,18 +148,10 @@ func TestConfigString(t *testing.T) {
 }
 
 func TestNumberKindString(t *testing.T) {
-	if s := SmartNumber32.String(); s != "SmartNumber32" {
-		t.Errorf("expected %v, got %v", "SmartNumber32", s)
-	} else if s := SmartNumber.String(); s != "SmartNumber" {
+	if s := SmartNumber.String(); s != "SmartNumber" {
 		t.Errorf("expected %v, got %v", "SmartNumber", s)
-	} else if s := IntNumber.String(); s != "IntNumber" {
-		t.Errorf("expected %v, got %v", "IntNumber", s)
-	} else if s := FloatNumber32.String(); s != "FloatNumber32" {
-		t.Errorf("expected %v, got %v", "FloatNumber32", s)
 	} else if s := FloatNumber.String(); s != "FloatNumber" {
 		t.Errorf("expected %v, got %v", "FloatNumber", s)
-	} else if s := Decimal.String(); s != "Decimal" {
-		t.Errorf("expected %v, got %v", "Decimal", s)
 	}
 }
 
@@ -268,7 +260,6 @@ func init() {
 		"\x01 42",
 		"\x01 true",
 		"\x01 1.2",
-		" 3.4 \x01",
 		"\x01 \"string\"",
 		// bad-utf8
 		"hello\xffworld",

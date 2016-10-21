@@ -28,7 +28,7 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 
 	case TypeNumber:
 		x := getDatum(code[n:])
-		y := denormalizeFloatTojson(code[n:n+x-1], text, config.nk)
+		y := collated2Json(code[n:n+x-1], text, config.nk)
 		return n + x, m + y
 
 	case TypeString:

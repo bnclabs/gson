@@ -110,7 +110,7 @@ func TestCborItem(t *testing.T) {
 		}
 	}
 
-	config := NewDefaultConfig().SetNumberKind(IntNumber)
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	config = config.SetContainerEncoding(Stream)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	item := config.NewCbor(make([]byte, 1024), 0)
@@ -120,7 +120,7 @@ func TestCborItem(t *testing.T) {
 		fn(ptr, tcase[1], cbr, item.Reset(nil))
 	}
 
-	config = NewDefaultConfig().SetNumberKind(IntNumber)
+	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	config = config.SetContainerEncoding(LengthPrefix)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	item = config.NewCbor(make([]byte, 1024), 0)

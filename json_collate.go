@@ -169,10 +169,29 @@ func jsonnum2collate(txt string, code []byte, nk NumberKind) (int, string) {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
 		}
 	}
-	f, err := strconv.ParseFloat(txt[s:e], 64)
-	if err != nil {
-		panic(err)
+	switch nk {
+	case FloatNumber:
+		f, err := strconv.ParseFloat(txt[s:e], 64)
+		if err != nil {
+			panic(err)
+		}
+		n := collateFloat64(f, code)
+		return n, txt[e:]
+
+	case SmartNumber:
+		if i, err := strconv.ParseInt(txt[s:e], 10, 64); err == nil {
+			n := collateInt64(i, code)
+			return n, txt[e:]
+		} else if ui, err := strconv.ParseUint(txt[s:e], 10, 64); err == nil {
+			n := collateUint64(ui, code)
+			return n, txt[e:]
+		}
+		f, err := strconv.ParseFloat(txt[s:e], 64)
+		if err != nil {
+			panic(err)
+		}
+		n := collateFloat64(f, code)
+		return n, txt[e:]
 	}
-	n := normalizeFloat(f, code, nk)
-	return n, txt[e:]
+	panic("unreachable code")
 }

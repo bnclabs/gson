@@ -116,18 +116,24 @@ func jsonnum2value(txt string, config *Config) (string, interface{}) {
 	}
 
 	switch config.nk {
-	case IntNumber:
-		num, err := strconv.Atoi(txt[s:e])
-		if err == nil {
-			return txt[e:], int64(num)
-		} else if config.strict {
-			panic("gson scanner expectedJsonInteger")
+	case FloatNumber:
+		f, err := strconv.ParseFloat(txt[s:e], 64)
+		if err != nil {
+			panic(err)
 		}
+		return txt[e:], f
+
+	case SmartNumber:
+		if i, err := strconv.ParseInt(txt[s:e], 10, 64); err == nil {
+			return txt[e:], i
+		} else if ui, err := strconv.ParseUint(txt[s:e], 10, 64); err == nil {
+			return txt[e:], ui
+		}
+		f, err := strconv.ParseFloat(txt[s:e], 64)
+		if err != nil {
+			panic(err)
+		}
+		return txt[e:], f
 	}
-	// FloatNumber, or FloatNumber32, or SmartNumber, or SmartNumber32
-	num, err := strconv.ParseFloat(string(txt[s:e]), 64)
-	if err != nil {
-		panic("unexpected json-number")
-	}
-	return txt[e:], num
+	panic("unreachable code")
 }

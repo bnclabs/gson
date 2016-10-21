@@ -1,7 +1,15 @@
 * document json pointer lookups in README and gettingstarted
 * fix tools/validate/container_test.go
 * test cases for cbor_json.go:tag2json().
-- run travis for go1.4, go1.5, go1.6
+* Investigate
+    BenchmarkVal2CollMap       50000   26696 ns/op  16416 B/op   2 allocs/op
+    BenchmarkVal2CollTyp       10000  174548 ns/op  49250 B/op   6 allocs/op
+
+    BenchmarkJson2CollStr      2000    635015 ns/op   1048647 B/op    5 allocs/op
+
+    BenchmarkCbor2CollMap      2000   787087 ns/op  1089654 B/op   8 allocs/op
+    BenchmarkCbor2CollTyp       500  2500523 ns/op  3269067 B/op  25 allocs/op
+* run travis for go1.4, go1.5, go1.6
 
 JSON:
 

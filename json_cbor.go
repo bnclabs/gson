@@ -151,62 +151,19 @@ func jsonNumToCbor(txt string, out []byte, config *Config) (string, int) {
 			flt = flt || fltCheck[txt[e]] == 1 // detected as float
 		}
 	}
-	switch config.nk {
-	case FloatNumber:
-		num, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		if err != nil { // once parsing logic is bullet proof remove this
-			panic(err)
-		}
-		n := valfloat642cbor(num, out)
-		return txt[e:], n
-
-	case IntNumber:
-		if flt && config.strict == false { // try parsing it as float
-			num, err := strconv.ParseFloat(string(txt[s:e]), 64)
-			if err != nil { // once parsing logic is bullet proof remove this
-				panic(err)
-			}
-			n := valfloat642cbor(num, out)
+	if config.nk != FloatNumber && !flt {
+		if i, err := strconv.ParseInt(txt[s:e], 10, 64); err == nil {
+			n := valint642cbor(i, out)
 			return txt[e:], n
-
-		} else if flt {
-			panic("cbor scanner expected integer")
+		} else if ui, err := strconv.ParseUint(txt[s:e], 10, 64); err == nil {
+			n := valuint642cbor(ui, out)
+			return txt[e:], n
 		}
-		num, err := strconv.Atoi(txt[s:e])
-		if err != nil { // once parsing logic is bullet proof remove this
-			panic(err)
-		}
-		n := valint642cbor(int64(num), out)
-		return txt[e:], n
-
-	case FloatNumber32:
-		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		if err != nil { // once parsing logic is bullet proof remove this
-			panic(err)
-		}
-		n := valfloat322cbor(float32(f), out)
-		return txt[e:], n
 	}
-	// SmartNumber
-	if flt && config.nk == SmartNumber32 {
-		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		if err != nil { // once parsing logic is bullet proof remove this
-			panic(err)
-		}
-		n := valfloat322cbor(float32(f), out)
-		return txt[e:], n
-	} else if flt {
-		f, err := strconv.ParseFloat(string(txt[s:e]), 64)
-		if err != nil { // once parsing logic is bullet proof remove this
-			panic(err)
-		}
-		n := valfloat642cbor(f, out)
-		return txt[e:], n
-	}
-	num, err := strconv.Atoi(txt[s:e])
-	if err != nil { // once parsig logic is bullet proof remove this
+	num, err := strconv.ParseFloat(txt[s:e], 64)
+	if err != nil { // once parsing logic is bullet proof remove this
 		panic(err)
 	}
-	n := valint642cbor(int64(num), out)
+	n := valfloat642cbor(num, out)
 	return txt[e:], n
 }

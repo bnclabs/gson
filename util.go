@@ -2,6 +2,7 @@ package gson
 
 import "reflect"
 import "unsafe"
+import "fmt"
 import "encoding/json"
 import "strconv"
 
@@ -71,85 +72,33 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 	}
 	switch v := val.(type) {
 	case int8:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case uint8:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case int16:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case uint16:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case int32:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case uint32:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case int64:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
+		if config.nk == FloatNumber {
 			return float64(v)
+		} else if config.nk == SmartNumber {
+			return v
 		}
 	case uint64:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
+		if config.nk == FloatNumber {
 			return float64(v)
+		} else if config.nk == SmartNumber {
+			return v
 		}
 	case float32:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return float64(v)
 	case float64:
-		if config.nk == IntNumber {
-			return int64(v)
-		} else if config.nk == FloatNumber32 || config.nk == SmartNumber32 {
-			return float32(v)
-		} else {
-			return float64(v)
-		}
+		return v
 	case map[string]interface{}:
 		for key, x := range v {
 			v[key] = Fixtojson(config, x)
@@ -167,130 +116,134 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 		}
 		return v
 	}
-	return val
+	panic("unreachable code")
 }
 
-// numbers can be encoded as integers, or as small-decimal,
-// or as floating-point - normalizeFloat() takes the number as
-// float64 and based on the configuration encodes it integer or
-// small-decimal or floating-point.
-func normalizeFloat(value float64, code []byte, nt NumberKind) int {
+func collateFloat64(value float64, code []byte) int {
 	var num [64]byte
-	switch nt {
-	case FloatNumber:
-		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 64)
-		return collateFloat(bs, code)
-
-	case FloatNumber32:
-		bs := strconv.AppendFloat(num[:0], value, 'e', -1, 32)
-		return collateFloat(bs, code)
-
-	case IntNumber:
-		v := int64(value)
-		bs := strconv.AppendInt(num[:0], v, 10)
-		return collateInt(bs, code)
-
-	case Decimal:
-		if -1 >= value || value <= 1 {
-			bs := strconv.AppendFloat(num[:0], value, 'f', -1, 64)
-			return collateSD(bs, code)
-		}
-		panic("collate invalid decimal")
-	}
-	panic("SmartNumber32 or SmartNumber not supported for collation")
+	bs := strconv.AppendFloat(num[:0], value, 'e', -1, 64)
+	return collateFloat(bs, code)
 }
 
-// numbers can be encoded as integers, or as small-decimal,
-// or as floating-point - normalizeFloat() takes the number as
-// int64 and based on the configuration encodes it integer or
-// small-decimal or floating-point.
-func normalizeInt64(value int64, code []byte, nt NumberKind) int {
+func collateUint64(value uint64, code []byte) int {
+	var num, fltx [64]byte
+	if value > 9007199254740991 {
+		intx := strconv.AppendUint(num[:0], value, 10)
+		fltx[0], fltx[1] = intx[0], '.'
+		n := 2 + copy(fltx[2:], intx[1:])
+		fltx[n], fltx[n+1], n = 'e', '+', n+2
+		tmp := strconv.AppendInt(fltx[n:n], int64(len(intx[1:])), 10)
+		ln := n + len(tmp)
+		return collateFloat(fltx[:ln], code)
+
+	} else {
+		bs := strconv.AppendFloat(num[:0], float64(value), 'e', -1, 64)
+		return collateFloat(bs, code)
+	}
+}
+
+func collateInt64(value int64, code []byte) int {
+	var num, fltx [64]byte
+	if value > 9007199254740991 {
+		intx := strconv.AppendInt(num[:0], value, 10)
+		fltx[0], fltx[1] = intx[0], '.'
+		n := 2 + copy(fltx[2:], intx[1:])
+		fltx[n], fltx[n+1], n = 'e', '+', n+2
+		tmp := strconv.AppendInt(fltx[n:n], int64(len(intx[1:])), 10)
+		ln := n + len(tmp)
+		return collateFloat(fltx[:ln], code)
+
+	} else if value < -9007199254740992 {
+		intx := strconv.AppendInt(num[:0], value, 10)
+		fltx[0], fltx[1], fltx[2] = intx[0], intx[1], '.'
+		n := 3 + copy(fltx[3:], intx[2:])
+		fltx[n], fltx[n+1], n = 'e', '+', n+2
+		tmp := strconv.AppendInt(fltx[n:n], int64(len(intx[2:])), 10)
+		ln := n + len(tmp)
+		return collateFloat(fltx[:ln], code)
+
+	} else {
+		bs := strconv.AppendFloat(num[:0], float64(value), 'e', -1, 64)
+		return collateFloat(bs, code)
+	}
+}
+
+func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {
+	parse := func(text []byte, m []byte) (dotat int, expat int, exp int, mant []byte) {
+		var err error
+		dotat, expat = -1, -1
+		for i, ch := range text {
+			if ch == '.' {
+				dotat = i
+			} else if ch == 'e' || ch == 'E' {
+				expat = i
+			} else if expat > -1 && ch == '+' {
+				expat = i
+			} else if expat == -1 {
+				if len(m) > 0 || (ch != '0' && ch != '+') {
+					m = append(m, ch)
+				}
+			}
+		}
+		mant = m
+		if expat > -1 {
+			exp, err = strconv.Atoi(bytes2str(text[expat+1:]))
+			if err != nil {
+				panic(err)
+			}
+		}
+		return
+	}
+
+	var mantissa, scratch [64]byte
+	_, y := collated2Float(code, scratch[:])
+	if nk == SmartNumber {
+		_, _, exp, mant := parse(scratch[:y], mantissa[:0])
+		if exp >= 15 {
+			x := len(mant) - exp - 1
+			if mant[0] == '+' || mant[0] == '-' {
+				x -= 1
+			}
+			if x > 0 {
+				for i := 0; i < x; i++ {
+					mant = append(mant, 0)
+				}
+			}
+			ui, err := strconv.ParseUint(bytes2str(mant), 10, 64)
+			if err == nil {
+				return ui, 0, 0, 1
+			}
+			i, err := strconv.ParseInt(bytes2str(mant), 10, 64)
+			if err == nil {
+				return 0, i, 0, 2
+			}
+			panic(fmt.Errorf("unexpected number %v", string(scratch[:y])))
+		}
+	}
+	f, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
+	if err != nil {
+		panic(err)
+	}
+	return 0, 0, f, 3
+
+}
+
+func collated2Json(code []byte, text []byte, nk NumberKind) int {
 	var num [64]byte
-	switch nt {
-	case FloatNumber:
-		v := float64(value)
-		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 64)
-		return collateFloat(bs, code)
 
-	case FloatNumber32:
-		v := float64(value)
-		bs := strconv.AppendFloat(num[:0], v, 'e', -1, 32)
-		return collateFloat(bs, code)
-
-	case IntNumber:
-		bs := strconv.AppendInt(num[:0], value, 10)
-		return collateInt(bs, code)
-
-	case Decimal:
-		v := float64(value)
-		if -1 >= v || v <= 1 {
-			bs := strconv.AppendFloat(num[:0], v, 'f', -1, 64)
-			return collateSD(bs, code)
-		}
-		panic("collate invalid decimal")
+	ui, i, f, what := collated2Number(code, nk)
+	switch what {
+	case 1:
+		nm := strconv.AppendUint(num[:0], ui, 10)
+		return copy(text, nm)
+	case 2:
+		nm := strconv.AppendInt(num[:0], i, 10)
+		return copy(text, nm)
+	case 3:
+		nm := strconv.AppendFloat(num[:0], f, 'e', -1, 64)
+		return copy(text, nm)
 	}
-	panic("SmartNumber32 or SmartNumber not supported for collation")
-}
-
-func denormalizeFloat(code []byte, nt NumberKind) float64 {
-	var scratch [64]byte
-	switch nt {
-	case FloatNumber:
-		_, y := collated2Float(code, scratch[:])
-		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-		if err != nil {
-			panic(err)
-		}
-		return res
-
-	case FloatNumber32:
-		_, y := collated2Float(code, scratch[:])
-		f, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-		if err != nil {
-			panic(err)
-		}
-		return f
-
-	case Decimal:
-		_, y := collated2SD(code, scratch[:])
-		res, err := strconv.ParseFloat(bytes2str(scratch[:y]), 64)
-		if err != nil {
-			panic(err)
-		}
-		return res
-	}
-	panic("SmartNumber32/SmartNumber/IntNumber not configured for collation")
-}
-
-func denormalizeInt64(code []byte, nt NumberKind) int64 {
-	var scratch [64]byte
-	switch nt {
-	case IntNumber:
-		_, y := collated2Int(code, scratch[:])
-		i, err := strconv.Atoi(bytes2str(scratch[:y]))
-		if err != nil {
-			panic(err)
-		}
-		return int64(i)
-	}
-	panic("only IntNumber is configured for collation")
-}
-
-func denormalizeFloatTojson(code []byte, text []byte, nt NumberKind) int {
-	switch nt {
-	case FloatNumber, FloatNumber32:
-		_, y := collated2Float(code, text[:])
-		return y
-
-	case IntNumber:
-		_, y := collated2Int(code, text[:])
-		return y
-
-	case Decimal:
-		_, y := collated2SD(code, text[:])
-		return y
-	}
-	panic("SmartNumber32 or SmartNumber not supported for collation")
+	panic("unreachable code")
 }
 
 // sort JSON property objects based on property names.

@@ -2,14 +2,6 @@ Primary use of collatejson is to do binary comparison on two json strings.
 Binary comparison (aka memcmp) can be several times faster than any other
 custom JSON parser.
 
-memcmp:
--------
-
-.. code-block:: C
-    int memcmp(const void *s1, const void *s2, size_t n);
-
-where, n = Min(s1, s2)
-
 JSON:
 -----
 
@@ -22,10 +14,79 @@ JSON, as defined by spec, can represent following elements,
   6. object of key,value properties, where key is represetned as string and
      value can be any JSON elements.
 
-nil, boolean, numbers, strings:
--------------------------------
+nil, boolean:
+-------------
 
-Basic elements can be compared without any special care.
+nil, true, and false are encoded as single byte.
+
+number:
+-------
+
+The basic problem with numbers is that Javascript, from which JSON evolved,
+does not have any notion of integer numbers. All numbers are represented as
+64-bit floating point. In which case, only integers less than 2^53 and greater
+than -2^53 can be represented using this format.
+
+* collating CBOR encoded numbers:
+  * all number are collated as float.
+  * if config.nk is FloatNumber, 64-bit integers are converted to float64.
+  * if config.nk is SmartNumber, 64-bit integers > 2^53 and < -2^53 are
+    preseved as integer and collated as float.
+  * array-length (if configured) and property-length (if configured) are
+    collated as integer.
+
+* transforming collated numbers to CBOR encoded numbers:
+  * since all numbers are collated as float, it is converted back to text
+    representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
+  * if config.nk is FloatNumber, all number are encoded as CBOR-float64.
+  * if config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
+    as uint64 (if number is positive), or int64 (if number is negative).
+    Others are encoded as CBOR-float64.
+
+* transforming collated numbers to JSON encoded numbers:
+  * since all numbers are collated as float, it is converted back to text
+    representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
+  * if config.nk is FloatNumber, all number are encoded as JSON-float64.
+  * if config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
+    as uint64 (if number is positive), or int64 (if number is negative).
+    Others are encoded as CBOR-float64.
+
+* transforming collated numbers to value:
+  * since all numbers are collated as float, it is converted back to text
+    representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
+  * if config.nk is FloatNumber, all number are encoded as JSON-float64.
+  * if config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
+    as uint64 (if number is positive), or int64 (if number is negative).
+    Others are encoded as CBOR-float64.
+
+* transforming JSON encoded numbers to CBOR-numbers:
+  * if config.nk is FloatNumber, all numbers are encoded as CBOR-float64.
+  * if config.nk is SmartNumber, all JSON float64 numbers are encoded as
+    CBOR-float64, and, all JSON positive integers are encoded as
+    CBOR-uint64, and, all JSON negative integers are encoded as
+    CBOR-int64.
+
+* collating JSON encoded numbers:
+  * all number are collated as float.
+  * if config.nk is FloatNumber, all numbers are interpreted as float64
+    and collated as float64.
+  * if config.nk is SmartNumber, all JSON float64 numbers are collated as
+    float64, and, 64-bit integers > 2^53 are preseved as integer and collated
+    as float.
+  * array-length (if configured) and property-length (if configured) are
+    collated as integer.
+
+* transforming JSON encoded numbers to golang values:
+  * if config.nk is FloatNumber, all numbers are interpreted as float64.
+  * if config.nk is SmartNumber, all JSON integers are interpreted as either
+    uint64 or int64, and, JSON float64 are interpreted as float64.
+
+* collating golang values:
+  * all number are collated as float.
+  * all JSON float64 numbers are collated as float64, and,
+    64-bit integers > 2^53 are preseved as integer and collated as float.
+  * array-length (if configured) and property-length (if configured) are
+    collated as integer.
 
 array:
 ------

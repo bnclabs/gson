@@ -100,7 +100,7 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 		`{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e","f":[1,2]}`,
 	}
 
-	config := NewDefaultConfig().SetNumberKind(IntNumber)
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	config = config.SetContainerEncoding(LengthPrefix)
 
 	jsn := config.NewJson(make([]byte, 1024), 0)
@@ -138,9 +138,9 @@ func TestCbor2JsonNum(t *testing.T) {
 		t.Errorf("expected %q, got %q", "10", s)
 	}
 
-	// test IntNumber
+	// test SmartNumber (integer)
 	config = NewDefaultConfig()
-	config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
+	config = config.SetNumberKind(SmartNumber).SetSpaceKind(UnicodeSpace)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	jsn = config.NewJson(make([]byte, 1024), 0)
 	jsnback = config.NewJson(make([]byte, 1024), 0)
@@ -152,65 +152,7 @@ func TestCbor2JsonNum(t *testing.T) {
 		t.Errorf("expected %q, got %q", "10", s)
 	}
 
-	// malformed IntNumber
-	func() {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config := NewDefaultConfig()
-		config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
-		config = config.SetStrict(true)
-		jsn := config.NewJson(make([]byte, 1024), 0)
-		cbr := config.NewCbor(make([]byte, 1024), 0)
-		jsn.Reset([]byte("10.2"))
-		jsn.Tocbor(cbr)
-	}()
-
-	// test FloatNumber32
-	config = NewDefaultConfig()
-	config = config.SetNumberKind(FloatNumber32).SetSpaceKind(UnicodeSpace)
-	jsn = config.NewJson(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	jsnback = config.NewJson(make([]byte, 1024), 0)
-
-	jsn.Reset([]byte("10"))
-	jsn.Tocbor(cbr)
-	cbr.Tojson(jsnback)
-	if s := string(jsnback.Bytes()); s != "10" {
-		t.Errorf("expected %q, got %q", "10", s)
-	}
-
-	// test SmartNumber32
-	config = NewDefaultConfig()
-	config = config.SetNumberKind(SmartNumber32).SetSpaceKind(UnicodeSpace)
-	jsn = config.NewJson(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	jsnback = config.NewJson(make([]byte, 1024), 0)
-
-	jsn.Reset([]byte("10.2"))
-	jsn.Tocbor(cbr)
-	cbr.Tojson(jsnback)
-	if s := string(jsnback.Bytes()); s != "10.2" {
-		t.Errorf("expected %q, got %q", "10.2", s)
-	}
-
-	// test SmartNumber32 (integer)
-	config = NewDefaultConfig()
-	config = config.SetNumberKind(SmartNumber32).SetSpaceKind(UnicodeSpace)
-	jsn = config.NewJson(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	jsnback = config.NewJson(make([]byte, 1024), 0)
-
-	jsn.Reset([]byte("10"))
-	jsn.Tocbor(cbr)
-	cbr.Tojson(jsnback)
-	if s := string(jsnback.Bytes()); s != "10" {
-		t.Errorf("expected %q, got %q", "10", s)
-	}
-
-	// test SmartNumber
+	// test SmartNumber (float)
 	config = NewDefaultConfig()
 	config = config.SetNumberKind(SmartNumber).SetSpaceKind(UnicodeSpace)
 	jsn = config.NewJson(make([]byte, 1024), 0)
@@ -223,20 +165,6 @@ func TestCbor2JsonNum(t *testing.T) {
 	if s := string(jsnback.Bytes()); s != "10.2" {
 		t.Errorf("expected %q, got %q", "10.2", s)
 	}
-
-	// test SmartNumber (integer)
-	config = NewDefaultConfig()
-	config = config.SetNumberKind(SmartNumber32).SetSpaceKind(UnicodeSpace)
-	jsn = config.NewJson(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	jsnback = config.NewJson(make([]byte, 1024), 0)
-
-	jsn.Reset([]byte("10"))
-	jsn.Tocbor(cbr)
-	cbr.Tojson(jsnback)
-	if s := string(jsnback.Bytes()); s != "10" {
-		t.Errorf("expected %q, got %q", "10", s)
-	}
 }
 
 func TestCbor2JsonNumber(t *testing.T) {
@@ -248,7 +176,7 @@ func TestCbor2JsonNumber(t *testing.T) {
 		"9223372036854775807", "-9223372036854775807", "-9223372036854775808",
 	}
 	config := NewDefaultConfig()
-	config = config.SetNumberKind(IntNumber).SetSpaceKind(UnicodeSpace)
+	config = config.SetNumberKind(SmartNumber).SetSpaceKind(UnicodeSpace)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	jsn := config.NewJson(make([]byte, 1024), 0)
 	jsnback := config.NewJson(make([]byte, 1024), 0)

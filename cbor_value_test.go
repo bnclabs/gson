@@ -427,7 +427,7 @@ func TestCborMalformed(t *testing.T) {
 			}()
 
 			config := NewDefaultConfig()
-			config = config.SetNumberKind(IntNumber).SetSpaceKind(AnsiSpace)
+			config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
 			jsn := config.NewJson(make([]byte, 1024), 0)
 			jsn.Tocbor(config.NewCbor(make([]byte, 1024), 0))
 		}()

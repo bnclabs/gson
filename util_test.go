@@ -39,62 +39,6 @@ func TestCborMap2Golang(t *testing.T) {
 	}
 }
 
-func TestNormalizeFloat(t *testing.T) {
-	// test with SmartNumber32 and SmartNumber
-	panicfn := func(nk NumberKind) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config := NewDefaultConfig().SetNumberKind(nk)
-		jsn := config.NewJson([]byte("10.3"), -1)
-		clt := config.NewCollate(make([]byte, 1024), 0)
-		jsn.Tocollate(clt)
-	}
-	panicfn(SmartNumber32)
-	panicfn(SmartNumber)
-}
-
-func TestDenormalizeFloat(t *testing.T) {
-	// test with SmartNumber32 and SmartNumber
-	panicfn := func(nk NumberKind) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config := NewDefaultConfig().SetNumberKind(nk)
-		jsn := config.NewJson([]byte("10.3"), -1)
-		cbr := config.NewCbor(make([]byte, 1024), 0)
-		clt := config.NewCollate(make([]byte, 1024), 0)
-		jsn.Tocollate(clt)
-		clt.Tocbor(cbr)
-	}
-	panicfn(SmartNumber32)
-	panicfn(SmartNumber)
-}
-
-func TestDenormalizeFloatTojson(t *testing.T) {
-	// test with SmartNumber32 and SmartNumber
-	panicfn := func(nk NumberKind) {
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("expected panic")
-			}
-		}()
-		config := NewDefaultConfig().SetNumberKind(nk)
-		jsn := config.NewJson(make([]byte, 1024), 0)
-		clt := config.NewCollate(make([]byte, 1024), 0)
-
-		jsn.Reset([]byte("10.3"))
-		jsn.Tocollate(clt)
-		clt.Tojson(jsn.Reset(nil))
-	}
-	panicfn(SmartNumber32)
-	panicfn(SmartNumber)
-}
-
 func TestKvrefs(t *testing.T) {
 	items := make(kvrefs, 4)
 	items[0] = kvref{"1", []byte("1")}
@@ -110,6 +54,120 @@ func TestKvrefs(t *testing.T) {
 	}
 	if !reflect.DeepEqual(ref, items) {
 		t.Errorf("expected %v, got %v", ref, items)
+	}
+}
+
+func TestCollated2Number(t *testing.T) {
+	tcases := [][]interface{}{
+		[]interface{}{
+			float64(0),
+			"0",
+			float64(0), float64(0),
+		},
+		[]interface{}{
+			uint64(0),
+			"0",
+			float64(0), float64(0),
+		},
+		[]interface{}{
+			int64(0),
+			"0",
+			float64(0), float64(0),
+		},
+		[]interface{}{
+			float64(10.1231131311),
+			">>2101231131311-",
+			float64(10.1231131311), float64(10.1231131311),
+		},
+		[]interface{}{
+			float64(-10.1231131311),
+			"--7898768868688>",
+			float64(-10.1231131311), float64(-10.1231131311),
+		},
+		[]interface{}{
+			float64(9007199254740992),
+			">>>2169007199254740992-",
+			float64(9.007199254740992e+15), uint64(9007199254740992),
+		},
+		[]interface{}{
+			float64(-9007199254740992),
+			"---7830992800745259007>",
+			float64(-9.007199254740992e+15), int64(-9.007199254740992e+15),
+		},
+		[]interface{}{
+			int64(9223372036854775807),
+			">>>2199223372036854775807-",
+			float64(9.223372036854776e+18), uint64(9223372036854775807),
+		},
+		[]interface{}{
+			int64(-9223372036854775808),
+			"---7800776627963145224191>",
+			float64(-9.223372036854776e+18), int64(-9223372036854775808),
+		},
+		[]interface{}{
+			uint64(9223372036854775808),
+			">>>2199223372036854775808-",
+			float64(9.223372036854776e+18), uint64(9223372036854775808),
+		},
+		[]interface{}{
+			uint64(18446744073709551615),
+			">>>22018446744073709551615-",
+			float64(1.8446744073709552e+19), uint64(18446744073709551615),
+		},
+	}
+
+	var code [64]byte
+	var n int
+
+	for _, tcase := range tcases {
+		t.Logf("%T %v", tcase[0], tcase[0])
+		switch val := tcase[0].(type) {
+		case float64:
+			n = collateFloat64(val, code[:])
+		case uint64:
+			n = collateUint64(val, code[:])
+		case int64:
+			n = collateInt64(val, code[:])
+		}
+		if ref := tcase[1].(string); ref != string(code[:n]) {
+			t.Errorf("expected %v, got %v", ref, string(code[:n]))
+		}
+
+		ui, i, f, what := collated2Number(code[:n], FloatNumber)
+		switch what {
+		case 1:
+			if x := uint64(tcase[2].(float64)); ui != x {
+				t.Errorf("expected uint64 %v, got %v", x, ui)
+			}
+		case 2:
+			if x := int64(tcase[2].(float64)); i != x {
+				t.Errorf("expected int64 %v, got %v", x, i)
+			}
+		case 3:
+			if x := tcase[2].(float64); f != x {
+				t.Errorf("expected float64 %v, got %v", x, f)
+			}
+		default:
+			panic("what is unknown")
+		}
+
+		ui, i, f, what = collated2Number(code[:n], SmartNumber)
+		switch what {
+		case 1:
+			if x := tcase[3].(uint64); ui != x {
+				t.Errorf("expected uint64 %v, got %v", x, ui)
+			}
+		case 2:
+			if x := tcase[3].(int64); i != x {
+				t.Errorf("expected int64 %v, got %v", x, i)
+			}
+		case 3:
+			if x := tcase[3].(float64); f != x {
+				t.Errorf("expected float64 %v, got %v", x, f)
+			}
+		default:
+			panic("what is unknown")
+		}
 	}
 }
 

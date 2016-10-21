@@ -78,7 +78,7 @@ func TestScanIntegers(t *testing.T) {
 		json.Unmarshal([]byte(tcase), &ref)
 
 		config := NewDefaultConfig()
-		config = config.SetNumberKind(IntNumber).SetSpaceKind(AnsiSpace)
+		config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
 		jsn := config.NewJson(make([]byte, 1024), 0)
 		if jsnrem, val := jsn.Reset([]byte(tcase)).Tovalue(); jsnrem != nil {
 			t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
@@ -100,28 +100,12 @@ func TestScanIntegers(t *testing.T) {
 		if v, ok := val.(float64); !ok || v != ref.(float64) {
 			t.Errorf("%q int should be parsed to %v", tcase, ref)
 		}
-
-		func() {
-			defer func() {
-				if r := recover(); r == nil {
-					t.Errorf("expected panic")
-				}
-			}()
-			json.Unmarshal([]byte(tcase), &ref)
-			config := NewDefaultConfig()
-			config = config.SetNumberKind(IntNumber).SetSpaceKind(AnsiSpace)
-			jsn := config.NewJson(make([]byte, 1024), 0)
-			jsnrem, _ := jsn.Reset([]byte(tcase)).Tovalue()
-			if remtxt := string(jsnrem.Bytes()); remtxt == tcase {
-				t.Errorf("expected %v got %v", tcase, remtxt)
-			}
-		}()
 	}
 }
 
 func TestScanMalformed(t *testing.T) {
 	config := NewDefaultConfig()
-	config = config.SetNumberKind(IntNumber).SetSpaceKind(AnsiSpace)
+	config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
 	config = config.SetStrict(true)
 
 	for _, tcase := range scaninvalid {
