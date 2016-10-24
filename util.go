@@ -64,13 +64,23 @@ func GolangMap2cborMap(value interface{}) interface{} {
 
 func Fixtojson(config *Config, val interface{}) interface{} {
 	var err error
+
+	if val == nil {
+		return nil
+	}
+
 	if s, ok := val.(json.Number); ok {
 		val, err = strconv.ParseFloat(string(s), 64)
 		if err != nil {
 			panic(err)
 		}
 	}
+
 	switch v := val.(type) {
+	case bool:
+		return v
+	case string:
+		return v
 	case int8:
 		return float64(v)
 	case uint8:
@@ -116,7 +126,7 @@ func Fixtojson(config *Config, val interface{}) interface{} {
 		}
 		return v
 	}
-	panic("unreachable code")
+	panic(fmt.Errorf("unreachable code, unexpected %T", val))
 }
 
 func collateFloat64(value float64, code []byte) int {
