@@ -1,4 +1,3 @@
-[ "hello", "world" ]
 [ 10.2 ]
 [ false ]
 [ "hello", "world", "fine" ]
@@ -13,3 +12,4 @@
 [ true ]
 [ 10 ]
 [ "hello", "python", "perl" ]
+[ "hello", "world" ]
