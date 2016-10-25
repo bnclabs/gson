@@ -240,26 +240,10 @@ func (this float64t) cmp(other interface{}) int {
 		}
 		return 1
 
-	case int:
-		if v := int64(this); v < int64(val) {
-			return -1
-		} else if v == int64(val) {
-			return rc
-		}
-		return 1
-
 	case int64:
 		if v := int64(this); v < val {
 			return -1
 		} else if v == val {
-			return rc
-		}
-		return 1
-
-	case uint:
-		if v := uint64(this); v < uint64(val) {
-			return -1
-		} else if v == uint64(val) {
 			return rc
 		}
 		return 1
@@ -297,16 +281,6 @@ func (this int64t) cmp(other interface{}) int {
 		}
 		return 1
 
-	case uint:
-		if uint64(val) >= 9223372036854775808 {
-			return -1
-		} else if v := int64(val); this < int64t(v) {
-			return -1
-		} else if this == int64t(v) {
-			return 0
-		}
-		return 1
-
 	case uint64:
 		if val >= 9223372036854775808 {
 			return -1
@@ -328,7 +302,7 @@ func (this uint64t) cmp(other interface{}) int {
 		return -float64t(val).cmp(uint64(this))
 	case int64:
 		if val < 0 {
-			return -1
+			return 1
 		} else if v := int64(val); int64(this) < v {
 			return -1
 		} else if int64(this) == v {

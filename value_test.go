@@ -13,6 +13,24 @@ var _ = fmt.Sprintf("dummy")
 func TestValueCompare(t *testing.T) {
 	config := NewDefaultConfig()
 	testcases := [][3]interface{}{
+		// numbers
+		[3]interface{}{uint64(10), float64(10), 0},
+		[3]interface{}{uint64(10), float64(10.1), -1},
+		[3]interface{}{uint64(10), int64(-10), 1},
+		[3]interface{}{uint64(10), int64(10), 0},
+		[3]interface{}{uint64(11), int64(10), 1},
+		[3]interface{}{uint64(9), uint64(10), -1},
+		[3]interface{}{uint64(10), uint64(10), 0},
+		[3]interface{}{int64(10), int(11), -1},
+		[3]interface{}{int64(11), int(10), 1},
+		[3]interface{}{int64(10), int64(10), 0},
+		[3]interface{}{int64(10), uint64(11), -1},
+		[3]interface{}{int64(10), uint64(10), 0},
+		[3]interface{}{int64(10), uint64(9), 1},
+		[3]interface{}{float64(10), uint64(10), 0},
+		[3]interface{}{float64(10.1), uint64(10), 1},
+		[3]interface{}{float64(10), uint64(9), 1},
+		// all others
 		[3]interface{}{nil, nil, 0},
 		[3]interface{}{nil, false, -1},
 		[3]interface{}{nil, true, -1},
