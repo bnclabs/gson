@@ -4,6 +4,7 @@
 package gson
 
 import "strconv"
+import "fmt"
 
 func value2json(value interface{}, out []byte, config *Config) int {
 	var err error
@@ -53,11 +54,25 @@ func value2json(value interface{}, out []byte, config *Config) int {
 		return len(out)
 
 	case int64:
-		out = strconv.AppendFloat(out[:0], float64(v), 'f', -1, 64)
+		switch config.nk {
+		case FloatNumber:
+			out = strconv.AppendFloat(out[:0], float64(v), 'f', -1, 64)
+		case SmartNumber:
+			out = strconv.AppendInt(out[:0], v, 10)
+		default:
+			panic(fmt.Errorf("unknown number kind %v", config.nk))
+		}
 		return len(out)
 
 	case uint64:
-		out = strconv.AppendFloat(out[:0], float64(v), 'f', -1, 64)
+		switch config.nk {
+		case FloatNumber:
+			out = strconv.AppendFloat(out[:0], float64(v), 'f', -1, 64)
+		case SmartNumber:
+			out = strconv.AppendUint(out[:0], v, 10)
+		default:
+			panic(fmt.Errorf("unknown number kind %v", config.nk))
+		}
 		return len(out)
 
 	case float32:
