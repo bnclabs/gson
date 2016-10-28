@@ -182,16 +182,14 @@ func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {
 	var mantissa, scratch [64]byte
 	_, y := collated2Float(code, scratch[:])
 	if nk == SmartNumber {
-		_, _, exp, mant := parseFloat(scratch[:y], mantissa[:0])
+		dotat, _, exp, mant := parseFloat(scratch[:y], mantissa[:0])
 		if exp >= 15 {
-			x := len(mant) - exp - 1
-			if mant[0] == '+' || mant[0] == '-' {
-				x -= 1
+			x := len(mant) - dotat
+			for i := 0; i < (exp - x); i++ {
+				mant = append(mant, '0')
 			}
-			if x > 0 {
-				for i := 0; i < x; i++ {
-					mant = append(mant, 0)
-				}
+			if mant[0] == '+' {
+				mant = mant[1:]
 			}
 			ui, err := strconv.ParseUint(bytes2str(mant), 10, 64)
 			if err == nil {
@@ -225,9 +223,7 @@ func parseFloat(text []byte, m []byte) (int, int, int, []byte) {
 		} else if expat > -1 && ch == '+' {
 			expat = i
 		} else if expat == -1 {
-			if len(m) > 0 || (ch != '0' && ch != '+') {
-				m = append(m, ch)
-			}
+			m = append(m, ch)
 		}
 	}
 	if expat > -1 {
