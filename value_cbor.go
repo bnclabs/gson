@@ -369,15 +369,15 @@ func valtime2cbor(dt interface{}, buf []byte, config *Config) int {
 	n := 0
 	switch v := dt.(type) {
 	case time.Time: // rfc3339, as refined by section 3.3 rfc4287
+		item := v.Format(time.RFC3339) // TODO: make rfc3339 as config.
 		n += tag2cbor(tagDateTime, buf)
-		// TODO: make rfc3339 as config.
-		n += value2cbor(v.Format(time.RFC3339), buf[n:], config)
+		n += value2cbor(item, buf[n:], config)
 	case CborTagEpoch:
 		n += tag2cbor(tagEpoch, buf)
-		n += value2cbor(int64(v), buf[n:], config)
+		n += valint642cbor(int64(v), buf[n:])
 	case CborTagEpochMicro:
 		n += tag2cbor(tagEpoch, buf)
-		n += value2cbor(float64(v), buf[n:], config)
+		n += valfloat642cbor(float64(v), buf[n:])
 	}
 	return n
 }
@@ -390,25 +390,49 @@ func valbignum2cbor(num *big.Int, buf []byte, config *Config) int {
 	} else {
 		n += tag2cbor(tagPosBignum, buf)
 	}
-	n += value2cbor(bytes, buf[n:], config)
+	n += valbytes2cbor(bytes, buf[n:])
 	return n
 }
 
 func valdecimal2cbor(v CborTagFraction, buf []byte, config *Config) int {
-	var sl [2]interface{}
+	var item interface{}
 
 	n := tag2cbor(tagDecimalFraction, buf)
-	sl[0], sl[1] = v[0], v[1]
-	n += value2cbor(sl[:], buf[n:], config)
+	if config.ct == LengthPrefix {
+		m := valuint642cbor(uint64(len(v)), buf[n:])
+		buf[n] = (buf[n] & 0x1f) | cborType4 // fix the type from type0->type4
+		n += m
+		for _, item = range v {
+			n += value2cbor(item, buf[n:], config)
+		}
+		return n
+	}
+	n += arrayStart(buf[n:])
+	for _, item = range v {
+		n += value2cbor(item, buf[n:], config)
+	}
+	n += breakStop(buf[n:])
 	return n
 }
 
 func valbigfloat2cbor(v CborTagFloat, buf []byte, config *Config) int {
-	var sl [2]interface{}
+	var item interface{}
 
 	n := tag2cbor(tagBigFloat, buf)
-	sl[0], sl[1] = v[0], v[1]
-	n += value2cbor(sl[:], buf[n:], config)
+	if config.ct == LengthPrefix {
+		m := valuint642cbor(uint64(len(v)), buf[n:])
+		buf[n] = (buf[n] & 0x1f) | cborType4 // fix the type from type0->type4
+		n += m
+		for _, item = range v {
+			n += value2cbor(item, buf[n:], config)
+		}
+		return n
+	}
+	n += arrayStart(buf[n:])
+	for _, item = range v {
+		n += value2cbor(item, buf[n:], config)
+	}
+	n += breakStop(buf[n:])
 	return n
 }
 

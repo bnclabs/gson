@@ -27,7 +27,7 @@ func cborSet(
 	if start < 0 {
 		x, m = addlength(cont, m, doc, newdoc)
 		key := bytes2str(segments[len(segments)-1])
-		m += value2cbor(key, newdoc[m:], config)
+		m += valtext2cbor(key, newdoc[m:])
 		m += copy(newdoc[m:], item)
 		m += copy(newdoc[m:], doc[x:])
 		n := copy(olditem, item)

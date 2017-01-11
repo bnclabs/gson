@@ -651,7 +651,7 @@ func TestBigFloat(t *testing.T) {
 		val := config.NewValue(ref)
 		val.Tocbor(cbr.Reset(nil))
 		if item := cbr.Tovalue(); !reflect.DeepEqual(ref, item) {
-			t.Errorf("expected %v got %v", ref, item)
+			t.Errorf("expected %T got %T", ref, item)
 		}
 	}
 }
