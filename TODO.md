@@ -17,6 +17,7 @@ JSON:
 * JSON numbers are by default treated as float64. since there is ordering
   between integer and floating point, try to handle this situation when
   converting JSON to collate, JSON to value and JSON to cbor.
+* Explore options of supporting json5.org specification.
 
 CBOR:
 
@@ -27,6 +28,8 @@ CBOR:
   encoding/json library is used (contributed by Sarath). keep it in sync with
   upstream (golang's stdlib).
 * support for cbor tags: tagBase64URL, tagBase64, tagBase16
+* Check whether CBOR supports -Infinity and +Infinity encoding. Without this
+  using CBOR for encoding Database queries might get convoluted.
 
 Collate:
 
