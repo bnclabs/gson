@@ -7,6 +7,7 @@ Topics
 
 * [what is what](#what-is-what)
 * [transforms](#transforms)
+* [understanding collation](docs/collate.rst)
 * [getting started](docs/gettingstarted.md)
 * [notes](#notes)
 
