@@ -28,6 +28,7 @@ does not have any notion of integer numbers. All numbers are represented as
 than -2^53 can be represented using this format.
 
 * collating CBOR encoded numbers:
+
   * all number are collated as float.
   * if config.nk is FloatNumber, 64-bit integers are converted to float64.
   * if config.nk is SmartNumber, 64-bit integers > 2^53 and < -2^53 are
@@ -36,6 +37,7 @@ than -2^53 can be represented using this format.
     collated as integer.
 
 * transforming collated numbers to CBOR encoded numbers:
+
   * since all numbers are collated as float, it is converted back to text
     representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
   * if config.nk is FloatNumber, all number are encoded as CBOR-float64.
@@ -44,6 +46,7 @@ than -2^53 can be represented using this format.
     Others are encoded as CBOR-float64.
 
 * transforming collated numbers to JSON encoded numbers:
+
   * since all numbers are collated as float, it is converted back to text
     representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
   * if config.nk is FloatNumber, all number are encoded as JSON-float64.
@@ -52,6 +55,7 @@ than -2^53 can be represented using this format.
     Others are encoded as CBOR-float64.
 
 * transforming collated numbers to value:
+
   * since all numbers are collated as float, it is converted back to text
     representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
   * if config.nk is FloatNumber, all number are encoded as JSON-float64.
@@ -60,6 +64,7 @@ than -2^53 can be represented using this format.
     Others are encoded as CBOR-float64.
 
 * transforming JSON encoded numbers to CBOR-numbers:
+
   * if config.nk is FloatNumber, all numbers are encoded as CBOR-float64.
   * if config.nk is SmartNumber, all JSON float64 numbers are encoded as
     CBOR-float64, and, all JSON positive integers are encoded as
@@ -67,6 +72,7 @@ than -2^53 can be represented using this format.
     CBOR-int64.
 
 * collating JSON encoded numbers:
+
   * all number are collated as float.
   * if config.nk is FloatNumber, all numbers are interpreted as float64
     and collated as float64.
@@ -77,11 +83,13 @@ than -2^53 can be represented using this format.
     collated as integer.
 
 * transforming JSON encoded numbers to golang values:
+
   * if config.nk is FloatNumber, all numbers are interpreted as float64.
   * if config.nk is SmartNumber, all JSON integers are interpreted as either
     uint64 or int64, and, JSON float64 are interpreted as float64.
 
 * collating golang values:
+
   * all number are collated as float.
   * all JSON float64 numbers are collated as float64, and,
     64-bit integers > 2^53 are preseved as integer and collated as float.
