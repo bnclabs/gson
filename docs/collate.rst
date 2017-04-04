@@ -1,3 +1,6 @@
+Summary:
+--------
+
 Primary use of collatejson is to do binary comparison on two json strings.
 Binary comparison (aka memcmp) can be several times faster than any other
 custom JSON parser.
