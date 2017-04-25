@@ -1,3 +1,4 @@
+* comparative benchmark graphs with jsoniter and competing libraries.
 * improvise gettingstarted.md
 * document json pointer lookups in README and gettingstarted
 * fix tools/validate/container_test.go
