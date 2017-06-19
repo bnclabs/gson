@@ -1,16 +1,19 @@
 General options
 ---------------
 
-* ``-inpfile`` file containing one or more json docs based on the context.
-* ``-inptxt`` use input text for the operation.
+* ``-inpfile`` process file containing json doc(s) based on other options.
+* ``-inptxt`` process input text based on their options.
 * ``-mprof`` take memory profile for testdata/code.json.gz.
-* ``-nk`` can be ``smart``, treat number as int64 or fall back to float64, or,
-  ``float``, treat number as float64 (default "float").
 * ``-outfile`` write output to file.
 * ``-overheads`` compute overheads on cbor and collation encoding.
 * ``-quote`` use strconv.Unquote on inptxt/inpfile.
 * ``-repeat`` repeat count.
+* ``-nk`` can be ``smart``, treat number as int64 or fall back to float64, or,
+  ``float``, treat number only as float64 (default "float").
 * ``-ws`` can be ``ansi`` whitespace, or, ``unicode`` whitespace, default "ansi".
+
+To include [n1ql](https://www.couchbase.com/products/n1ql), compile it with
+``-tags n1ql``.
 
 Convert from JSON
 -----------------
@@ -45,15 +48,15 @@ Convert from Collate
 **options for collation**
 
 * ``-arrlenprefix`` set SortbyArrayLen for collation ordering.
-* ``-checkdir`` test files for collation order in specified directory. For
-  every input file ``<checkdir>/filename``, there should be reference file
-  ``<checkdir>/filename.ref``.
+* ``-maplenprefix`` SortbyPropertyLen for collation ordering (default true)
+* ``-domissing`` consider missing type while collation (default true).
 * ``-collatesort`` sort inpfile, with one or more JSON terms, using
   collation algorithm.
 * ``-n1qlsort`` sort inpfile, with one or more JSON terms, using
   collation algorithm.
-* ``-domissing`` consider missing type while collation (default true).
-* ``-maplenprefix`` SortbyPropertyLen for collation ordering (default true)
+* ``-checkdir`` test files for collation order in specified directory. For
+  every input file ``<checkdir>/filename``, there should be reference file
+  ``<checkdir>/filename.ref``.
 
 Convert from value
 ------------------

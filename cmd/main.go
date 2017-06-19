@@ -16,99 +16,114 @@ import "io/ioutil"
 import "runtime/pprof"
 
 import "github.com/prataprc/gson"
-import qv "github.com/couchbase/query/value"
 
 var options struct {
-	repeat      int
-	inpfile     string
-	inptxt      string
-	mprof       string
-	pointers    bool
-	checkdir    string
-	collatesort string
-	n1qlsort    bool
-	quote       bool
-	overheads   bool
-	outfile     string
-	// transform actions
-	value2json   bool
+	// generat options
+	inpfile   string
+	inptxt    string
+	mprof     string
+	outfile   string
+	overheads bool
+	quote     bool
+	repeat    int
+	nk        string
+	ws        string
+
+	// convert from JSON
 	json2value   bool
 	json2cbor    bool
+	json2collate bool
+	pointers     bool
+
+	// convert from CBOR
 	cbor2json    bool
 	cbor2collate bool
-	collate2cbor bool
-	value2cbor   bool
 	cbor2value   bool
-	json2collate bool
-	collate2json bool
-	// config options
-	nk                string
-	ws                string
-	ct                string
+	ct           string
+
+	// convert from Collate
+	collate2cbor      bool
+	collate2json      bool
 	arrayLenPrefix    bool
 	propertyLenPrefix bool
 	doMissing         bool
+	collatesort       string
+	n1qlsort          string
+	checkdir          string
+
+	// convert from Value
+	value2json bool
+	value2cbor bool
 }
 
+var n1qltag = false
+
 func argParse() []string {
-	flag.IntVar(&options.repeat, "repeat", 0,
-		"repeat count")
+	// general options
 	flag.StringVar(&options.inpfile, "inpfile", "",
 		"file containing one or more json docs based on the context")
 	flag.StringVar(&options.inptxt, "inptxt", "",
 		"use input text for the operation.")
 	flag.StringVar(&options.mprof, "mprof", "",
 		"take memory profile for testdata/code.json.gz")
-	flag.BoolVar(&options.pointers, "pointers", false,
-		"list of json-pointers from input file")
-	flag.StringVar(&options.checkdir, "checkdir", "",
-		"check test files for collation order")
-	flag.BoolVar(&options.collatesort, "collatesort", "",
-		"sort inpfile, with one or more JSON terms, using collation algorithm")
-	flag.BoolVar(&options.n1qlsort, "n1qlsort", "",
-		"sort inpfile, with one or more JSON terms, using n1ql algorithm")
-	flag.BoolVar(&options.quote, "quote", false,
-		"use strconv.Unquote on inptxt/inpfile")
-	flag.BoolVar(&options.overheads, "overheads", false,
-		"compute overheads on cbor and collation encoding")
 	flag.StringVar(&options.outfile, "outfile", "",
 		"write output to file")
-	// transform options
-	flag.BoolVar(&options.value2json, "value2json", false,
-		"convert inptxt json to value and then back to json")
+	flag.BoolVar(&options.overheads, "overheads", false,
+		"compute overheads on cbor and collation encoding")
+	flag.BoolVar(&options.quote, "quote", false,
+		"use strconv.Unquote on inptxt/inpfile")
+	flag.IntVar(&options.repeat, "repeat", 0,
+		"repeat count")
+	flag.StringVar(&options.nk, "nk", "float",
+		"interpret number as smart | float "+
+			"smart - either treat number as int64 or fall back to float64 "+
+			"float - treat number only as float64 ")
+	flag.StringVar(&options.ws, "ws", "ansi",
+		"interpret space as ansi (ansi whitespace) | unicode (unicode space).")
+
+	// convert from JSON
 	flag.BoolVar(&options.json2value, "json2value", false,
 		"convert inptxt or content in inpfile to golang value")
 	flag.BoolVar(&options.json2cbor, "json2cbor", false,
 		"convert inptxt or content in inpfile to cbor output")
+	flag.BoolVar(&options.json2collate, "json2collate", false,
+		"convert inptxt or content in inpfile to collated output")
+	flag.BoolVar(&options.pointers, "pointers", false,
+		"list of json-pointers from input file")
+
+	// convert from CBOR
 	flag.BoolVar(&options.cbor2json, "cbor2json", false,
 		"convert inptxt or content in inpfile to json output")
 	flag.BoolVar(&options.cbor2collate, "cbor2collate", false,
 		"convert inptxt or content in inpfile to collated output")
-	flag.BoolVar(&options.collate2cbor, "collate2cbor", false,
-		"convert inptxt or content in inpfile to cbor output")
-	flag.BoolVar(&options.value2cbor, "value2cbor", false,
-		"convert inptxt json to value and then to cbor")
 	flag.BoolVar(&options.cbor2value, "cbor2value", false,
 		"convert inptxt or content in inpfile to golang value")
-	flag.BoolVar(&options.json2collate, "json2collate", false,
-		"convert inptxt or content in inpfile to collated output")
-	flag.BoolVar(&options.collate2json, "collate2json", false,
-		"convert inptxt or content in inpfile to json output")
-	// configuration switches
-	flag.StringVar(&options.nk, "nk", "float",
-		"interpret number as smart | float "+
-			"smart - either treat number as int64 or fall back to float64 "+
-			"float - treat number as float64 ")
-	flag.StringVar(&options.ws, "ws", "ansi",
-		"interpret space as ansi (ansi whitespace) | unicode (unicode space).")
 	flag.StringVar(&options.ct, "ct", "stream",
 		"container encoding for cbor stream | lenprefix.")
+
+	// convert from collate
+	flag.BoolVar(&options.collate2cbor, "collate2cbor", false,
+		"convert inptxt or content in inpfile to cbor output")
+	flag.BoolVar(&options.collate2json, "collate2json", false,
+		"convert inptxt or content in inpfile to json output")
 	flag.BoolVar(&options.arrayLenPrefix, "arrlenprefix", false,
 		"set SortbyArrayLen for collation ordering")
 	flag.BoolVar(&options.propertyLenPrefix, "maplenprefix", true,
 		"set SortbyPropertyLen for collation ordering")
 	flag.BoolVar(&options.doMissing, "domissing", true,
 		"use missing type for collation")
+	flag.StringVar(&options.collatesort, "collatesort", "",
+		"sort inpfile, with one or more JSON terms, using collation algorithm")
+	flag.StringVar(&options.n1qlsort, "n1qlsort", "",
+		"sort inpfile, with one or more JSON terms, using n1ql algorithm")
+	flag.StringVar(&options.checkdir, "checkdir", "",
+		"check test files for collation order")
+
+	// convert from value
+	flag.BoolVar(&options.value2json, "value2json", false,
+		"convert inptxt json to value and then back to json")
+	flag.BoolVar(&options.value2cbor, "value2cbor", false,
+		"convert inptxt json to value and then to cbor")
 
 	flag.Parse()
 
@@ -133,10 +148,10 @@ func main() {
 	} else if options.checkdir != "" {
 		checkdir(options.checkdir)
 
-	} else if options.collatesort {
+	} else if options.collatesort != "" {
 		fmt.Println(strings.Join(collatefile(options.collatesort), "\n"))
 
-	} else if options.n1qlsort {
+	} else if options.n1qlsort != "" {
 		fmt.Println(strings.Join(sortn1ql(options.n1qlsort), "\n"))
 
 	} else if options.value2json {
@@ -246,18 +261,6 @@ func doSort(texts [][]byte, codes codeList) (outs []string) {
 		outs = append(outs, string(texts[code.off]))
 	}
 	return
-}
-
-func sortn1ql(filename string) []string {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err.Error())
-	}
-	s := string(data)
-	items := strings.Split(s, "\n")
-	list := &jsonList{vals: items, compares: 0}
-	sort.Sort(list)
-	return list.vals
 }
 
 func lines(content []byte) [][]byte {
@@ -713,27 +716,4 @@ func (codes codeList) Less(i, j int) bool {
 
 func (codes codeList) Swap(i, j int) {
 	codes[i], codes[j] = codes[j], codes[i]
-}
-
-// sort type for n1ql
-
-type jsonList struct {
-	compares int
-	vals     []string
-}
-
-func (jsons *jsonList) Len() int {
-	return len(jsons.vals)
-}
-
-func (jsons *jsonList) Less(i, j int) bool {
-	key1, key2 := jsons.vals[i], jsons.vals[j]
-	jsons.compares++
-	value1 := qv.NewValue([]byte(key1))
-	value2 := qv.NewValue([]byte(key2))
-	return value1.Collate(value2) < 0
-}
-
-func (jsons *jsonList) Swap(i, j int) {
-	jsons.vals[i], jsons.vals[j] = jsons.vals[j], jsons.vals[i]
 }
