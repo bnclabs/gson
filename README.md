@@ -1,27 +1,28 @@
+Object formats and notations
+============================
+
 [![Build Status](https://travis-ci.org/prataprc/gson.png)](https://travis-ci.org/prataprc/gson)
 [![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.png?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
 [![GoDoc](https://godoc.org/github.com/prataprc/gson?status.png)](https://godoc.org/github.com/prataprc/gson)
-
-Topics
-======
 
 * [what is what](#what-is-what)
 * [transforms](#transforms)
 * [understanding collation](docs/collate.rst)
 * [getting started](docs/gettingstarted.md)
+* [play with command line](cmd/README.md)
 * [notes](#notes)
 
 What is what
 ------------
 
-**json**
+**JSON**
 
 * Java Script Object Notation, also called [JSON](http://www.json.org/),
   [RFC-7159](https://tools.ietf.org/html/rfc7159).
 * fast becoming the internet standard for data exchange.
 * human readable format, not so friendly for machine representation.
 
-**value (aka gson)**
+**Value (aka gson)**
 
 * golang object parsed from json, cbor or collate representation.
 * json arrays are represeted in golang as `[]interface{}`.
@@ -30,7 +31,7 @@ What is what
 * gson objects support operations like, Get(), Set(), and
   Delete() on individual fields located by the json-pointer.
 
-**cbor**
+**CBOR**
 
 * Concise Binary Object Representation, also called [CBOR](http://cbor.io/),
   [RFC-7049](https://tools.ietf.org/html/rfc7049).
@@ -39,7 +40,7 @@ What is what
 * can be used for more than data exchange, left to user
   imagination :) ...
 
-**collate**
+**Binary-Collation**
 
 * a custom encoding based on a paper and improvised to handle
   JSON specification.
@@ -61,7 +62,7 @@ What is what
 * per couchbase-N1QL requirement: collation of missing type, a
   unit type, is also supported.
 
-**json-pointer**
+**JSON-Pointer**
 
 * url like field locator within a json object,
   [RFC-6901](https://tools.ietf.org/html/rfc6901).
