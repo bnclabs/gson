@@ -44,6 +44,7 @@ var options struct {
 	// convert from Collate
 	collate2cbor      bool
 	collate2json      bool
+	collate2value     bool
 	arrayLenPrefix    bool
 	propertyLenPrefix bool
 	doMissing         bool
@@ -52,8 +53,9 @@ var options struct {
 	checkdir          string
 
 	// convert from Value
-	value2json bool
-	value2cbor bool
+	value2json    bool
+	value2cbor    bool
+	value2collate bool
 }
 
 var n1qltag = false
@@ -106,6 +108,8 @@ func argParse() []string {
 		"convert inptxt or content in inpfile to cbor output")
 	flag.BoolVar(&options.collate2json, "collate2json", false,
 		"convert inptxt or content in inpfile to json output")
+	flag.BoolVar(&options.collate2value, "collate2value", false,
+		"convert inptxt or content in inpfile to json output")
 	flag.BoolVar(&options.arrayLenPrefix, "arrlenprefix", false,
 		"set SortbyArrayLen for collation ordering")
 	flag.BoolVar(&options.propertyLenPrefix, "maplenprefix", true,
@@ -124,6 +128,8 @@ func argParse() []string {
 		"convert inptxt json to value and then back to json")
 	flag.BoolVar(&options.value2cbor, "value2cbor", false,
 		"convert inptxt json to value and then to cbor")
+	flag.BoolVar(&options.value2collate, "value2collate", false,
+		"convert inptxt json to value and then to collate")
 
 	flag.Parse()
 
@@ -172,8 +178,14 @@ func main() {
 	} else if options.collate2cbor {
 		collate2cbor(readinput())
 
+	} else if options.collate2value {
+		collate2value(readinput())
+
 	} else if options.value2cbor {
 		value2cbor(readinput())
+
+	} else if options.value2collate {
+		value2collate(readinput())
 
 	} else if options.cbor2value {
 		cbor2value(readinput())
@@ -199,7 +211,9 @@ func listpointers(inp []byte) {
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
 
-	for _, pointer := range val.ListPointers([]string{}) {
+	pointers := val.ListPointers([]string{})
+	sort.Strings(pointers)
+	for _, pointer := range pointers {
 		fmt.Println(pointer)
 	}
 }
@@ -272,80 +286,69 @@ func value2json(inp []byte) { // catch: input comes as json-str
 	// json->value->json
 	config := makeConfig()
 	jsn := config.NewJson(inp, -1)
-	jsnback := config.NewJson(make([]byte, len(inp)*2), 0)
+	jsnback := config.NewJson(make([]byte, (len(inp)*2+128)), 0)
 
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
 
-	fn := func() {
-		val.Tojson(jsnback.Reset(nil))
-	}
-
 	if options.mprof == "" {
-		fn()
-		fmt.Printf("Valu: %q\n", val)
+		val.Tojson(jsnback.Reset(nil))
+		fmt.Printf("Valu: %v\n", value)
 		fmt.Printf("Json: %v\n", bytes2str(inp))
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { val.Tojson(jsnback.Reset(nil)) }, options.repeat)
 	}
 }
 
 func json2value(inp []byte) {
-	var value interface{}
-
+	inp = bytes.TrimRight(inp, "\n")
 	config := makeConfig()
 	jsn := config.NewJson(inp, -1)
 
-	fn := func() {
-		_, value = jsn.Tovalue()
-	}
-
 	if options.mprof == "" {
-		fn()
+		_, value := jsn.Tovalue()
 		fmt.Printf("Json: %v\n", bytes2str(inp))
-		fmt.Printf("Valu: %q\n", value)
+		fmt.Printf("Valu: %v\n", value)
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { jsn.Tovalue() }, options.repeat)
 	}
 }
 
 func json2cbor(inp []byte) { // catch: input comes as json-str
+	inp = bytes.TrimRight(inp, "\n")
+
 	config := makeConfig()
 	jsn := config.NewJson(inp, -1)
-	cbr := config.NewCbor(make([]byte, len(inp)*2), 0)
-
-	fn := func() {
-		jsn.Tocbor(cbr.Reset(nil))
-	}
+	cbr := config.NewCbor(make([]byte, (len(inp)*2)+128), 0)
 
 	if options.mprof == "" {
-		fn()
+		jsn.Tocbor(cbr.Reset(nil))
 		if options.outfile == "" {
 			fmt.Printf("Json: %v\n", bytes2str(inp))
-			fmt.Printf("Cbor: %q\n", bytes2str(cbr.Bytes()))
 			fmt.Printf("Cbor: %v\n", cbr.Bytes())
+			fmt.Printf("Cbor: %q\n", bytes2str(cbr.Bytes()))
+			cbr.Tojson(jsn.Reset(nil))
+			fmt.Printf("Json: %v\n", bytes2str(jsn.Bytes()))
+
 		} else {
 			err := ioutil.WriteFile(options.outfile, cbr.Bytes(), 0666)
 			if err != nil {
 				fmt.Printf("error writing to %s: %v\n", options.outfile, err)
 			}
 		}
+
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { jsn.Tocbor(cbr.Reset(nil)) }, options.repeat)
 	}
 }
 
 func cbor2json(inp []byte) { // catch: input comes as cbor-str
 	config := makeConfig()
 	cbr := config.NewCbor(inp, -1)
-	jsn := config.NewJson(make([]byte, len(inp)*4), 0)
-
-	fn := func() {
-		cbr.Tojson(jsn.Reset(nil))
-	}
+	jsn := config.NewJson(make([]byte, (len(inp)*4+128)), 0)
 
 	if options.mprof == "" {
-		fn()
+		cbr.Tojson(jsn.Reset(nil))
 		if options.outfile == "" {
 			fmt.Printf("Cbor: %q\n", bytes2str(inp))
 			fmt.Printf("Json: %v\n", bytes2str(jsn.Bytes()))
@@ -356,7 +359,7 @@ func cbor2json(inp []byte) { // catch: input comes as cbor-str
 			}
 		}
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { cbr.Tojson(jsn.Reset(nil)) }, options.repeat)
 	}
 }
 
@@ -368,12 +371,8 @@ func cbor2collate(inp []byte) { // catch: input comes as cbor-str
 	cbr := config.NewCbor(inp, -1)
 	clt := config.NewCollate(make([]byte, len(inp)*2), -1)
 
-	fn := func() {
-		cbr.Tocollate(clt.Reset(nil))
-	}
-
 	if options.mprof == "" {
-		fn()
+		cbr.Tocollate(clt.Reset(nil))
 		if options.outfile == "" {
 			fmt.Printf("Cbor: %q\n", bytes2str(inp))
 			fmt.Printf("Coll: %q\n", bytes2str(clt.Bytes()))
@@ -385,7 +384,7 @@ func cbor2collate(inp []byte) { // catch: input comes as cbor-str
 			}
 		}
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { cbr.Tocollate(clt.Reset(nil)) }, options.repeat)
 	}
 }
 
@@ -395,14 +394,10 @@ func collate2cbor(inp []byte) { // catch: input comes as collate-str
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	clt := config.NewCollate(inp, -1)
-	cbr := config.NewCbor(make([]byte, len(inp)*2), 0)
-
-	fn := func() {
-		clt.Tocbor(cbr.Reset(nil))
-	}
+	cbr := config.NewCbor(make([]byte, (len(inp)*2+128)), 0)
 
 	if options.mprof == "" {
-		fn()
+		clt.Tocbor(cbr.Reset(nil))
 		if options.outfile == "" {
 			fmt.Printf("Coll: %q\n", bytes2str(inp))
 			fmt.Printf("Cbor: %q\n", bytes2str(cbr.Bytes()))
@@ -414,7 +409,7 @@ func collate2cbor(inp []byte) { // catch: input comes as collate-str
 			}
 		}
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { clt.Tocbor(cbr.Reset(nil)) }, options.repeat)
 	}
 }
 
@@ -426,40 +421,31 @@ func value2collate(inp []byte) { // catch: input comes as json-str
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	_, value := config.NewJson(inp, -1).Tovalue()
 	val := config.NewValue(value)
-	clt := config.NewCollate(make([]byte, len(inp)*2), 0)
-
-	fn := func() {
-		val.Tocollate(clt.Reset(nil))
-	}
+	clt := config.NewCollate(make([]byte, (len(inp)*2+128)), 0)
 
 	if options.mprof == "" {
-		fn()
-		fmt.Printf("Valu: %q\n", val)
+		val.Tocollate(clt.Reset(nil))
+		fmt.Printf("Valu: %v\n", value)
 		fmt.Printf("Coll: %q\n", bytes2str(clt.Bytes()))
 		fmt.Printf("Coll: %v\n", clt.Bytes())
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { val.Tocollate(clt.Reset(nil)) }, options.repeat)
 	}
 }
 
 func collate2value(inp []byte) { // catch: input comes as collate-str
-	var value interface{}
+	strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, len(inp)*2, 1024
 
 	config := makeConfig()
-	strlen, numkeys, itemlen, ptrlen := 1024*1024, 1024, len(inp)*2, 1024
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	clt := config.NewCollate(inp, -1)
 
-	fn := func() {
-		value = clt.Tovalue()
-	}
-
 	if options.mprof == "" {
-		fn()
+		value := clt.Tovalue()
 		fmt.Printf("Coll: %q\n", bytes2str(inp))
-		fmt.Printf("Valu: %q\n", value)
+		fmt.Printf("Valu: %v\n", value)
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { clt.Tovalue() }, options.repeat)
 	}
 }
 
@@ -468,21 +454,17 @@ func value2cbor(inp []byte) { // catch: input comes as json-str
 
 	config := makeConfig()
 	jsn := config.NewJson(inp, -1)
-	cbr := config.NewCbor(make([]byte, len(inp)*2), 0)
+	cbr := config.NewCbor(make([]byte, (len(inp)*2+128)), 0)
 
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
-	fn := func() {
-		val.Tocbor(cbr.Reset(nil))
-	}
-
 	if options.mprof == "" {
-		fn()
-		fmt.Printf("Valu: %q\n", val)
+		val.Tocbor(cbr.Reset(nil))
+		fmt.Printf("Valu: %v\n", value)
 		fmt.Printf("Cbor: %q\n", bytes2str(cbr.Bytes()))
 		fmt.Printf("Cbor: %v\n", cbr.Bytes())
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { val.Tocbor(cbr.Reset(nil)) }, options.repeat)
 	}
 }
 
@@ -492,27 +474,25 @@ func cbor2value(inp []byte) { // catch: input comes as cbor-str
 	config := makeConfig()
 	cbr := config.NewCbor(inp, -1)
 
-	fn := func() {
-		value = cbr.Tovalue()
-	}
-
 	if options.mprof == "" {
-		fn()
+		value = cbr.Tovalue()
 		fmt.Printf("Cbor: %q\n", bytes2str(inp))
 		fmt.Printf("Cbor: %v\n", inp)
 		fmt.Printf("Valu: %v\n", value)
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { cbr.Tovalue() }, options.repeat)
 	}
 }
 
 func json2collate(inp []byte) { // catch: input comes as json-str
 	strlen, numkeys, itemlen, ptrlen := 1024, 1024, len(inp)*2, 1024
 
+	inp = bytes.TrimRight(inp, "\n")
+
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	jsn := config.NewJson(inp, -1)
-	clt := config.NewCollate(make([]byte, len(inp)*2), 0)
+	clt := config.NewCollate(make([]byte, (len(inp)*2)+128), 0)
 
 	fn := func() {
 		jsn.Tocollate(clt.Reset(nil))
@@ -541,14 +521,10 @@ func collate2json(inp []byte) { // catch: input comes as collate-str
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	clt := config.NewCollate(inp, -1)
-	jsn := config.NewJson(make([]byte, len(inp)*4), 0)
-
-	fn := func() {
-		clt.Tojson(jsn.Reset(nil))
-	}
+	jsn := config.NewJson(make([]byte, (len(inp)*4+128)), 0)
 
 	if options.mprof == "" {
-		fn()
+		clt.Tojson(jsn.Reset(nil))
 		if options.outfile == "" {
 			fmt.Printf("Coll: %q\n", bytes2str(inp))
 			fmt.Printf("Json: %v\n", bytes2str(jsn.Bytes()))
@@ -559,7 +535,7 @@ func collate2json(inp []byte) { // catch: input comes as collate-str
 			}
 		}
 	} else {
-		repeat(fn, options.repeat)
+		repeat(func() { clt.Tojson(jsn.Reset(nil)) }, options.repeat)
 	}
 }
 

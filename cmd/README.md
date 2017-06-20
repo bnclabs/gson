@@ -43,6 +43,7 @@ Convert from Collate
 
 * ``-collate2cbor`` convert inptxt or content in inpfile to cbor output.
 * ``-collate2json`` convert inptxt or content in inpfile to json output.
+* ``-collate2value`` convert inptxt or content in inpfile to value.
 
 
 **options for collation**
@@ -63,3 +64,81 @@ Convert from value
 
 * ``-value2cbor`` convert inptxt json to value and then to cbor
 * ``-value2json`` convert inptxt json to value and then back to json
+* ``-value2collate`` convert inptxt json to value and then back to binary
+
+
+Examples
+--------
+
+**Transformations**
+
+```bash
+$ gson -inpfile example.json -json2value
+Json: "hello world"
+Valu: hello world
+```
+
+```bash
+$ gson -inptxt '"hello world"' -json2value
+Json: "hello world"
+Valu: hello world
+```
+
+```bash
+$ gson -inptxt '"hello world"' -json2cbor
+Json: "hello world"
+Cbor: [107 104 101 108 108 111 32 119 111 114 108 100]
+Json: "hello world"
+```
+
+```bash
+$ gson -inptxt '"hello world"' -json2collate
+Json: "hello world"
+Coll: "\x06hello world\x00\x00"
+Coll: [6 104 101 108 108 111 32 119 111 114 108 100 0 0]
+```
+
+Similary to transform from CBOR:
+
+```bash
+$ gson -inptxt "khello world" -cbor2value
+$ gson -inptxt "khello world" -cbor2json
+$ gson -inptxt "khello world" -cbor2collate
+```
+
+Specifying container type for transforming to CBOR:
+
+```bash
+$ go build -o gson; gson -inptxt "[10,20]" -ct lenprefix -json2cbor
+Json: [10,20]
+Cbor: [130 251 64 36 0 0 0 0 0 0 251 64 52 0 0 0 0 0 0]
+Cbor: "\x82\xfb@$\x00\x00\x00\x00\x00\x00\xfb@4\x00\x00\x00\x00\x00\x00"
+Json: [10,20]
+$ go build -o gson; gson -inptxt "[10,20]" -ct stream -json2cbor
+Json: [10,20]
+Cbor: [159 251 64 36 0 0 0 0 0 0 251 64 52 0 0 0 0 0 0 255]
+Cbor: "\x9f\xfb@$\x00\x00\x00\x00\x00\x00\xfb@4\x00\x00\x00\x00\x00\x00\xff"
+Json: [10,20]
+```
+
+Similary to transform from collate:
+
+```bash
+$ gson -inpfile example.coll -collate2value
+$ gson -inpfile example.coll -collate2json
+$ gson -inpfile example.coll -collate2cbor
+```
+
+Similary to transform from value:
+
+```bash
+$ gson -inptxt '"hello world"' -value2json
+$ gson -inptxt '"hello world"' -value2cbor
+$ gson -inptxt '"hello world"' -value2collate
+```
+
+**possible list of json-pointer**
+
+```bash
+$ gson -inpfile typical.json -pointers
+```
