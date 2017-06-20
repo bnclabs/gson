@@ -239,6 +239,8 @@ func checkdir(dirname string) {
 			ref, err := ioutil.ReadFile(file + ".ref")
 			mf(err)
 			if strings.Trim(string(ref), "\n") != out {
+				fmt.Println("expected\n", string(ref))
+				fmt.Println("got\n", out)
 				panic(fmt.Errorf("sort mismatch in %v", file))
 			}
 		}
@@ -253,6 +255,7 @@ func collatefile(filename string) (outs []string) {
 	config := gson.NewDefaultConfig()
 	config = config.SortbyArrayLen(options.arrayLenPrefix)
 	config = config.SortbyPropertyLen(options.propertyLenPrefix)
+	config = config.SetNumberKind(gson.SmartNumber)
 
 	return collateLines(config, s)
 }
