@@ -14,7 +14,7 @@ func TestCborMajor(t *testing.T) {
 
 func TestCborSmallInt(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 10), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 
 	for i := int8(-24); i < 24; i++ { // SmallInt is -24..23
 		cbr.EncodeSmallint(i)
@@ -30,7 +30,7 @@ func TestCborSmallInt(t *testing.T) {
 
 func TestCborSimpleType(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 10), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 
 	// test encoding type7/simpletype < 20
 	for i := 0; i < 20; i++ {
@@ -172,9 +172,9 @@ func TestCborItem(t *testing.T) {
 
 func TestCborEmpty(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 10), 0)
-	jsn := config.NewJson(make([]byte, 10), 0)
-	clt := config.NewCollate(make([]byte, 10), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
+	jsn := config.NewJson(make([]byte, 128), 0)
+	clt := config.NewCollate(make([]byte, 128), 0)
 
 	func() {
 		defer func() {

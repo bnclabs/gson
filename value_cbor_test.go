@@ -10,7 +10,7 @@ var _ = fmt.Sprintf("dummy")
 
 func BenchmarkVal2CborNull(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 10), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(nil)
 
 	for i := 0; i < b.N; i++ {
@@ -20,7 +20,7 @@ func BenchmarkVal2CborNull(b *testing.B) {
 
 func BenchmarkVal2CborTrue(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(true)
 
 	for i := 0; i < b.N; i++ {
@@ -30,7 +30,7 @@ func BenchmarkVal2CborTrue(b *testing.B) {
 
 func BenchmarkVal2CborFalse(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 10), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(false)
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
@@ -39,7 +39,7 @@ func BenchmarkVal2CborFalse(b *testing.B) {
 
 func BenchmarkVal2CborUint8(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(uint8(255))
 
 	for i := 0; i < b.N; i++ {
@@ -49,7 +49,7 @@ func BenchmarkVal2CborUint8(b *testing.B) {
 
 func BenchmarkVal2CborInt8(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(int8(-128))
 
 	for i := 0; i < b.N; i++ {
@@ -59,7 +59,7 @@ func BenchmarkVal2CborInt8(b *testing.B) {
 
 func BenchmarkVal2CborUint16(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(uint16(65535))
 
 	for i := 0; i < b.N; i++ {
@@ -69,7 +69,7 @@ func BenchmarkVal2CborUint16(b *testing.B) {
 
 func BenchmarkVal2CborInt16(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(int16(-32768))
 
 	for i := 0; i < b.N; i++ {
@@ -79,7 +79,7 @@ func BenchmarkVal2CborInt16(b *testing.B) {
 
 func BenchmarkVal2CborUint32(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(uint32(4294967295))
 
 	for i := 0; i < b.N; i++ {
@@ -89,7 +89,7 @@ func BenchmarkVal2CborUint32(b *testing.B) {
 
 func BenchmarkVal2CborInt32(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(int32(-2147483648))
 
 	for i := 0; i < b.N; i++ {
@@ -99,7 +99,7 @@ func BenchmarkVal2CborInt32(b *testing.B) {
 
 func BenchmarkVal2CborUint64(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(uint64(18446744073709551615))
 
 	for i := 0; i < b.N; i++ {
@@ -109,7 +109,7 @@ func BenchmarkVal2CborUint64(b *testing.B) {
 
 func BenchmarkVal2CborInt64(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(int64(-2147483648))
 
 	for i := 0; i < b.N; i++ {
@@ -119,7 +119,7 @@ func BenchmarkVal2CborInt64(b *testing.B) {
 
 func BenchmarkVal2CborFlt32(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(float32(10.2))
 
 	for i := 0; i < b.N; i++ {
@@ -129,7 +129,7 @@ func BenchmarkVal2CborFlt32(b *testing.B) {
 
 func BenchmarkVal2CborFlt64(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(float64(10.2))
 
 	for i := 0; i < b.N; i++ {
@@ -139,7 +139,7 @@ func BenchmarkVal2CborFlt64(b *testing.B) {
 
 func BenchmarkVal2CborTBytes(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue([]byte("hello world"))
 
 	for i := 0; i < b.N; i++ {
@@ -149,7 +149,7 @@ func BenchmarkVal2CborTBytes(b *testing.B) {
 
 func BenchmarkVal2CborText(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 64), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue("hello world")
 
 	for i := 0; i < b.N; i++ {

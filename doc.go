@@ -42,4 +42,7 @@
 // Json-Pointer:
 //
 // Package also provides a RFC-6901 (JSON-pointers) implementation.
+//
+// NOTE: Buffer supplied to APIs NewJson(), NewCbor(), NewCollate()
+// should atleast be 128 bytes in size.
 package gson

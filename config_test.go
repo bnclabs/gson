@@ -14,7 +14,7 @@ var _ = fmt.Sprintf("dummy")
 
 func TestConfig(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 16), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(10.2)
 	val.Tocbor(cbr)
 	if value := cbr.Tovalue(); !reflect.DeepEqual(val.data, value) {
@@ -26,7 +26,7 @@ type testLocal byte
 
 func TestUndefined(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 16), 0)
+	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(CborUndefined(cborSimpleUndefined))
 	val.Tocbor(cbr)
 	if value := cbr.Tovalue(); !reflect.DeepEqual(val.data, value) {
