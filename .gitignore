@@ -1,6 +1,5 @@
 *.swp
 *.swo
 .vimsession
-tools/collate_validate/collate_validate
-tools/validate/validate
-tools/gson/gson
+cmd/gson
+cmd/gson-n1ql
