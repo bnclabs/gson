@@ -1,4 +1,4 @@
-go build
+go build -o gson
 
 echo "value2json ..."
 ./gson -repeat 100 -mprof value2json.mprof -value2json -inpfile ../../testdata/code.json.gz
@@ -49,3 +49,5 @@ echo "collate2json ..."
 ./gson -repeat 100 -mprof collate2json.mprof -collate2json -inpfile ../../testdata/code.collate.gz
 go tool pprof --svg --inuse_space gson collate2json.mprof > collate2json.inuse.svg
 go tool pprof --svg --alloc_space gson collate2json.mprof > collate2json.alloc.svg
+
+rm gson
