@@ -147,7 +147,10 @@ func TestCmdArgs(t *testing.T) {
 	for _, testcase := range testcases {
 		args := testcase[0].([]string)
 		cmd := exec.Command(CMDEXEC, args...)
-		out, _ := cmd.CombinedOutput()
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Error(err)
+		}
 		ref := testcase[1].([]byte)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
