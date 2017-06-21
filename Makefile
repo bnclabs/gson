@@ -1,7 +1,8 @@
 build:
 	go build
+	make -C cmd build
 
-test:
+test: build
 	make -C cmd test
 	go test -race -timeout 4000s -test.run=. -test.bench=xxx -test.benchmem=true
 	go test -timeout 4000s -test.run=xxx -test.bench=. -test.benchmem=true

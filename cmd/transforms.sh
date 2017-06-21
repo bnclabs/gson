@@ -1,5 +1,6 @@
 go build -o gson
 go build -tags n1ql -o gsonn1ql
+
 echo "list pointers ..."
 ./gson -pointers -inpfile ../testdata/typical.json
 echo
@@ -55,5 +56,3 @@ echo
 echo "collate2json ..."
 ./gson -quote -collate2json -inptxt '"\t\a>3\x00\x06perl\x00\x00\x06ugly\x00\x00\x06php\x00\x00\x06bad\x00\x00\x06python\x00\x00\x06good\x00\x00\x00"'
 echo
-
-rm gson gsonn1ql

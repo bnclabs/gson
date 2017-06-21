@@ -2,4 +2,4 @@
 *.swo
 .vimsession
 cmd/gson
-cmd/gson-n1ql
+cmd/gsonn1ql
