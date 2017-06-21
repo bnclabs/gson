@@ -1,4 +1,5 @@
 build:
+	go get ./...
 	go build -o gson
 	go build -tags n1ql -o gsonn1ql
 
