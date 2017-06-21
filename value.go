@@ -300,6 +300,7 @@ func (this uint64t) cmp(other interface{}) int {
 	switch val := other.(type) {
 	case float64:
 		return -float64t(val).cmp(uint64(this))
+
 	case int64:
 		if val < 0 {
 			return 1
@@ -309,6 +310,7 @@ func (this uint64t) cmp(other interface{}) int {
 			return 0
 		}
 		return 1
+
 	case uint64:
 		if uint64(this) < val {
 			return -1
