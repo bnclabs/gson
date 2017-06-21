@@ -1,6 +1,6 @@
 build:
-	go build -o gson
-	go build -tags n1ql -o gsonn1ql
+	go install -o gson
+	go install -tags n1ql -o gsonn1ql
 
 test: build
 	go test -race -test.run=. -test.bench=. -test.benchmem=true
