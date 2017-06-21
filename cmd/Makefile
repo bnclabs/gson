@@ -4,8 +4,8 @@ build:
 
 test: build
 	go test -race -test.run=. -test.bench=. -test.benchmem=true
-	sort.sh
-	transforms.sh
+	./sort.sh
+	./transforms.sh
 
 clean:
 	rm -rf gson gsonn1ql
