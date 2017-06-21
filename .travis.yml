@@ -14,4 +14,4 @@ install:
 
 script:
   - make test
-  - $HOME/gopath/bin/goveralls -service=travis-ci
+  - $HOME/gopath/bin/goveralls -service=travis-ci -package github.com/prataprc/gson
