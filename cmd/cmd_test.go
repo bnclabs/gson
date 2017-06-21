@@ -10,7 +10,7 @@ import "os/exec"
 import "compress/gzip"
 
 var _ = fmt.Sprintf("dummy")
-var CMDEXEC = "gson"
+var CMDEXEC = "./gson"
 
 var updateref = false
 
