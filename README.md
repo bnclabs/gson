@@ -5,6 +5,19 @@ Object formats and notations
 [![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.png?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
 [![GoDoc](https://godoc.org/github.com/prataprc/gson?status.png)](https://godoc.org/github.com/prataprc/gson)
 
+Goals:
+
+- High performance algorithms for data transformation, serialization and
+  manipulation.
+- Based on well established standards.
+- ZERO allocation when transforming from one format to another, except
+  for APIs creating golang values from encoded data.
+- [JSON](http://json.org) for web.
+- [CBOR](http://cbor.io) for machine.
+- [Binary-Collation](docs/collate.md) for high performance sorting.
+
+**This package is under continuous development, but the APIs are fairly stable**.
+
 * [What is what](#what-is-what)
 * [Transforms](#transforms)
 * [Understanding collation](docs/collate.md)
@@ -71,15 +84,47 @@ What is what
   accessing into JSON text (or an equivalent representation),
   after unquoting segments within the pointer, each segment shall
   be binary compared with property keys.
-* JSON-pointers can be used to access Gson or CBOR representation.
 * Documents encoded in CBOR format using LengthPrefix are not
   supported by lookup APIs.
+
+**Performance and memory pressure**
+
+Following Benchmark is made on a map data which has a shape similar to:
+
+```go
+{"key1": nil, "key2": true, "key3": false,
+"key4": "hello world", "key5": 10.23122312}
+```
+or,
+```go
+{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}
+```
+
+```text
+BenchmarkVal2JsonMap5  3000000   537 ns/op    0 B/op  0 allocs/op
+BenchmarkVal2CborMap5  3000000   449 ns/op    0 B/op  0 allocs/op
+BenchmarkVal2CollMap   1000000  1458 ns/op    0 B/op  0 allocs/op
+BenchmarkJson2CborMap  2000000   982 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2JsonMap  1000000  1003 ns/op    0 B/op  0 allocs/op
+BenchmarkJson2CollMap  1000000  2179 ns/op    2 B/op  0 allocs/op
+BenchmarkColl2JsonMap  1000000  1774 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2CollMap  1000000  1805 ns/op    1 B/op  0 allocs/op
+BenchmarkColl2CborMap  1000000  1675 ns/op    2 B/op  0 allocs/op
+```
+
+Though converting to golang value incurs cost.
+
+```text
+BenchmarkJson2ValMap5 1000000   1912 ns/op  690 B/op 14 allocs/op
+BenchmarkCbor2ValMap5 1000000   2020 ns/op  496 B/op 18 allocs/op
+BenchmarkColl2ValMap  1000000   2222 ns/op  616 B/op 20 allocs/op
+```
 
 Configuration
 -------------
 
 **Configuration APIs are not re-entrant**. For concurrent use of Gson, please
-create a `gson.Config{}` per routine.
+create a `gson.Config{}` per routine, or protect them with a mutex.
 
 **NumberKind**
 
