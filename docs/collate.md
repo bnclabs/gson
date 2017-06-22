@@ -31,7 +31,8 @@ Binary compilation
 
 If input text, which is in JSON encoded format, needs to be sorted based
 on above collation rules, every comparison operation will involve parsing
-the input for its type and value. And hence comparison is a costly operation.
+the input for its type and value. And hence comparison becomes a costly
+operation.
 
 What if we can compile the input text into binary sequence of bytes with
 following properties ?

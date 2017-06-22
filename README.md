@@ -11,7 +11,7 @@ Object formats and notations
 * [Getting started](docs/gettingstarted.md)
 * [Play with command line](cmd/README.md)
 * [Articles related to gson](#articles)
-* [Notes](#notes)
+* [How to contribute](#how-to-contribute)
 
 What is what
 ------------
