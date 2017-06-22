@@ -18,9 +18,11 @@ const (
 // MaxKeys maximum number of keys allowed in a property object.
 const MaxKeys = 1024
 
-// Config is the primary object to access the APIs exported by this package.
-// Before calling any of the config-methods, make sure to initialize
-// them with desired settings and don't change them afterwards.
+// Config is the root object to access all transformations and APIs
+// exported by this package. Before calling any of the config-methods,
+// make sure to initialize them with desired settings.
+//
+// NOTE: Config objects are immutable.
 type Config struct {
 	nk      NumberKind
 	maxKeys int
@@ -104,18 +106,11 @@ func (config Config) SetMaxkeys(n int) *Config {
 	return &config
 }
 
-// SetJptrlen will set the maximum size for jsonpointer path.
-func (config Config) SetJptrlen(n int) *Config {
-	config.jptrMaxlen = n
-	config.jptrMaxseg = n / 8
-	return &config
-}
-
 // ResetPools will create a new set of pools with specified size.
 //	   strlen  - maximum length of string value inside JSON document
 //	   numkeys - maximum number of keys that a property object can have
 //	   itemlen - maximum length of collated value.
-//	   ptrlen  - maximum length of json-pointer can take
+//	   ptrlen  - maximum possible length of json-pointer.
 func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 	config.memConfig = memConfig{
 		strlen: strlen, numkeys: numkeys, itemlen: itemlen, ptrlen: ptrlen,

@@ -15,6 +15,13 @@ type jptrConfig struct {
 	jptrMaxseg int
 }
 
+// SetJptrlen will set the maximum size for jsonpointer path.
+func (config Config) SetJptrlen(n int) *Config {
+	config.jptrMaxlen = n
+	config.jptrMaxseg = n / 8
+	return &config
+}
+
 // Jsonpointer abstracts rfc-6901 into a type.
 // allows ~0 and ~1 escapes, property lookup by specifying the key,
 // and array lookup by specifying the index.
