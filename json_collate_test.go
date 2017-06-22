@@ -108,7 +108,7 @@ func BenchmarkJson2CollMap(b *testing.B) {
 
 func BenchmarkJson2CollTyp(b *testing.B) {
 	inp := testdataFile("testdata/typical.json")
-	config := NewDefaultConfig().SetMaxkeys(10)
+	config := NewDefaultConfig().SetMaxkeys(100)
 	jsn := config.NewJson(inp, -1)
 	clt := config.NewCollate(make([]byte, 10*1024), 0)
 

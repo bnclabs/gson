@@ -132,7 +132,7 @@ func BenchmarkCbor2CollMap(b *testing.B) {
 func BenchmarkCbor2CollTyp(b *testing.B) {
 	data := testdataFile("testdata/typical.json")
 
-	config := NewDefaultConfig().SetMaxkeys(10)
+	config := NewDefaultConfig().SetMaxkeys(100)
 	jsn := config.NewJson(data, -1)
 	cbr := config.NewCbor(make([]byte, 10*1024), 0)
 	clt := config.NewCollate(make([]byte, 10*1024), 0)

@@ -15,8 +15,9 @@ const (
 	SmartNumber
 )
 
-// MaxKeys maximum number of keys allowed in a property object.
-const MaxKeys = 1024
+// MaxKeys maximum number of keys allowed in a property object. Changing this
+// value will affect all new configuration objects.
+var MaxKeys = 1024
 
 // Config is the root object to access all transformations and APIs
 // exported by this package. Before calling any of the config-methods,
@@ -24,9 +25,8 @@ const MaxKeys = 1024
 //
 // NOTE: Config objects are immutable.
 type Config struct {
-	nk      NumberKind
-	maxKeys int
-	pools   mempools
+	nk    NumberKind
+	pools mempools
 
 	cborConfig
 	jsonConfig
@@ -37,7 +37,6 @@ type Config struct {
 
 // NewDefaultConfig return a new configuration with default settings:
 //		+FloatNumber        +Stream
-//		MaxKeys
 //		+UnicodeSpace       -strict
 //		+doMissing          -arrayLenPrefix     +propertyLenPrefix
 //		MaxJsonpointerLen
@@ -45,8 +44,7 @@ type Config struct {
 //		MaxCollateLen       MaxJsonpointerLen
 func NewDefaultConfig() *Config {
 	config := &Config{
-		nk:      FloatNumber,
-		maxKeys: MaxKeys,
+		nk: FloatNumber,
 		cborConfig: cborConfig{
 			ct: Stream,
 		},
@@ -67,12 +65,14 @@ func NewDefaultConfig() *Config {
 		},
 	}
 	config = config.SetJptrlen(MaxJsonpointerLen)
+	return config.init()
+}
 
+func (config *Config) init() *Config {
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
 	config.enc = json.NewEncoder(config.buf)
 	a, b, c, d := config.strlen, config.numkeys, config.itemlen, config.ptrlen
 	config.pools = newMempool(a, b, c, d)
-
 	return config
 }
 
@@ -89,11 +89,45 @@ func (config Config) SetContainerEncoding(ct ContainerEncoding) *Config {
 	return &config
 }
 
-// SetMaxkeys configute to set the maximum number of keys
+// SetSpaceKind setting to interpret whitespaces in json text.
+func (config Config) SetSpaceKind(ws SpaceKind) *Config {
+	config.ws = ws
+	return &config
+}
+
+// SetStrict setting to enforce strict transforms to and from JSON.
+// If set to true,
+//   a. IntNumber configuration float numbers in JSON text still are parsed.
+//   b. Use golang stdlib encoding/json for transforming strings to JSON.
+func (config Config) SetStrict(what bool) *Config {
+	config.strict = what
+	return &config
+}
+
+// SortbyArrayLen setting to sort array of smaller-size before larger ones.
+func (config Config) SortbyArrayLen(what bool) *Config {
+	config.arrayLenPrefix = what
+	return &config
+}
+
+// SortbyPropertyLen setting to sort properties of smaller size before
+// larger ones.
+func (config Config) SortbyPropertyLen(what bool) *Config {
+	config.propertyLenPrefix = what
+	return &config
+}
+
+// UseMissing setting to use TypeMissing collation.
+func (config Config) UseMissing(what bool) *Config {
+	config.doMissing = what
+	return &config
+}
+
+// SetMaxkeys configure to set the maximum number of keys
 // allowed in property item.
 func (config Config) SetMaxkeys(n int) *Config {
-	config.maxKeys = n
-	return &config
+	config.numkeys = n
+	return config.init()
 }
 
 // ResetPools configure a new set of pools with specified size.
@@ -105,8 +139,7 @@ func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 	config.memConfig = memConfig{
 		strlen: strlen, numkeys: numkeys, itemlen: itemlen, ptrlen: ptrlen,
 	}
-	config.pools = newMempool(strlen, numkeys, itemlen, ptrlen)
-	return &config
+	return config.init()
 }
 
 // NewCbor factory to create a new Cbor instance. Buffer can't be nil.
@@ -181,10 +214,10 @@ func (config *Config) NewJsonpointer(path string) *Jsonpointer {
 func (config *Config) String() string {
 	return fmt.Sprintf(
 		"nk:%v, ws:%v, ct:%v, arrayLenPrefix:%v, "+
-			"propertyLenPrefix:%v, doMissing:%v, maxKeys:%v",
+			"propertyLenPrefix:%v, doMissing:%v",
 		config.nk, config.ws, config.ct,
 		config.arrayLenPrefix, config.propertyLenPrefix,
-		config.doMissing, config.maxKeys)
+		config.doMissing)
 }
 
 func (nk NumberKind) String() string {

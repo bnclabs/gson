@@ -19,13 +19,10 @@ var (
 	TypeBinary  byte = 10
 )
 
-// Missing denotes a special type for an item that evaluates
-// to _nothing_, used for collation.
+// Missing denotes a special type for an item that evaluates to _nothing_.
 type Missing string
 
-// MissingLiteral is special string to denote missing item:
-// IMPORTANT: we are assuming that MissingLiteral will not occur in
-// the keyspace.
+// MissingLiteral is undocumented, for now.
 const MissingLiteral = Missing("~[]{}falsenilNA~")
 
 type collateConfig struct {
@@ -34,25 +31,6 @@ type collateConfig struct {
 	propertyLenPrefix bool // first sort properties based on length
 	enc               *json.Encoder
 	buf               *bytes.Buffer
-}
-
-// SortbyArrayLen setting to sort array of smaller-size before larger ones.
-func (config Config) SortbyArrayLen(what bool) *Config {
-	config.arrayLenPrefix = what
-	return &config
-}
-
-// SortbyPropertyLen setting to sort properties of smaller size before
-// larger ones.
-func (config Config) SortbyPropertyLen(what bool) *Config {
-	config.propertyLenPrefix = what
-	return &config
-}
-
-// UseMissing setting to use TypeMissing collation.
-func (config Config) UseMissing(what bool) *Config {
-	config.doMissing = what
-	return &config
 }
 
 // Collate abstraction for value encoded into binary-collation.
