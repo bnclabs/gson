@@ -15,19 +15,19 @@ func TestCborGet(t *testing.T) {
 	json.Unmarshal([]byte(txt), &ref)
 
 	testcases := [][2]interface{}{
-		[2]interface{}{"/a", 10.0},
-		[2]interface{}{"/arr/0", 1.0},
-		[2]interface{}{"/arr/1", 2.0},
-		[2]interface{}{"/nestd", []interface{}{[]interface{}{23.0}}},
-		[2]interface{}{"/dict/a", 10.0},
-		[2]interface{}{"/dict/b", 20.0},
-		[2]interface{}{"/dict/b", 20.0},
-		[2]interface{}{"/", 1.0},
-		[2]interface{}{
+		{"/a", 10.0},
+		{"/arr/0", 1.0},
+		{"/arr/1", 2.0},
+		{"/nestd", []interface{}{[]interface{}{23.0}}},
+		{"/dict/a", 10.0},
+		{"/dict/b", 20.0},
+		{"/dict/b", 20.0},
+		{"/", 1.0},
+		{
 			"/dict",
 			map[string]interface{}{"a": 10.0, "b": 20.0, "": 2.0}},
-		[2]interface{}{"/dict/", 2.0},
-		[2]interface{}{"", ref},
+		{"/dict/", 2.0},
+		{"", ref},
 	}
 	dotest := func(config *Config) {
 		cbr := config.NewCbor(make([]byte, 1024), 0)
@@ -63,13 +63,13 @@ func TestCborSet(t *testing.T) {
 	json.Unmarshal([]byte(txt), &refobj)
 
 	testcases := [][3]interface{}{
-		[3]interface{}{"/a", 11.0, 10.0},
-		[3]interface{}{"/b", 1.0, 1.0},
-		[3]interface{}{"/arr/0", 10.0, 1.0},
-		[3]interface{}{"/arr/1", 30.0, 2.0},
-		[3]interface{}{"/-/0/0", 30.0, 1.0},
-		[3]interface{}{"/dict/a", 1.0, 10.0},
-		[3]interface{}{"/dict/b", 2.0, 20.0},
+		{"/a", 11.0, 10.0},
+		{"/b", 1.0, 1.0},
+		{"/arr/0", 10.0, 1.0},
+		{"/arr/1", 30.0, 2.0},
+		{"/-/0/0", 30.0, 1.0},
+		{"/dict/a", 1.0, 10.0},
+		{"/dict/b", 2.0, 20.0},
 	}
 
 	dotest := func(config *Config) {
@@ -253,14 +253,14 @@ func TestCborDelete(t *testing.T) {
 	txt := `{"a": 10, "-": [1], "arr": [1,2],  "nestd": [[23]], ` +
 		`"dict": {"a":10, "b":20, "": 30}}`
 	testcases := [][2]interface{}{
-		[2]interface{}{"/a", 10.0},
-		[2]interface{}{"/arr/1", 2.0},
-		[2]interface{}{"/arr/0", 1.0},
-		[2]interface{}{"/-/0", 1.0},
-		[2]interface{}{"/nestd/0/0", 23.0},
-		[2]interface{}{"/dict/a", 10.0},
-		[2]interface{}{"/dict/b", 20.0},
-		[2]interface{}{"/dict/", 30.0},
+		{"/a", 10.0},
+		{"/arr/1", 2.0},
+		{"/arr/0", 1.0},
+		{"/-/0", 1.0},
+		{"/nestd/0/0", 23.0},
+		{"/dict/a", 10.0},
+		{"/dict/b", 20.0},
+		{"/dict/", 30.0},
 	}
 
 	dotest := func(config *Config) {

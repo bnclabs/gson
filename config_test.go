@@ -107,8 +107,8 @@ func TestCborToCollate(t *testing.T) {
 	out := config.NewCbor(make([]byte, 1024), 0)
 
 	o := [][2]interface{}{
-		[2]interface{}{"a", 10.0},
-		[2]interface{}{"b", 20.0},
+		{"a", 10.0},
+		{"b", 20.0},
 	}
 	refm := CborMap2golangMap(o)
 

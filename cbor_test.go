@@ -57,14 +57,14 @@ func TestCborMapslice(t *testing.T) {
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 
 	items := [][2]interface{}{
-		[2]interface{}{"first", true},
-		[2]interface{}{"second", 12.2},
-		[2]interface{}{"third", []interface{}{true, false, 10.2}},
-		[2]interface{}{
+		{"first", true},
+		{"second", 12.2},
+		{"third", []interface{}{true, false, 10.2}},
+		{
 			"fourth",
 			[][2]interface{}{
-				[2]interface{}{"a", 10.2},
-				[2]interface{}{"b", 11.2},
+				{"a", 10.2},
+				{"b", 11.2},
 			},
 		},
 	}
@@ -87,16 +87,16 @@ func TestCborItem(t *testing.T) {
 		`"dict": {"a":10, "b":20, "": 2}, "": 1}`
 
 	testcases := [][2]interface{}{
-		[2]interface{}{"/a", 10},
-		[2]interface{}{"/b", 1024},
-		[2]interface{}{"/c", 1048576},
-		[2]interface{}{"/d", 8589934592},
-		[2]interface{}{"/an", -10},
-		[2]interface{}{"/bn", -1024},
-		[2]interface{}{"/cn", -1048576},
-		[2]interface{}{"/dn", -8589934592},
-		[2]interface{}{"/arr", []interface{}{1, 2}},
-		[2]interface{}{
+		{"/a", 10},
+		{"/b", 1024},
+		{"/c", 1048576},
+		{"/d", 8589934592},
+		{"/an", -10},
+		{"/bn", -1024},
+		{"/cn", -1048576},
+		{"/dn", -8589934592},
+		{"/arr", []interface{}{1, 2}},
+		{
 			"/dict",
 			map[string]interface{}{"a": 10, "b": 20, "": 2},
 		},
@@ -147,14 +147,14 @@ func TestCborItem(t *testing.T) {
 	cbr.n++
 
 	testcases = [][2]interface{}{
-		[2]interface{}{"/0", uint64(10)},
-		[2]interface{}{"/1", int64(-10)},
-		[2]interface{}{"/2", uint8(128)},
-		[2]interface{}{"/3", uint64(100)},
-		[2]interface{}{"/4", float32(10.2)},
-		[2]interface{}{"/5", CborTagEpoch(1234567890)},
-		[2]interface{}{"/6", [][]byte{[]byte("hello"), []byte("world")}},
-		[2]interface{}{"/7", []string{"sound", "ok", "horn"}},
+		{"/0", uint64(10)},
+		{"/1", int64(-10)},
+		{"/2", uint8(128)},
+		{"/3", uint64(100)},
+		{"/4", float32(10.2)},
+		{"/5", CborTagEpoch(1234567890)},
+		{"/6", [][]byte{[]byte("hello"), []byte("world")}},
+		{"/7", []string{"sound", "ok", "horn"}},
 	}
 
 	t.Logf("%v", string(cbr.Bytes()))

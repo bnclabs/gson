@@ -212,16 +212,16 @@ func TestJson2CollateArray(t *testing.T) {
 
 	// without length prefix
 	testcases := [][4]string{
-		[4]string{`[null,true,false,10.0,"hello"]`,
+		{`[null,true,false,10.0,"hello"]`,
 			`\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`,
 			`\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
 				`\x06hello\x00\x00\x00`,
 			`[null,true,false,1e+01,"hello"]`},
-		[4]string{`[]`,
+		{`[]`,
 			`\b\x00`,
 			`\b\a0\x00\x00`,
 			`[]`},
-		[4]string{`[null,true,10.0,10.2,[],{"key":{}}]`,
+		{`[null,true,10.0,10.2,[],{"key":{}}]`,
 			`\b\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00\b\x00` +
 				`\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
 			`\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
@@ -275,7 +275,7 @@ func TestJson2CollateArray(t *testing.T) {
 func TestJson2CollateMap(t *testing.T) {
 	// with length prefix
 	testcases := [][4]string{
-		[4]string{
+		{
 			`{"a":null,"b":true,"c":false,"d":10.0,"e":"hello","f":["world"]}`,
 			`\t\a>6\x00\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c` +
 				`\x00\x00\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +

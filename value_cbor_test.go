@@ -190,9 +190,9 @@ func BenchmarkVal2CborMap0(b *testing.B) {
 
 func BenchmarkVal2CborMap5(b *testing.B) {
 	value := interface{}([][2]interface{}{
-		[2]interface{}{"key0", 5}, [2]interface{}{"key1", 5.0},
-		[2]interface{}{"key2", "hello world"},
-		[2]interface{}{"key3", true}, [2]interface{}{"key4", nil},
+		{"key0", 5}, {"key1", 5.0},
+		{"key2", "hello world"},
+		{"key3", true}, {"key4", nil},
 	})
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 1024), 0)

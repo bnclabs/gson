@@ -9,21 +9,21 @@ var _ = fmt.Sprintf("dummy")
 
 func TestParsePointer(t *testing.T) {
 	var tcasesJSONPointers = [][3]interface{}{
-		[3]interface{}{``, []string{}, ``},
-		[3]interface{}{`/`, []string{""}, `/`},
-		[3]interface{}{"/foo", []string{"foo"}, "/foo"},
-		[3]interface{}{"/foo/0", []string{"foo", "0"}, "/foo/0"},
-		[3]interface{}{"/a~1b", []string{"a/b"}, "/a~1b"},
-		[3]interface{}{"/c%d", []string{"c%d"}, "/c%d"},
-		[3]interface{}{"/e^f", []string{"e^f"}, "/e^f"},
-		[3]interface{}{"/g|h", []string{"g|h"}, "/g|h"},
-		[3]interface{}{`/i\j`, []string{`i\j`}, `/i\\j`},
-		[3]interface{}{`/k\"l`, []string{`k\"l`}, `/k\\\"l`},
-		[3]interface{}{"/ ", []string{" "}, "/ "},
-		[3]interface{}{"/m~0n", []string{"m~n"}, "/m~0n"},
-		[3]interface{}{"/g~1n~1r", []string{"g/n/r"}, "/g~1n~1r"},
-		[3]interface{}{"/g/汉语/r", []string{"g", "汉语", "r"}, "/g/汉语/r"},
-		[3]interface{}{"/dict/", []string{"dict", ""}, "/dict/"},
+		{``, []string{}, ``},
+		{`/`, []string{""}, `/`},
+		{"/foo", []string{"foo"}, "/foo"},
+		{"/foo/0", []string{"foo", "0"}, "/foo/0"},
+		{"/a~1b", []string{"a/b"}, "/a~1b"},
+		{"/c%d", []string{"c%d"}, "/c%d"},
+		{"/e^f", []string{"e^f"}, "/e^f"},
+		{"/g|h", []string{"g|h"}, "/g|h"},
+		{`/i\j`, []string{`i\j`}, `/i\\j`},
+		{`/k\"l`, []string{`k\"l`}, `/k\\\"l`},
+		{"/ ", []string{" "}, "/ "},
+		{"/m~0n", []string{"m~n"}, "/m~0n"},
+		{"/g~1n~1r", []string{"g/n/r"}, "/g~1n~1r"},
+		{"/g/汉语/r", []string{"g", "汉语", "r"}, "/g/汉语/r"},
+		{"/dict/", []string{"dict", ""}, "/dict/"},
 	}
 
 	// test ParseJsonPointer

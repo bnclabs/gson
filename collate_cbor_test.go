@@ -50,33 +50,33 @@ func TestCbor2CollateFalse(t *testing.T) {
 
 func TestCbor2CollateNumber(t *testing.T) {
 	testcases := [][3]interface{}{
-		[3]interface{}{"10.2", `\x05>>2102-\x00`, FloatNumber},
-		[3]interface{}{"10", `\x05>>21-\x00`, FloatNumber},
-		[3]interface{}{"10.2", `\x05>>2102-\x00`, SmartNumber},
-		[3]interface{}{"10", `\x05>>21-\x00`, SmartNumber},
-		[3]interface{}{"10", `\x05>>21-\x00`, FloatNumber},
-		[3]interface{}{"-10", `\x05--78>\x00`, SmartNumber},
-		[3]interface{}{"-10", `\x05--78>\x00`, FloatNumber},
-		[3]interface{}{"200", `\x05>>32-\x00`, SmartNumber},
-		[3]interface{}{"200", `\x05>>32-\x00`, FloatNumber},
-		[3]interface{}{"-200", `\x05--67>\x00`, SmartNumber},
-		[3]interface{}{"-200", `\x05--67>\x00`, FloatNumber},
-		[3]interface{}{
+		{"10.2", `\x05>>2102-\x00`, FloatNumber},
+		{"10", `\x05>>21-\x00`, FloatNumber},
+		{"10.2", `\x05>>2102-\x00`, SmartNumber},
+		{"10", `\x05>>21-\x00`, SmartNumber},
+		{"10", `\x05>>21-\x00`, FloatNumber},
+		{"-10", `\x05--78>\x00`, SmartNumber},
+		{"-10", `\x05--78>\x00`, FloatNumber},
+		{"200", `\x05>>32-\x00`, SmartNumber},
+		{"200", `\x05>>32-\x00`, FloatNumber},
+		{"-200", `\x05--67>\x00`, SmartNumber},
+		{"-200", `\x05--67>\x00`, FloatNumber},
+		{
 			"4294967297", `\x05>>>2104294967297-\x00`, FloatNumber},
-		[3]interface{}{
+		{
 			"-4294967297", `\x05---7895705032702>\x00`, FloatNumber},
-		[3]interface{}{
+		{
 			"4294967297", `\x05>>>2104294967297-\x00`, SmartNumber},
-		[3]interface{}{
+		{
 			"-4294967297", `\x05---7895705032702>\x00`, SmartNumber},
-		[3]interface{}{
+		{
 			"9007199254740992", `\x05>>>2169007199254740992-\x00`, FloatNumber},
-		[3]interface{}{
+		{
 			"-9007199254740993", `\x05---7830992800745259007>\x00`, FloatNumber},
-		[3]interface{}{
+		{
 			"9007199254740992", `\x05>>>2169007199254740992-\x00`, SmartNumber},
 
-		[3]interface{}{
+		{
 			"-9007199254740993", `\x05---7830992800745259006>\x00`, SmartNumber},
 	}
 
@@ -103,9 +103,9 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 func TestCbor2CollateString(t *testing.T) {
 	testcases := [][2]string{
-		[2]string{`""`, `\x06\x00\x00`},
-		[2]string{`"hello world"`, `\x06hello world\x00\x00`},
-		[2]string{fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`},
+		{`""`, `\x06\x00\x00`},
+		{`"hello world"`, `\x06hello world\x00\x00`},
+		{fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`},
 	}
 
 	config := NewDefaultConfig()
@@ -176,16 +176,16 @@ func TestCbor2CollateArray(t *testing.T) {
 
 	// without length prefix
 	testcases := [][4]string{
-		[4]string{`[]`,
+		{`[]`,
 			`\b\x00`,
 			`\b\a0\x00\x00`,
 			`[]`},
-		[4]string{`[null,true,false,10.0,"hello"]`,
+		{`[null,true,false,10.0,"hello"]`,
 			`\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`,
 			`\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
 				`\x06hello\x00\x00\x00`,
 			`[null,true,false,+0.1e+2,"hello"]`},
-		[4]string{`[null,true,10.0,10.2,[],{"key":{}}]`,
+		{`[null,true,10.0,10.2,[],{"key":{}}]`,
 			`\b\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00\b\x00` +
 				`\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
 			`\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
@@ -262,12 +262,12 @@ func TestCbor2CollateArray(t *testing.T) {
 func TestCbor2CollateMap(t *testing.T) {
 	// with length prefix
 	testcases := [][4]string{
-		[4]string{
+		{
 			`{}`,
 			`\t\a0\x00\x00`,
 			`\t\x00`,
 			`{}`},
-		[4]string{
+		{
 			`{"a":null,"b":true,"c":false,"d":10.0,"e":"hello","f":["wo"]}`,
 			`\t\a>6\x00\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c` +
 				`\x00\x00\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +

@@ -177,9 +177,9 @@ func TestVal2CollateString(t *testing.T) {
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
 	testcases := [][2]interface{}{
-		[2]interface{}{"", `\x06\x00\x00`},
-		[2]interface{}{"hello world", `\x06hello world\x00\x00`},
-		[2]interface{}{string(MissingLiteral), `\x01\x00`},
+		{"", `\x06\x00\x00`},
+		{"hello world", `\x06hello world\x00\x00`},
+		{string(MissingLiteral), `\x01\x00`},
 	}
 	for _, tcase := range testcases {
 		obj, ref := tcase[0].(string), tcase[1].(string)
@@ -232,11 +232,11 @@ func TestVal2CollateArray(t *testing.T) {
 
 	// without length prefix
 	testcases := [][2]interface{}{
-		[2]interface{}{[]interface{}{nil, true, false, 10.0, "hello"},
+		{[]interface{}{nil, true, false, 10.0, "hello"},
 			`\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`},
-		[2]interface{}{[]interface{}{},
+		{[]interface{}{},
 			`\b\x00`},
-		[2]interface{}{[]interface{}{
+		{[]interface{}{
 			nil, true, 10.0, 10.2, []interface{}{},
 			map[string]interface{}{"key": map[string]interface{}{}}},
 			`\b\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00\b\x00` +
@@ -260,12 +260,12 @@ func TestVal2CollateArray(t *testing.T) {
 	config = config.SortbyArrayLen(true)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 	testcases = [][2]interface{}{
-		[2]interface{}{[]interface{}{nil, true, false, 10.0, "hello"},
+		{[]interface{}{nil, true, false, 10.0, "hello"},
 			`\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
 				`\x06hello\x00\x00\x00`},
-		[2]interface{}{[]interface{}{},
+		{[]interface{}{},
 			`\b\a0\x00\x00`},
-		[2]interface{}{[]interface{}{
+		{[]interface{}{
 			nil, true, 10.0, 10.2, []interface{}{},
 			map[string]interface{}{"key": map[string]interface{}{}}},
 			`\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
@@ -291,7 +291,7 @@ func TestVal2CollateMap(t *testing.T) {
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	// with length prefix
 	testcases := [][2]interface{}{
-		[2]interface{}{
+		{
 			map[string]interface{}{
 				"a": nil, "b": true, "c": false, "d": 10.0, "e": "hello"},
 			`\t\a>5\x00\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c` +
@@ -314,7 +314,7 @@ func TestVal2CollateMap(t *testing.T) {
 	// without length prefix
 	config = config.SortbyPropertyLen(false)
 	testcases = [][2]interface{}{
-		[2]interface{}{
+		{
 			map[string]interface{}{
 				"a": nil, "b": true, "c": false, "d": 10.0, "e": "hello"},
 			`\t\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c\x00\x00` +
