@@ -14,7 +14,7 @@ Goals:
   for APIs creating golang values from encoded data.
 - [JSON](http://json.org) for web.
 - [CBOR](http://cbor.io) for machine.
-- [Binary-Collation](docs/collate.md) for high performance sorting.
+- [Binary-Collation](docs/collate.md) for high performance comparison/sorting.
 
 **This package is under continuous development, but the APIs are fairly stable**.
 
