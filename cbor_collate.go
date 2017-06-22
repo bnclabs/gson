@@ -233,17 +233,17 @@ func collateCborT4Indef(buf, out []byte, config *Config) (m int, n int) {
 	ln := 0
 	out[n] = TypeArray
 	n++
-	n_, n__ := n, n
+	nn, nnn := n, n
 	if config.arrayLenPrefix {
-		n_, n__ = n+32, n+32 // length encoding can go upto max of 32 bytes
+		nn, nnn = n+32, n+32 // length encoding can go upto max of 32 bytes
 	}
 
 	defer func() {
 		if config.arrayLenPrefix {
 			n += collateCborLength(ln, out[n:], config)
 		}
-		copy(out[n:], out[n_:n__])
-		n += (n__ - n_)
+		copy(out[n:], out[nn:nnn])
+		n += (nnn - nn)
 		out[n] = Terminator
 		n++
 		return
@@ -255,8 +255,8 @@ func collateCborT4Indef(buf, out []byte, config *Config) (m int, n int) {
 		return
 	}
 	for buf[m] != brkstp {
-		x, y := cbor2collate(buf[m:], out[n__:], config)
-		m, n__ = m+x, n__+y
+		x, y := cbor2collate(buf[m:], out[nnn:], config)
+		m, nnn = m+x, nnn+y
 		ln++
 	}
 	m++

@@ -51,7 +51,7 @@ func (val *Value) Get(jptr *Jsonpointer) (item interface{}) {
 }
 
 // Set field or nested field specified by json pointer. While
-// `newval` is gauranteed to contain the `item`, `val` _may_ not be.
+// `newval` is guaranteed to contain the `item`, `val` _may_ not be.
 // Suggested usage,
 //      val := config.NewValue([]interface{}{"hello"})
 //      newval, _ = val.Set("/-", "world")
@@ -60,7 +60,7 @@ func (val *Value) Set(jptr *Jsonpointer, item interface{}) (newval, oldval inter
 }
 
 // Delete field or nested field specified by json pointer. While
-// `newval` is gauranteed to be updated, `val` _may_ not be.
+// `newval` is guaranteed to be updated, `val` _may_ not be.
 // Suggested usage,
 //      val := NewValue([]interface{}{"hello", "world"})
 //      newval, _ = val.Delete("/1")
@@ -69,7 +69,7 @@ func (val *Value) Delete(jptr *Jsonpointer) (newval, deleted interface{}) {
 }
 
 // Append item to end of an array pointed by json-pointer.
-// returns `newval`, is gauranteed to be updated,
+// returns `newval`, is guaranteed to be updated,
 //      val := NewValue([]interface{}{"hello", "world"})
 //      newval, _ = val.Append("", "welcome")
 func (val *Value) Append(jptr *Jsonpointer, item interface{}) interface{} {
@@ -77,13 +77,14 @@ func (val *Value) Append(jptr *Jsonpointer, item interface{}) interface{} {
 }
 
 // Prepend an item to the beginning of an array.
-// returns `newval`, is gauranteed to be updated,
+// returns `newval`, is guaranteed to be updated,
 //      val := NewValue([]interface{}{"hello", "world"})
 //      newval, _ = val.Append("", "welcome")
 func (val *Value) Prepend(jptr *Jsonpointer, item interface{}) interface{} {
 	return valPrepend(jptr.Segments(), val.data, item)
 }
 
+// Compare to value object.
 func (val *Value) Compare(other *Value) int {
 	return valuecompare(val.data, other.data)
 }
@@ -222,26 +223,26 @@ func cmpnumber(n1, n2 interface{}) int {
 
 type float64t float64
 
-func (this float64t) cmp(other interface{}) int {
+func (f float64t) cmp(other interface{}) int {
 	var rc int
 	switch {
-	case float64(this) < float64(int64(this)):
+	case float64(f) < float64(int64(f)):
 		rc = -1
-	case float64(this) > float64(int64(this)):
+	case float64(f) > float64(int64(f)):
 		rc = 1
 	}
 
 	switch val := other.(type) {
 	case float64:
-		if float64(this) < val {
+		if float64(f) < val {
 			return -1
-		} else if float64(this) == val {
+		} else if float64(f) == val {
 			return 0
 		}
 		return 1
 
 	case int64:
-		if v := int64(this); v < val {
+		if v := int64(f); v < val {
 			return -1
 		} else if v == val {
 			return rc
@@ -249,7 +250,7 @@ func (this float64t) cmp(other interface{}) int {
 		return 1
 
 	case uint64:
-		if v := uint64(this); v < val {
+		if v := uint64(f); v < val {
 			return -1
 		} else if v == val {
 			return rc
@@ -261,22 +262,22 @@ func (this float64t) cmp(other interface{}) int {
 
 type int64t int64
 
-func (this int64t) cmp(other interface{}) int {
+func (f int64t) cmp(other interface{}) int {
 	switch val := other.(type) {
 	case float64:
-		return -float64t(val).cmp(int64(this))
+		return -float64t(val).cmp(int64(f))
 	case int:
-		if int64(this) < int64(val) {
+		if int64(f) < int64(val) {
 			return -1
-		} else if int64(this) == int64(val) {
+		} else if int64(f) == int64(val) {
 			return 0
 		}
 		return 1
 
 	case int64:
-		if int64(this) < val {
+		if int64(f) < val {
 			return -1
-		} else if int64(this) == val {
+		} else if int64(f) == val {
 			return 0
 		}
 		return 1
@@ -284,9 +285,9 @@ func (this int64t) cmp(other interface{}) int {
 	case uint64:
 		if val >= 9223372036854775808 {
 			return -1
-		} else if v := int64(val); this < int64t(v) {
+		} else if v := int64(val); f < int64t(v) {
 			return -1
-		} else if this == int64t(v) {
+		} else if f == int64t(v) {
 			return 0
 		}
 		return 1
@@ -296,25 +297,25 @@ func (this int64t) cmp(other interface{}) int {
 
 type uint64t int64
 
-func (this uint64t) cmp(other interface{}) int {
+func (f uint64t) cmp(other interface{}) int {
 	switch val := other.(type) {
 	case float64:
-		return -float64t(val).cmp(uint64(this))
+		return -float64t(val).cmp(uint64(f))
 
 	case int64:
 		if val < 0 {
 			return 1
-		} else if v := int64(val); int64(this) < v {
+		} else if v := int64(val); int64(f) < v {
 			return -1
-		} else if int64(this) == v {
+		} else if int64(f) == v {
 			return 0
 		}
 		return 1
 
 	case uint64:
-		if uint64(this) < val {
+		if uint64(f) < val {
 			return -1
-		} else if uint64(this) == val {
+		} else if uint64(f) == val {
 			return 0
 		}
 		return 1

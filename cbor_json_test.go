@@ -116,7 +116,7 @@ func TestCbor2JsonLengthPrefix(t *testing.T) {
 		jsnback.Reset(nil)
 		cbr.Tojson(jsnback)
 
-		err := compare_jsons(t, tcase, string(jsnback.Bytes()))
+		err := compareJSONs(t, tcase, string(jsnback.Bytes()))
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -292,7 +292,7 @@ func TestCbor2JsonString(t *testing.T) {
 	n := valtext2cbor(s, buf)
 
 	_, m := cbor2json(buf[:n], out, config)
-	if err := compare_jsons(t, ref, string(out[:m])); err != nil {
+	if err := compareJSONs(t, ref, string(out[:m])); err != nil {
 		t.Errorf("%v", err)
 	}
 }

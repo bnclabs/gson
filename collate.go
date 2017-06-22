@@ -6,7 +6,7 @@ import "bytes"
 // Collation order for supported types, to change the order set these
 // values in your init() function.
 var (
-	Terminator  byte = 0
+	Terminator  byte
 	TypeMissing byte = 1
 	TypeNull    byte = 2
 	TypeFalse   byte = 3

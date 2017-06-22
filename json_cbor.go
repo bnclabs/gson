@@ -49,12 +49,12 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 		return txt, n
 
 	case '[':
-		n, m, n_, n__ := 0, 0, 0, 0
+		n, m, nn, nnn := 0, 0, 0, 0
 		switch config.ct {
 		case LengthPrefix:
-			n_, n__ = n+32, n+32
+			nn, nnn = n+32, n+32
 		case Stream:
-			n__ += arrayStart(out[n__:])
+			nnn += arrayStart(out[nnn:])
 		}
 
 		var ln int
@@ -62,8 +62,8 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 			panic("cbor scanner expected ']'")
 		} else if txt[0] != ']' {
 			for {
-				txt, m = json2cbor(txt, out[n__:], config)
-				n__ += m
+				txt, m = json2cbor(txt, out[nnn:], config)
+				nnn += m
 				ln++
 				if txt = skipWS(txt, config.ws); len(txt) == 0 {
 					panic("cbor scanner expected ']'")
@@ -81,20 +81,20 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 			x := valuint642cbor(uint64(ln), out[n:])
 			out[n] = (out[n] & 0x1f) | cborType4 // fix type from type0->type4
 			n += x
-			n += copy(out[n:], out[n_:n__])
+			n += copy(out[n:], out[nn:nnn])
 		case Stream:
-			n__ += breakStop(out[n__:])
-			n = n__
+			nnn += breakStop(out[nnn:])
+			n = nnn
 		}
 		return txt[1:], n
 
 	case '{':
-		n, m, n_, n__ := 0, 0, 0, 0
+		n, m, nn, nnn := 0, 0, 0, 0
 		switch config.ct {
 		case LengthPrefix:
-			n_, n__ = n+32, n+32
+			nn, nnn = n+32, n+32
 		case Stream:
-			n__ += mapStart(out[n__:])
+			nnn += mapStart(out[nnn:])
 		}
 
 		var ln int
@@ -106,14 +106,14 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 		} else {
 			for {
 				// 16 reserved for cbor hdr
-				txt, m = scanString(txt, out[n__+16:])
-				n__ += valtext2cbor(bytes2str(out[n__+16:n__+16+m]), out[n__:])
+				txt, m = scanString(txt, out[nnn+16:])
+				nnn += valtext2cbor(bytes2str(out[nnn+16:nnn+16+m]), out[nnn:])
 
 				if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
 					panic("cbor scanner expected property colon")
 				}
-				txt, m = json2cbor(skipWS(txt[1:], config.ws), out[n__:], config)
-				n__ += m
+				txt, m = json2cbor(skipWS(txt[1:], config.ws), out[nnn:], config)
+				nnn += m
 				ln++
 
 				if txt = skipWS(txt, config.ws); len(txt) == 0 {
@@ -132,10 +132,10 @@ func json2cbor(txt string, out []byte, config *Config) (string, int) {
 			x := valuint642cbor(uint64(ln), out[n:])
 			out[n] = (out[n] & 0x1f) | cborType5 // fix type from type0->type5
 			n += x
-			n += copy(out[n:], out[n_:n__])
+			n += copy(out[n:], out[nn:nnn])
 		case Stream:
-			n__ += breakStop(out[n__:])
-			n = n__
+			nnn += breakStop(out[nnn:])
+			n = nnn
 		}
 		return txt[1:], n
 

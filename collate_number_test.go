@@ -139,7 +139,7 @@ func TestLargeDecimal(t *testing.T) {
 		if out := string(code[:x]); out != ref {
 			t.Errorf("expected %q, got %q", ref, out)
 		}
-		x, y := collated2LD(code[:x], text)
+		_, y := collated2LD(code[:x], text)
 		outf, samplef := atof(string(text[:y]), t), atof(sample, t)
 		if outf != samplef {
 			t.Errorf("expected %v, got %v", samplef, outf)

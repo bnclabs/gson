@@ -149,7 +149,7 @@ func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 // Reset() call.
 func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
 	if buffer != nil && ln >= 0 && len(buffer) < 128 {
-		panic("cbor buffer should alteast be 128 bytes")
+		panic("cbor buffer should atleast be 128 bytes")
 	}
 	if ln == -1 {
 		ln = len(buffer)

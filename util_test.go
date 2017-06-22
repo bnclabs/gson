@@ -185,7 +185,7 @@ func BenchmarkStr2Bytes(b *testing.B) {
 	}
 }
 
-func compare_jsons(t *testing.T, json1, json2 string) error {
+func compareJSONs(t *testing.T, json1, json2 string) error {
 	var m1, m2 interface{}
 	err := json.Unmarshal(str2bytes(json1), &m1)
 	if err != nil {

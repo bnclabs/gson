@@ -24,8 +24,9 @@ func str2bytes(str string) []byte {
 	return *(*[]byte)(unsafe.Pointer(sl))
 }
 
-// CborMap2golangMap transforms [][2]interface{} to map[string]interface{}
-// that is required for converting golang to cbor and vice-versa.
+// CborMap2golangMap used by validation tools.
+// Transforms [][2]interface{} to map[string]interface{} that is required for
+// converting golang to cbor and vice-versa.
 func CborMap2golangMap(value interface{}) interface{} {
 	switch items := value.(type) {
 	case []interface{}:
@@ -43,7 +44,8 @@ func CborMap2golangMap(value interface{}) interface{} {
 	return value
 }
 
-// GolangMap2cborMap transforms map[string]interface{} to [][2]interface{}
+// GolangMap2cborMap used by validation tools.
+// Transforms map[string]interface{} to [][2]interface{}
 // that is required for converting golang to cbor and vice-versa.
 func GolangMap2cborMap(value interface{}) interface{} {
 	switch items := value.(type) {
@@ -62,6 +64,7 @@ func GolangMap2cborMap(value interface{}) interface{} {
 	return value
 }
 
+// Fixtojson used by validation tools.
 func Fixtojson(config *Config, val interface{}) interface{} {
 	var err error
 
@@ -146,10 +149,9 @@ func collateUint64(value uint64, code []byte) int {
 		ln := n + len(tmp)
 		return collateFloat(fltx[:ln], code)
 
-	} else {
-		bs := strconv.AppendFloat(num[:0], float64(value), 'e', -1, 64)
-		return collateFloat(bs, code)
 	}
+	bs := strconv.AppendFloat(num[:0], float64(value), 'e', -1, 64)
+	return collateFloat(bs, code)
 }
 
 func collateInt64(value int64, code []byte) int {

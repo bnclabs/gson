@@ -60,12 +60,12 @@ func TestJsonToValue(t *testing.T) {
 
 func TestJsonToValues(t *testing.T) {
 	var s string
-	uni_s := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
-	json.Unmarshal([]byte(uni_s), &s)
+	uniStr := `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
+	json.Unmarshal([]byte(uniStr), &s)
 	ref := []interface{}{"abcd", "xyz", "10", s}
 
 	config := NewDefaultConfig().SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `+uni_s), -1)
+	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `+uniStr), -1)
 	if values := jsn.Tovalues(); !reflect.DeepEqual(values, ref) {
 		t.Errorf("expected %v, got %v", ref, values)
 	}

@@ -67,9 +67,9 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 
 		code[n] = TypeArray
 		n++
-		n_, n__, ln := n, n, 0
+		nn, nnn, ln := n, n, 0
 		if config.arrayLenPrefix {
-			n_, n__ = (n_ + 32), (n__ + 32) // prealloc space for Len encoding
+			nn, nnn = (nn + 32), (nnn + 32) // prealloc space for Len encoding
 		}
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
@@ -77,8 +77,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 
 		} else if txt[0] != ']' {
 			for {
-				txt, x = json2collate(txt, code[n__:], config)
-				n__ += x
+				txt, x = json2collate(txt, code[nnn:], config)
+				nnn += x
 				ln++
 				if txt = skipWS(txt, config.ws); len(txt) == 0 {
 					panic("gson scanner expectedCloseArray")
@@ -93,9 +93,9 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		}
 		if config.arrayLenPrefix {
 			n += collateLength(ln, code[n:])
-			n += copy(code[n:], code[n_:n__])
+			n += copy(code[n:], code[nn:nnn])
 		} else {
-			n = n__
+			n = nnn
 		}
 		code[n] = Terminator
 		n++
