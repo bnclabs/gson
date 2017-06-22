@@ -19,6 +19,7 @@ Goals:
 **This package is under continuous development, but the APIs are fairly stable**.
 
 * [What is what](#what-is-what)
+* [Configuration](#configuration)
 * [Transforms](#transforms)
 * [Understanding collation](docs/collate.md)
 * [Getting started](docs/gettingstarted.md)
