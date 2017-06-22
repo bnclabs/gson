@@ -29,10 +29,8 @@ What is what
 * JSON arrays are represented in golang as `[]interface{}`.
 * JSON objects, aka properties, are presented in golang as
   `map[string]interface{}`.
-* Gson objects support operations like, Get(), Set(), and
-  Delete() on individual fields located by the JSON-POINTER.
 * Following golang-types can be transformed to JSON, CBOR, or,
-  Binary-collation: `nil`, `bool`,
+  [Binary-collation](docs/collate.md): `nil`, `bool`,
   `byte, int8, int16, uint16, int32, uint32, int, uint, int64, uint64`,
   `float32, float64`,
   `string`, `[]interface{}`, `map[string]interface{}`,
@@ -40,6 +38,8 @@ What is what
 * For type `[][2]interface{}`, first item is treated as key (string) and
   second item is treated as value, hence equivalent to
   `map[string]interface{}`.
+* Gson objects support operations like, Get(), Set(), and
+  Delete() on individual fields located by the JSON-POINTER.
 
 **CBOR**
 
@@ -52,13 +52,14 @@ What is what
 
 **Binary-Collation**
 
-* A custom encoding based on a [paper](docs/pdf) and improvised to
+* A custom encoding based on a [paper](docs/collate.pdf) and improvised to
   handle JSON specification.
 * Binary representation preserving the sort order.
 * Transform back to original JSON from binary representation.
 * Numbers can be encoded in three ways - as integers, or as
   small-decimals, or as floating-point represented in exponent
   form.
+* More details can be found [here](docs/collate.md)
 
 **JSON-Pointer**
 
