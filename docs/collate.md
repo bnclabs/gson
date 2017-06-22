@@ -48,7 +48,8 @@ precisely that.
 Encoding Nil, Boolean
 ---------------------
 
-nil, true, and false are encoded as single byte.
+Types `nil, true, and false` are encoded as single byte. Types `string`
+value will be encoded into UTF-8 format before collating it.
 
 **Encoding Number**
 
@@ -59,6 +60,9 @@ than -2^53 can be represented using this format.
 
 **Encoding golang values**
 
+* Types `nil`, `true`, `false`, `float64`, `int64`, `int`,
+  `string`, `[]byte`, `[]interface{}`, `map[string]interface{}`
+  are supported for collation.
 * All number are collated as float.
 * All JSON float64 numbers are collated as float64, and,
   64-bit integers > 2^53 are preserved as integer and collated as float.

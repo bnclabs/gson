@@ -32,13 +32,14 @@ What is what
 * Gson objects support operations like, Get(), Set(), and
   Delete() on individual fields located by the JSON-POINTER.
 * Following golang-types can be transformed to JSON, CBOR, or,
-  Binary-collation: ``nil``, ``bool``,
-  ``byte, int8, int16, uint16, int32, uint32, int, uint, int64, uint64``,
-  ``float32, float64``,
-  ``string``, ``[]interface{}``, ``map[string]interface{}``,
-  ``[][2]interface{}``.
-* First item in ``[][2]interface{}`` is treated as key (string) and second
-  item is treated as value, hence equivalent to ``map[string]interface{}``
+  Binary-collation: `nil`, `bool`,
+  `byte, int8, int16, uint16, int32, uint32, int, uint, int64, uint64`,
+  `float32, float64`,
+  `string`, `[]interface{}`, `map[string]interface{}`,
+  `[][2]interface{}`.
+* For type `[][2]interface{}`, first item is treated as key (string) and
+  second item is treated as value, hence equivalent to
+  `map[string]interface{}`.
 
 **CBOR**
 
@@ -73,6 +74,104 @@ What is what
 * Documents encoded in CBOR format using LengthPrefix are not
   supported by lookup APIs.
 
+Configuration
+-------------
+
+**Configuration APIs are not re-entrant**. For concurrent use of Gson, please
+create a `gson.Config{}` per routine.
+
+**NumberKind**
+
+There are two ways to treat numbers in Gson, as integers (upto 64-bit width)
+or floating-point (float64).
+
+- **FloatNumber** configuration can be used to tell Gson to treat all numbers
+as floating point. This has the convenience of having precision between
+discrete values, but suffers round of errors and inability to represent
+integer values greater than 2^53. **DEFAULT choice**.
+
+- **SmartNumber** will use int64, uint64 for representing integer values and
+use float64 when decimal precision is required. Choosing this option, Gson
+might need more CPU time.
+
+Can be configured per configuration instance via `SetNumberKind()`.
+
+**MaxKeys**
+
+Maximum number of keys allowed in a property object. This can be configured
+globally via `gson.MaxKeys` or per configuration via `SetMaxkeys()`.
+
+**Memory-pools**
+
+Gson uses memory pools:
+
+* Pool of Byte blocks for listing json-pointers.
+* Pool of Byte blocks for for encoding / decoding string types,
+  and property keys.
+* Pool of set of strings for sorting keys within property.
+
+Memory foot print of gson depends on the pools size, maximum length of
+input string, number keys in input property-map.
+
+Mempools can be configured globally via
+`gson.MaxStringLen, gson.MaxKeys, gson.MaxCollateLen, gson.MaxJsonpointerLen`
+package variables or per configuration instance via `ResetPools()`.
+
+**CBOR ContainerEncoding**
+
+In CBOR both map and array (called container types) can be encoded as length
+followed by items, or items followed by end-marker.
+
+- **LengthPrefix** to encode length of container type first, followed by
+  each item in the container.
+- **Stream** to encode each item in the container as it appears in the input
+  stream, finally ending it with a End-Stream-Marker. **DEFAULT choice**.
+
+Can be configured per configuration instance via `SetContainerEncoding`
+
+**JSON Strict**
+
+- If configured as true, encode / decode JSON strings operations will use
+Golang's encoding / JSON package.
+
+Can be configured per configuration instance via `SetStrict`.
+
+**JSON SpaceKind**
+
+How to interpret space characters ? There are two options:
+
+- **AnsiSpace** will be faster but does not support unicode.
+- **UnicodeSpace** will be slower but supports unicode. **DEFAULT choice**.
+
+Can be configured per configuration instance via `SetSpaceKind`.
+
+**Collate ArrayLenPrefix**
+
+While sorting array, which is a container type, should collation algorithm
+consider the arity of the array ? If ArrayLenPrefix prefix is configured as
+true, arrays with more number of items will sort after arrays with lesser
+number of items.
+
+Can be configured per configuration instance via `SortbyArrayLen`.
+
+**Collate PropertyLenPrefix**
+
+While sorting property-map, which is a container type, should collation
+algorithm consider number of entries in the map ? If PropertyLenPrefix is
+configured as true, maps with more number of items will sort after maps
+with lesser number of items.
+
+Can be configured per configuration instance via `SortbyPropertyLen`.
+
+**JSON-Pointer JsonpointerLength**
+
+Maximum length a JSON-pointer string can take. Can be configured globally
+via MaxJsonpointerLen or per configuration instance via `SetJptrlen`.
+
+NOTE: JSON pointers are composed of path segments, there is an upper limit
+to the number of path-segments a JSON pointer can have. If your configuration
+exceeds that limit, try increasing the JsonpointerLength.
+
 Transforms
 ----------
 
@@ -82,18 +181,12 @@ Transforms
 
 * Gson uses custom parser that must be faster than encoding/JSON.
 * Numbers can be interpreted as integer, or float64,
-  -  `IntNumber` to interpret JSON number as integer whose size is
-     defined by the platform.
   -  `FloatNumber` to interpret JSON number as 64-bit floating point.
-
-* Whitespace can be interpreted, based on configuration parameter
-  `SpaceKind`. SpaceKind can be one of the following `AnsiSpace` or
-  `UnicodeSpace`.
+  -  `SmartNumber` to interpret JSON number as int64, or uint64, or float64.
+* Whitespace can be interpreted, based on configuration type `SpaceKind`.
+  SpaceKind can be one of the following `AnsiSpace` or `UnicodeSpace`.
   - `AnsiSpace` that should be faster
   - `UnicodeSpace` supports unicode white-spaces as well.
-
-**value to JSON**
-
 
 **value to CBOR**
 
@@ -146,15 +239,13 @@ Transforms
 **JSON to CBOR**
 
 * JSON Types `null`, `true`, `false` are encodable into CBOR format.
-* Types `number` are encoded based on configuration parameter
-  `NumberKind`, which can be one of the following.
-  * Type `FloatNumber` number is encoded as CBOR-float64.
-  * Type `FloatNumber32` number is encoded as CBOR-float32.
-  * Type `IntNumber` number is encoded as CBOR-int64.
-  * Type `SmartNumber` if number is floating point then it is encoded
-    as CBOR-float64, else encoded as CBOR-int64.
-  * Type `SmartNumber32` if number is floating point then it is encoded
-    as CBOR-float32, else encoded as CBOR-float32.
+* Types `number` are encoded based on configuration type `NumberKind`,
+  which can be one of the following.
+  * If config.nk is FloatNumber, all numbers are encoded as CBOR-float64.
+  * If config.nk is SmartNumber, all JSON float64 numbers are encoded as
+    CBOR-float64, and, all JSON positive integers are encoded as
+    CBOR-uint64, and, all JSON negative integers are encoded as
+    CBOR-int64.
 * Type `string` will be parsed and translated into UTF-8, and subsequently
   encoded as CBOR-text.
 * Type `arrays` can be encoded in `Stream` mode, using CBOR's
@@ -173,8 +264,6 @@ Transforms
   non-exponent format.
 * Type `integer` is transformed back to JSON-integer representation,
   and integers exceeding 9223372036854775807 are not supported.
-* Type `strings` is encoded into JSON-string using `encoding/json`
-  package.
 * Type `array` either with length prefix or with indefinite encoding
   are converted back to JSON array.
 * Type `map` either with length prefix or with indefinite encoding
@@ -183,48 +272,9 @@ Transforms
 * Type CBOR-text with indefinite encoding are not supported.
 * Type Simple type float16 are not supported.
 
+For transforming to and from binary-collation refer [here](docs/collate.md)
 
-**value to collate**
-
-* Types `nil`, `true`, `false`, `float64`, `int64`, `int`, `Missing`,
-  `string`, `[]byte`, `[]interface{}`, `map[string]interface{}`
-  are supported for collation.
-* If configured as `FloatNumber`, `FloatNumber32` number will
-  be collated as floating point.
-* If configured as `IntNumber` number will be collated as integer.
-* If configured as `Decimal` number will be collated as
-  small-decimal ( -1 >= num <= 1 ).
-* If string value is MissingLiteral, it shall be collated as
-  missing.
-
-**collate to value**
-
-* Types `Missing`, `null`, `true`, `false`, `floating-point`,
-  `small-decimal`, `integer`, `string`, `[]byte` (aka binary),
-  `array`, `object` from its collated from can be converted back
-  to value.
-
-**JSON to collate**
-
-* Types `null`, `true`, `false`, `number`, `string`, `array`, `object`
-  are supported for collation.
-* Type `number` is parsed as float64 and collated based on configuration:
-  * If configured as `FloatNumber`, `FloatNumber32` number will be
-    collated as floating point.
-  * If configured as `IntNumber` number will be collated as integer.
-  * If configured as `Decimal` number will be collated as
-    small-decimal ( -1 >= num <= 1 ).
-* If string value is MissingLiteral, it shall be collated as
-  missing.
-* All other `string` value will be encoded into UTF-8 format before
-  collating it.
-
-**collate to JSON**
-
-* `null`, `true`, `false`, `number`, `string`, `array`, `object`
-  types are converted back to JSON.
-
-**CBOR to collate**
+**CBOR to Collate**
 
 * CBOR Types `null`, `true`, `false`, `float32`, `float64`, `integer`,
   `string`, `[]byte` (aka binary), `array`, `object` can be
@@ -233,24 +283,41 @@ Transforms
 * LengthPrefix and Stream encoding for array and maps are supported.
 
 
-**collate to CBOR**
+**Collate to CBOR**
 
 * `Missing`, `null`, `true`, `false`, `floating-point`, `small-decimal`,
   `integer`, `string`, `[]byte` (aka binary), `array`, `object` types
   from its collated from can be converted back to CBOR.
 
+How to contribute
+-----------------
+
+* Pick an issue, or create an new issue. Provide adequate documentation for
+  the issue.
+* Assign the issue or get it assigned.
+* Work on the code, once finished, raise a pull request.
+* Golog is written in [golang](https://golang.org/), hence expected to follow the
+  global guidelines for writing go programs.
+
+**Task list**
+
+* [ ] Binary collation: transparently handle int64, uint64 and float64.
+* [ ] Support for json.Number
+* [ ] UTF-8 collation of strings.
+* [ ] JSON-pointer.
+  - [ ] JSON pointer for looking up within CBOR map.
+  - [ ] JSON pointer for looking up within value-map.
+
 Notes
 -----
 
 * Don't change the tag number.
-* Don't have mandatory fields.
 * All supplied APIs will panic in case of error, applications can
   recover from panic, dump a stack trace along with input passed on to
   the API, and subsequently handle all such panics as a single valued
   error.
-* Maximum integer space shall be in int64.
-* `Config` instances, and its APIs, are neither re-entrant not thread safe.
-* Encoding/json.Number is not supported yet.
+* For now, maximum integer range shall be within int64.
+* `Config` instances, and its APIs, are neither re-entrant nor thread safe.
 
 **list of changes from github.com/prataprc/collatejson**
 
@@ -264,27 +331,3 @@ Notes
 * all APIs panic instead of returning an error.
 * output buffer should have its len() == cap(), so that encoder and decoder
   can avoid append and instead use buffer index.
-
-Task list
-=========
-
-* [ ] Binary collation: transparently handle int64, uint64 and float64.
-* [ ] Support for json.Number
-* [ ] UTF-8 collation of strings.
-* [ ] JSON-pointer.
-  - [ ] JSON pointer for looking up within CBOR map.
-  - [ ] JSON pointer for looking up within value-map.
-
-* transforming JSON encoded numbers to CBOR-numbers:
-
-  * if config.nk is FloatNumber, all numbers are encoded as CBOR-float64.
-  * if config.nk is SmartNumber, all JSON float64 numbers are encoded as
-    CBOR-float64, and, all JSON positive integers are encoded as
-    CBOR-uint64, and, all JSON negative integers are encoded as
-    CBOR-int64.
-
-* transforming JSON encoded numbers to golang values:
-
-  * if config.nk is FloatNumber, all numbers are interpreted as float64.
-  * if config.nk is SmartNumber, all JSON integers are interpreted as either
-    uint64 or int64, and, JSON float64 are interpreted as float64.

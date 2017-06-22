@@ -137,7 +137,7 @@ $ gson -inptxt '"hello world"' -value2cbor
 $ gson -inptxt '"hello world"' -value2collate
 ```
 
-**possible list of json-pointer**
+**possible list of json-pointer from a given doc**
 
 ```bash
 $ gson -inpfile typical.json -pointers
