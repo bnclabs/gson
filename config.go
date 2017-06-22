@@ -33,25 +33,13 @@ type Config struct {
 	collateConfig
 	jptrConfig
 	memConfig
-
-	//-- unicode
-	//backwards        bool
-	//hiraganaQ        bool
-	//caseLevel        bool
-	//numeric          bool
-	//nfkd              bool
-	//utf8              bool
-	//strength          colltab.Level
-	//alternate         collate.AlternateHandling
-	//language          language.Tag
 }
 
-// NewDefaultConfig returns a new configuration with default settings:
+// NewDefaultConfig return a new configuration with default settings:
 //		+FloatNumber        +Stream
 //		MaxKeys
 //		+UnicodeSpace       -strict
-//		+doMissing          -arrayLenPrefix
-//		+propertyLenPrefix
+//		+doMissing          -arrayLenPrefix     +propertyLenPrefix
 //		MaxJsonpointerLen
 //		MaxStringLen        MaxKeys
 //		MaxCollateLen       MaxJsonpointerLen
@@ -88,29 +76,31 @@ func NewDefaultConfig() *Config {
 	return config
 }
 
-// SetNumberKind setting to interpret number values.
+// SetNumberKind configure to interpret number values.
 func (config Config) SetNumberKind(nk NumberKind) *Config {
 	config.nk = nk
 	return &config
 }
 
-// SetContainerEncoding setting to encode / decode cbor arrays and maps.
+// SetContainerEncoding configure to encode / decode cbor
+// arrays and maps.
 func (config Config) SetContainerEncoding(ct ContainerEncoding) *Config {
 	config.ct = ct
 	return &config
 }
 
-// SetMaxkeys will set the maximum number of keys allowed in property item.
+// SetMaxkeys configute to set the maximum number of keys
+// allowed in property item.
 func (config Config) SetMaxkeys(n int) *Config {
 	config.maxKeys = n
 	return &config
 }
 
-// ResetPools will create a new set of pools with specified size.
-//	   strlen  - maximum length of string value inside JSON document
-//	   numkeys - maximum number of keys that a property object can have
-//	   itemlen - maximum length of collated value.
-//	   ptrlen  - maximum possible length of json-pointer.
+// ResetPools configure a new set of pools with specified size.
+//	 strlen  - maximum length of string value inside JSON document
+//	 numkeys - maximum number of keys that a property object can have
+//	 itemlen - maximum length of collated value.
+//	 ptrlen  - maximum possible length of json-pointer.
 func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 	config.memConfig = memConfig{
 		strlen: strlen, numkeys: numkeys, itemlen: itemlen, ptrlen: ptrlen,
@@ -119,7 +109,11 @@ func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 	return &config
 }
 
-// NewCbor create a new Cbor instance.
+// NewCbor factory to create a new Cbor instance. Buffer can't be nil.
+// If length is less than 0, ln will be assumed as len(buffer).
+// Otherwise if ln >= 0, it should atleast be 128 or greater. This also
+// implies that len(buffer) >= 128. Cbor object can be re-used after a
+// Reset() call.
 func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
 	if buffer != nil && ln >= 0 && len(buffer) < 128 {
 		panic("cbor buffer should alteast be 128 bytes")
@@ -130,7 +124,11 @@ func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
 	return &Cbor{config: config, data: buffer, n: ln}
 }
 
-// NewJson create a new Json instance.
+// NewJson factory to create a new Json instance. Buffer can't be nil.
+// If length is less than 0, ln will be assumed as len(buffer).
+// Otherwise if ln >= 0, it should atleast be 128 or greater. This also
+// implies that len(buffer) >= 128. Json object can be re-used after a
+// Reset() call.
 func (config *Config) NewJson(buffer []byte, ln int) *Json {
 	if buffer != nil && ln >= 0 && len(buffer) < 128 {
 		panic("json buffer should atleast be 128 bytes")
@@ -141,7 +139,11 @@ func (config *Config) NewJson(buffer []byte, ln int) *Json {
 	return &Json{config: config, data: buffer, n: ln}
 }
 
-// NewCollate create a new Collate instance.
+// NewCollate factor to create a new Collate instance. Buffer can't be nil.
+// If length is less than 0, ln will be assumed as len(buffer).
+// Otherwise if ln >= 0, it should atleast be 128 or greater. This also
+// implies that len(buffer) >= 128. Collate object can be re-used after a
+// Reset() call.
 func (config *Config) NewCollate(buffer []byte, ln int) *Collate {
 	if buffer != nil && ln >= 0 && len(buffer) < 128 {
 		panic("collate buffer should atleast be 128 bytes")
@@ -152,12 +154,13 @@ func (config *Config) NewCollate(buffer []byte, ln int) *Collate {
 	return &Collate{config: config, data: buffer, n: ln}
 }
 
-// NewValue create a new Value instance.
+// NewValue factory to create a new Value instance. Value instances are
+// immutable, and can be used and re-used any number of times.
 func (config *Config) NewValue(value interface{}) *Value {
 	return &Value{config: config, data: value}
 }
 
-// NewJsonpointer create a instance of Jsonpointer allocate necessary memory.
+// NewJsonpointer create a instance of Jsonpointer.
 func (config *Config) NewJsonpointer(path string) *Jsonpointer {
 	if len(path) > config.jptrMaxlen {
 		panic("jsonpointer path exceeds configured length")
