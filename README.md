@@ -289,6 +289,11 @@ For transforming to and from binary-collation refer [here](docs/collate.md)
   `integer`, `string`, `[]byte` (aka binary), `array`, `object` types
   from its collated from can be converted back to CBOR.
 
+Articles
+--------
+
+* [Note on sorting](http://prataprc.github.io/sorting-data.html).
+
 How to contribute
 -----------------
 
