@@ -40,7 +40,7 @@ type Collate struct {
 	n      int
 }
 
-// Bytes return reference to byte-slice of valid buffer.
+// Bytes return the byte-slice holding the collated data.
 func (clt *Collate) Bytes() []byte {
 	return clt.data[:clt.n]
 }

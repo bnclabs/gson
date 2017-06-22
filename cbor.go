@@ -130,7 +130,7 @@ type Cbor struct {
 	n      int
 }
 
-// Bytes return reference to byte-slice of valid cbor-buffer.
+// Bytes return the byte-slice holding the CBOR data.
 func (cbr *Cbor) Bytes() []byte {
 	return cbr.data[:cbr.n]
 }
@@ -195,13 +195,16 @@ func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
 	return cbr
 }
 
-// EncodeMapslice to encode key,value pairs into cbor buffer.
+// EncodeMapslice to encode key,value pairs into cbor buffer. Whether
+// to encode them as indefinite-sequence of pairs, or as length prefixed
+// pairs is decided by config.ContainerEncoding.
 func (cbr *Cbor) EncodeMapslice(items [][2]interface{}) *Cbor {
 	cbr.n += mapl2cbor(items, cbr.data[cbr.n:cap(cbr.data)], cbr.config)
 	return cbr
 }
 
-// EncodeBytechunks chunks of bytes as indefinite stream.
+// EncodeBytechunks to encode several chunks of bytes as an
+// indefinite-sequence of byte-blocks.
 func (cbr *Cbor) EncodeBytechunks(chunks [][]byte) *Cbor {
 	cbr.n += bytesStart(cbr.data[cbr.n:cap(cbr.data)])
 	for _, chunk := range chunks {
@@ -212,7 +215,8 @@ func (cbr *Cbor) EncodeBytechunks(chunks [][]byte) *Cbor {
 	return cbr
 }
 
-// EncodeTextchunks chunks of text as indefinite stream.
+// EncodeTextchunks to encode several chunks of text as an
+// indefinite-sequence of byte-blocks.
 func (cbr *Cbor) EncodeTextchunks(chunks []string) *Cbor {
 	cbr.n += textStart(cbr.data[cbr.n:cap(cbr.data)])
 	for _, chunk := range chunks {

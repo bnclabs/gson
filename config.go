@@ -15,8 +15,8 @@ const (
 	SmartNumber
 )
 
-// MaxKeys maximum number of keys allowed in a property object. Changing this
-// value will affect all new configuration objects.
+// MaxKeys maximum number of keys allowed in a property object. Affects
+// memory pool. Changing this value will affect all new configuration objects.
 var MaxKeys = 1024
 
 // Config is the root object to access all transformations and APIs
