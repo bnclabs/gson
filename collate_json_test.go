@@ -6,7 +6,7 @@ import "fmt"
 var _ = fmt.Sprintf("dummy")
 
 func TestJson2CollateNil(t *testing.T) {
-	inp, ref := "null", `\x02\x00`
+	inp, ref := "null", `\f\x00`
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
@@ -25,7 +25,7 @@ func TestJson2CollateNil(t *testing.T) {
 }
 
 func TestJson2CollateTrue(t *testing.T) {
-	inp, ref := "true", `\x04\x00`
+	inp, ref := "true", `\x0e\x00`
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
@@ -44,7 +44,7 @@ func TestJson2CollateTrue(t *testing.T) {
 }
 
 func TestJson2CollateFalse(t *testing.T) {
-	inp, ref := "false", `\x03\x00`
+	inp, ref := "false", `\r\x00`
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
@@ -64,7 +64,7 @@ func TestJson2CollateFalse(t *testing.T) {
 
 func TestJson2CollateNumber(t *testing.T) {
 	// as float64 using FloatNumber configuration
-	inp, refcode, reftxt := "10.2", `\x05>>2102-\x00`, "1.02e+01"
+	inp, refcode, reftxt := "10.2", `\x0f>>2102-\x00`, "1.02e+01"
 	config := NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -81,7 +81,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 
 	// as int64 using FloatNumber configuration
-	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "1e+01"
+	inp, refcode, reftxt = "10", `\x0f>>21-\x00`, "1e+01"
 	config = NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
@@ -98,7 +98,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 
 	// as float64 using IntNumber configuration
-	inp, refcode, reftxt = "10.2", `\x05>>2102-\x00`, "1.02e+01"
+	inp, refcode, reftxt = "10.2", `\x0f>>2102-\x00`, "1.02e+01"
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
@@ -115,7 +115,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	}
 
 	// as int64 using IntNumber configuration
-	inp, refcode, reftxt = "10", `\x05>>21-\x00`, "1e+01"
+	inp, refcode, reftxt = "10", `\x0f>>21-\x00`, "1e+01"
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
@@ -134,7 +134,7 @@ func TestJson2CollateNumber(t *testing.T) {
 
 func TestJson2CollateString(t *testing.T) {
 	// empty string
-	inp, refcode, reftxt := `""`, `\x06\x00\x00`, `""`
+	inp, refcode, reftxt := `""`, `\x10\x00\x00`, `""`
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -151,7 +151,7 @@ func TestJson2CollateString(t *testing.T) {
 	}
 
 	// normal string
-	inp, refcode = `"hello world"`, `\x06hello world\x00\x00`
+	inp, refcode = `"hello world"`, `\x10hello world\x00\x00`
 	dotest := func(config *Config) {
 		clt = config.NewCollate(make([]byte, 1024), 0)
 
@@ -171,7 +171,7 @@ func TestJson2CollateString(t *testing.T) {
 	dotest(NewDefaultConfig().SetStrict(false))
 
 	// missing string
-	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `\x01\x00`
+	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `\v\x00`
 	reftxt = string(MissingLiteral)
 	config = NewDefaultConfig()
 	clt = config.NewCollate(make([]byte, 1024), 0)
@@ -190,7 +190,7 @@ func TestJson2CollateString(t *testing.T) {
 
 	// missing string without doMissing configuration
 	inp = fmt.Sprintf(`"%s"`, MissingLiteral)
-	refcode = `\x06~[]{}falsenilNA~\x00\x00`
+	refcode = `\x10~[]{}falsenilNA~\x00\x00`
 	config = NewDefaultConfig().UseMissing(false)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
@@ -213,19 +213,20 @@ func TestJson2CollateArray(t *testing.T) {
 	// without length prefix
 	testcases := [][4]string{
 		{`[null,true,false,10.0,"hello"]`,
-			`\b\x02\x00\x04\x00\x03\x00\x05>>21-\x00\x06hello\x00\x00\x00`,
-			`\b\a>5\x00\x02\x00\x04\x00\x03\x00\x05>>21-\x00` +
-				`\x06hello\x00\x00\x00`,
+			`\x12\f\x00\x0e\x00\r\x00\x0f>>21-\x00\x10hello\x00\x00\x00`,
+			`\x12\x11>5\x00\f\x00\x0e\x00\r\x00\x0f>>21-\x00\x10hello` +
+				`\x00\x00\x00`,
 			`[null,true,false,1e+01,"hello"]`},
 		{`[]`,
-			`\b\x00`,
-			`\b\a0\x00\x00`,
+			`\x12\x00`,
+			`\x12\x110\x00\x00`,
 			`[]`},
 		{`[null,true,10.0,10.2,[],{"key":{}}]`,
-			`\b\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00\b\x00` +
-				`\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
-			`\b\a>6\x00\x02\x00\x04\x00\x05>>21-\x00\x05>>2102-\x00` +
-				`\b\a0\x00\x00\t\a>1\x00\x06key\x00\x00\t\a0\x00\x00\x00\x00`,
+			`\x12\f\x00\x0e\x00\x0f>>21-\x00\x0f>>2102-\x00\x12\x00\x13\x11` +
+				`>1\x00\x10key\x00\x00\x13\x110\x00\x00\x00\x00`,
+			`\x12\x11>6\x00\f\x00\x0e\x00\x0f>>21-\x00\x0f>>2102-\x00\x12` +
+				`\x110\x00\x00\x13\x11>1\x00\x10key\x00\x00\x13\x110\x00` +
+				`\x00\x00\x00`,
 			`[null,true,1e+01,1.02e+01,[],{"key":{}}]`},
 	}
 
@@ -277,12 +278,12 @@ func TestJson2CollateMap(t *testing.T) {
 	testcases := [][4]string{
 		{
 			`{"a":null,"b":true,"c":false,"d":10.0,"e":"hello","f":["world"]}`,
-			`\t\a>6\x00\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c` +
-				`\x00\x00\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +
-				`\x06hello\x00\x00\x06f\x00\x00\b\x06world\x00\x00\x00\x00`,
-			`\t\x06a\x00\x00\x02\x00\x06b\x00\x00\x04\x00\x06c\x00\x00` +
-				`\x03\x00\x06d\x00\x00\x05>>21-\x00\x06e\x00\x00` +
-				`\x06hello\x00\x00\x06f\x00\x00\b\x06world\x00\x00\x00\x00`,
+			`\x13\x11>6\x00\x10a\x00\x00\f\x00\x10b\x00\x00\x0e\x00\x10c` +
+				`\x00\x00\r\x00\x10d\x00\x00\x0f>>21-\x00\x10e\x00\x00\x10hello` +
+				`\x00\x00\x10f\x00\x00\x12\x10world\x00\x00\x00\x00`,
+			`\x13\x10a\x00\x00\f\x00\x10b\x00\x00\x0e\x00\x10c\x00\x00\r\x00` +
+				`\x10d\x00\x00\x0f>>21-\x00\x10e\x00\x00\x10hello` +
+				`\x00\x00\x10f\x00\x00\x12\x10world\x00\x00\x00\x00`,
 			`{"a":null,"b":true,"c":false,"d":1e+01,"e":"hello","f":["world"]}`,
 		},
 	}

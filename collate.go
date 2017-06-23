@@ -6,17 +6,17 @@ import "bytes"
 // Collation order for supported types, to change the order set these
 // values in your init() function.
 var (
-	Terminator  byte
-	TypeMissing byte = 1
-	TypeNull    byte = 2
-	TypeFalse   byte = 3
-	TypeTrue    byte = 4
-	TypeNumber  byte = 5
-	TypeString  byte = 6
-	TypeLength  byte = 7
-	TypeArray   byte = 8
-	TypeObj     byte = 9
-	TypeBinary  byte = 10
+	Terminator  byte = 0
+	TypeMissing byte = 11
+	TypeNull    byte = 12
+	TypeFalse   byte = 13
+	TypeTrue    byte = 14
+	TypeNumber  byte = 15
+	TypeString  byte = 16
+	TypeLength  byte = 17
+	TypeArray   byte = 18
+	TypeObj     byte = 19
+	TypeBinary  byte = 20
 )
 
 // Missing denotes a special type for an item that evaluates to _nothing_.
