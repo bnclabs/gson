@@ -103,15 +103,15 @@ or,
 ```
 
 ```text
-BenchmarkVal2JsonMap5  3000000   537 ns/op    0 B/op  0 allocs/op
-BenchmarkVal2CborMap5  3000000   449 ns/op    0 B/op  0 allocs/op
-BenchmarkVal2CollMap   1000000  1458 ns/op    0 B/op  0 allocs/op
-BenchmarkJson2CborMap  2000000   982 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2JsonMap  1000000  1003 ns/op    0 B/op  0 allocs/op
-BenchmarkJson2CollMap  1000000  2179 ns/op    2 B/op  0 allocs/op
-BenchmarkColl2JsonMap  1000000  1774 ns/op    0 B/op  0 allocs/op
-BenchmarkCbor2CollMap  1000000  1805 ns/op    1 B/op  0 allocs/op
-BenchmarkColl2CborMap  1000000  1675 ns/op    2 B/op  0 allocs/op
+BenchmarkVal2JsonMap5-8  3000000   461 ns/op    0 B/op  0 allocs/op
+BenchmarkVal2CborMap5-8  5000000   262 ns/op    0 B/op  0 allocs/op
+BenchmarkVal2CollMap-8   1000000  1321 ns/op  128 B/op  2 allocs/op
+BenchmarkJson2CborMap-8  2000000   838 ns/op    0 B/op  0 allocs/op
+BenchmarkCbor2JsonMap-8  2000000  1010 ns/op    0 B/op  0 allocs/op
+BenchmarkJson2CollMap-8  1000000  1825 ns/op  202 B/op  2 allocs/op
+BenchmarkColl2JsonMap-8  1000000  2028 ns/op  434 B/op  6 allocs/op
+BenchmarkCbor2CollMap-8  1000000  1692 ns/op  131 B/op  2 allocs/op
+BenchmarkColl2CborMap-8  1000000  1769 ns/op  440 B/op  6 allocs/op
 ```
 
 Though converting to golang value incurs cost.
