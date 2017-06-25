@@ -20,6 +20,8 @@ Goals
 * [CBOR](http://cbor.io) for machine.
 * [Binary-Collation](https://github.com/prataprc/gson/blob/master/docs/collate.md)
   for crazy fast comparison/sorting.
+* [JSON-pointer](https://tools.ietf.org/html/rfc6901) for field lookup within
+  document.
 
 ---
 
@@ -163,7 +165,7 @@ an index on {city,age}, the collated output shall look like -
 
 ---
 
-Easy of use
+Ease of use
 ===========
 
 Always start with the config object. Apply desired configuration,

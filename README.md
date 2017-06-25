@@ -5,6 +5,7 @@ Object formats and notations
 [![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.png?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
 [![GoDoc](https://godoc.org/github.com/prataprc/gson?status.png)](https://godoc.org/github.com/prataprc/gson)
 [![Go Report Card](https://goreportcard.com/badge/github.com/prataprc/gson)](https://goreportcard.com/report/github.com/prataprc/gson)
+[![GitPitch](https://gitpitch.com/assets/badge.svg)](https://gitpitch.com/prataprc/gson/master?grs=github&t=white)
 
 **Goals**:
 
@@ -19,6 +20,10 @@ Object formats and notations
 
 **This package is under continuous development, but the APIs are fairly stable**.
 
+Quick Links
+-----------
+
+* [slides on gson](https://gitpitch.com/prataprc/gson/master?grs=github&t=white)
 * [What is what](#what-is-what)
 * [Configuration](#configuration)
 * [Transforms](#transforms)
