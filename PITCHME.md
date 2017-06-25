@@ -39,7 +39,7 @@ Transformations are orthogonal
 
 Convert from any format to any other format, without loss of information.
 
-[Transforms](https://github.com/prataprc/gson/blob/master/docs/transforms.png)
+![Transforms](https://github.com/prataprc/gson/blob/master/docs/transforms.png)
 
 ---
 
@@ -150,10 +150,12 @@ Let us say a composite key looks like `["paris", 35]`, which is basically
 an index on {city,age}, the collated output shall look like -
 `"\x12\x10paris\x00\x00\x0f>>235-\x00\x00"`
 
-```text
-// sorting a list of 10000 JSON entires for different shapes, 100 times
+```bash
+# sorting a list of 10000 JSON entires for different shapes
+# repeat 100 times
 41.10s user 0.84s system 112% cpu 37.265 total
-// sorting the same after collation encoding (using memcmp)
+# sorting the same after collation encoding (using memcmp)
+# repeat 100 times
 2.93s user 0.09s system 115% cpu 2.622 total
 ```
 
@@ -164,39 +166,36 @@ an index on {city,age}, the collated output shall look like -
 Easy of use
 ===========
 
-Always start with the config object:
+Always start with the config object. Apply desired configuration,
+note that config objects are immutable so make sure to receive a new
+config object from each config API.
 
 ```go
 config := NewDefaultConfig()
-```
-
-Apply desired configuration, note that config objects are immutable
-so make sure the receive a new config object from each config API.
-
-```go
 config = config.SetNumberKind(FloatNumber).SetContainerEncoding(Stream)
 ```
+
+---
 
 Format factories
 ================
 
-Use the config object to create any number of buffer types, for - JSON,
-CBOR, Value, Collate:
+Use the config object to create any number of buffer types: JSON,
+CBOR, Value, Collate. Reuse the objects, avoid GC pressure.
+**buffer objects are not thread-safe**
 
 ```go
 val := config.NewValue("any golang value")      // *gson.Value
 jsn := config.NewCbor(json_byteslice, -1)       // *gson.Json
 cbr := config.NewCbor(cbor_byteslice, -1)       // *gson.Cbor
 clt := config.NewCbor(collated_byteslice, -1)   // *gson.Collate
-```
-
-Reuse the objects, avoid GC pressure. **buffer objects are not thread-safe**
-
-```go
+...
 jsn.Reset(nil)
 cbr.Reset(nil)
 clt.Reset(nil)
 ```
+
+---
 
 Transform examples
 ==================
@@ -211,15 +210,13 @@ clt = jsn.Tocollate(collate)          // json -> collate
 
 // json -> collate -> cbor -> value
 val := config.NewValue(jsn.Tocollate(cbr).Tocbor(clt).Tovalue())
-```
-
-To get the underlying data from each buffer:
-
-```go
+// To get the underlying data from each buffer:
 jsn.Bytes()
 cbr.Bytes()
 clt.Bytes()
 ```
+
+---
 
 Thank you
 =========
