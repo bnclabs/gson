@@ -39,7 +39,7 @@ Transformations are orthogonal
 
 Convert from any format to any other format, without loss of information.
 
-![Transforms](https://github.com/prataprc/gson/blob/master/docs/transforms.png)
+![Transforms](assets/transforms.png)
 
 ---
 
@@ -126,7 +126,7 @@ CBOR for machine
 CBOR Vs JSON benchmarks
 =======================
 
-```text
+```bash
 BenchmarkVal2CborBool  10000000    158 ns/op    0 B/op   0 allocs/op
 BenchmarkVal2CborFlt64  5000000    382 ns/op    0 B/op   0 allocs/op
 BenchmarkCbor2ValBool   5000000    303 ns/op    1 B/op   1 allocs/op
