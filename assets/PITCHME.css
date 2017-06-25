@@ -1,0 +1,16 @@
+.reveal h1 {
+    font-size: 1.7em;
+    text-align: left;
+}
+.reveal p {
+    text-align: left;
+    font-size: 0.75em;
+}
+.reveal ul {
+    text-align: left;
+    font-size: 0.75em;
+}
+.reveal ol {
+    text-align: left;
+    font-size: 0.75em;
+}

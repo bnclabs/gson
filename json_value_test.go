@@ -210,7 +210,7 @@ func BenchmarkUnmarshalBool(b *testing.B) {
 func BenchmarkJson2ValNum(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
-	in := "100000.23"
+	in := "10.2"
 	jsn := config.NewJson([]byte(in), -1)
 
 	b.SetBytes(int64(len(in)))

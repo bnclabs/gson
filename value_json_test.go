@@ -170,7 +170,7 @@ func BenchmarkVal2JsonNum(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
 	jsn := config.NewJson(make([]byte, 1024), 0)
-	val := config.NewValue(100000.23)
+	val := config.NewValue(10.2)
 
 	for i := 0; i < b.N; i++ {
 		val.Tojson(jsn.Reset(nil))
@@ -182,7 +182,7 @@ func BenchmarkMarshalNum(b *testing.B) {
 	var data []byte
 
 	for i := 0; i < b.N; i++ {
-		data, _ = json.Marshal(100000.23)
+		data, _ = json.Marshal(10.2)
 	}
 	b.SetBytes(int64(len(data)))
 }

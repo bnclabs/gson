@@ -1,0 +1,5 @@
+theme : beige
+highlight : molokai
+slide-number : true
+vertical-center : false
+theme-override : assets/PITCHME.css

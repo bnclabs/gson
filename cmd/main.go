@@ -257,7 +257,11 @@ func collatefile(filename string) (outs []string) {
 	config = config.SortbyPropertyLen(options.propertyLenPrefix)
 	config = config.SetNumberKind(gson.SmartNumber)
 
-	return collateLines(config, s)
+	out := collateLines(config, s)
+	for i := 0; i < options.repeat; i++ {
+		collateLines(config, s)
+	}
+	return out
 }
 
 func collateLines(config *gson.Config, s []byte) []string {

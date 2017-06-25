@@ -19,6 +19,10 @@ func sortn1ql(filename string) []string {
 	}
 	s := string(data)
 	items := strings.Split(s, "\n")
+	for i := 0; i < options.repeat; i++ {
+		list := &jsonList{vals: items, compares: 0}
+		sort.Sort(list)
+	}
 	list := &jsonList{vals: items, compares: 0}
 	sort.Sort(list)
 	return list.vals

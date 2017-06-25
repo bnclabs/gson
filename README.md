@@ -15,7 +15,7 @@ Object formats and notations
   for APIs creating golang values from encoded data.
 - [JSON](http://json.org) for web.
 - [CBOR](http://cbor.io) for machine.
-- [Binary-Collation](docs/collate.md) for high performance comparison/sorting.
+- [Binary-Collation](docs/collate.md) for crazy fast comparison/sorting.
 
 **This package is under continuous development, but the APIs are fairly stable**.
 
@@ -354,7 +354,7 @@ How to contribute
 
 **Task list**
 
-* [ ] Binary collation: transparently handle int64, uint64 and float64.
+* [x] Binary collation: transparently handle int64, uint64 and float64.
 * [ ] Support for json.Number
 * [ ] UTF-8 collation of strings.
 * [ ] JSON-pointer.
