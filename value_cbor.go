@@ -369,7 +369,7 @@ func valtime2cbor(dt interface{}, buf []byte, config *Config) int {
 	n := 0
 	switch v := dt.(type) {
 	case time.Time: // rfc3339, as refined by section 3.3 rfc4287
-		item := v.Format(time.RFC3339) // TODO: make rfc3339 as config.
+		item := v.Format(time.RFC3339)
 		n += tag2cbor(tagDateTime, buf)
 		n += value2cbor(item, buf[n:], config)
 	case CborTagEpoch:

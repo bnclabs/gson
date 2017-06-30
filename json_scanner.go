@@ -35,7 +35,7 @@ func skipWS(txt string, ws SpaceKind) string {
 	return txt
 }
 
-var escapeCode = [256]byte{ // TODO: size can be optimized
+var escapeCode = [256]byte{
 	'"':  '"',
 	'\\': '\\',
 	'/':  '/',
