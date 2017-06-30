@@ -77,6 +77,18 @@ func TestMaptoJson(t *testing.T) {
 	}
 }
 
+func TestMapUint64toJson(t *testing.T) {
+	txt := `{"key1":10, "key2":9223372036854775808, "key3":-9223372036854775808}`
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
+	jsn := config.NewJson(make([]byte, 1024), 0)
+
+	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	config.NewValue(value).Tojson(jsn)
+	if _, val := jsn.Tovalue(); !reflect.DeepEqual(value, val) {
+		t.Errorf("expected %v, got %v", value, val)
+	}
+}
+
 func TestValues2Json(t *testing.T) {
 	testcases := append(scanvalid, []string{
 		string(mapValue),
@@ -237,6 +249,21 @@ func BenchmarkVal2JsonMap5(b *testing.B) {
 		"a": nil, "b": true, "c": false, "d\"": -10E-1, "e": "tru\"e",
 	})
 
+	for i := 0; i < b.N; i++ {
+		val.Tojson(jsn.Reset(nil))
+	}
+	b.SetBytes(int64(len(jsn.Bytes())))
+}
+
+func BenchmarkVal2JsonMapUint64(b *testing.B) {
+	config := NewDefaultConfig()
+	config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
+	jsn := config.NewJson(make([]byte, 1024), 0)
+	val := config.NewValue(map[string]interface{}{
+		"key1": 10,
+		"key2": int64(9223372036854775807),
+		"key3": int64(-9223372036854775808),
+	})
 	for i := 0; i < b.N; i++ {
 		val.Tojson(jsn.Reset(nil))
 	}

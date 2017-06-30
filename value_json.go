@@ -132,6 +132,33 @@ func value2json(value interface{}, out []byte, config *Config) int {
 		n++
 		return n
 
+	case map[string]uint64:
+		n := 0
+		out[n] = '{'
+		n++
+
+		count := len(v)
+		for key := range v {
+			outsl, err = encodeString(str2bytes(key), out[n:n])
+			if err != nil {
+				panic("error encoding key")
+			}
+			n += len(outsl)
+			out[n] = ':'
+			n++
+
+			n += value2json(v[key], out[n:], config)
+
+			count--
+			if count > 0 {
+				out[n] = ','
+				n++
+			}
+		}
+		out[n] = '}'
+		n++
+		return n
+
 	case [][2]interface{}:
 		n := 0
 		out[n] = '{'
