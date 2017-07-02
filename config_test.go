@@ -163,6 +163,36 @@ func TestContainerEncodingString(t *testing.T) {
 	}
 }
 
+func TestCheckSortedkeys(t *testing.T) {
+	val := map[string]interface{}{
+		"ddd": true, "ccc": false, "fff": true, "aaa": nil,
+		"bbb": []interface{}{1, 2},
+	}
+	srtjson := `{"aaa":null,"bbb":[1,2],"ccc":false,"ddd":true,"fff":true}`
+
+	config := NewDefaultConfig()
+	jsn := config.NewJson(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+	col := config.NewCollate(make([]byte, 1024), 0)
+
+	json := config.NewValue(val).Tojson(jsn.Reset(nil)).Bytes()
+	if string(json) != srtjson {
+		t.Errorf("expected %v, got %v", srtjson, string(json))
+	}
+
+	cbr = config.NewValue(val).Tocbor(cbr.Reset(nil))
+	json = cbr.Tojson(jsn.Reset(nil)).Bytes()
+	if string(json) != srtjson {
+		t.Errorf("expected %v, got %v", srtjson, string(json))
+	}
+
+	col = config.NewValue(val).Tocollate(col.Reset(nil))
+	json = col.Tocbor(cbr.Reset(nil)).Tojson(jsn.Reset(nil)).Bytes()
+	if string(json) != srtjson {
+		t.Errorf("expected %v, got %v", srtjson, string(json))
+	}
+}
+
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
 	if err != nil {

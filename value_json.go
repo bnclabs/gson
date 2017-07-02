@@ -114,8 +114,12 @@ func value2json(value interface{}, out []byte, config *Config) int {
 		out[n] = '{'
 		n++
 
+		poolobj := config.pools.keysPool.Get()
+		keys := poolobj.([]string)
+		defer config.pools.keysPool.Put(poolobj)
+
 		count := len(v)
-		for key := range v {
+		for _, key := range sortProps1(v, keys) {
 			outsl, err = encodeString(str2bytes(key), out[n:n])
 			if err != nil {
 				panic("error encoding key")
@@ -141,8 +145,12 @@ func value2json(value interface{}, out []byte, config *Config) int {
 		out[n] = '{'
 		n++
 
+		poolobj := config.pools.keysPool.Get()
+		keys := poolobj.([]string)
+		defer config.pools.keysPool.Put(poolobj)
+
 		count := len(v)
-		for key := range v {
+		for _, key := range sortProps2(v, keys) {
 			outsl, err = encodeString(str2bytes(key), out[n:n])
 			if err != nil {
 				panic("error encoding key")

@@ -122,7 +122,8 @@ var hdrIndefiniteText = cborHdr(cborType3, cborIndefiniteLength)
 var hdrIndefiniteArray = cborHdr(cborType4, cborIndefiniteLength)
 var hdrIndefiniteMap = cborHdr(cborType5, cborIndefiniteLength)
 
-// Cbor encapsulates configuration and a cbor buffer.
+// Cbor encapsulates configuration and a cbor buffer. Map element
+// in cbor encoding should have its keys sorted.
 type Cbor struct {
 	config *Config
 	data   []byte

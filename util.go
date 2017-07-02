@@ -290,7 +290,7 @@ func collated2Json(code []byte, text []byte, nk NumberKind) int {
 }
 
 // sort JSON property objects based on property names.
-func sortProps(props map[string]interface{}, keys []string) []string {
+func sortProps1(props map[string]interface{}, keys []string) []string {
 	for k := range props {
 		keys = append(keys, k)
 	}
@@ -298,7 +298,21 @@ func sortProps(props map[string]interface{}, keys []string) []string {
 	return sortStrings(keys)
 }
 
-// bubble sort, moving to qsort should be atleast 40% faster.
+func sortProps2(props map[string]uint64, keys []string) []string {
+	for k := range props {
+		keys = append(keys, k)
+	}
+	return sortStrings(keys)
+}
+
+func sortProps3(props [][2]interface{}, keys []string) []string {
+	for _, item := range props {
+		keys = append(keys, item[0].(string))
+	}
+	return sortStrings(keys)
+}
+
+// TODO: bubble sort, moving to qsort should be atleast 40% faster.
 func sortStrings(strs []string) []string {
 	for ln := len(strs) - 1; ; ln-- {
 		changed := false

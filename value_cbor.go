@@ -70,16 +70,22 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 	case [][2]interface{}:
 		n += valmap2cbor(v, out, config)
 	case map[string]interface{}:
+		poolobj := config.pools.keysPool.Get()
+		keys := poolobj.([]string)
+		defer config.pools.keysPool.Put(poolobj)
+
 		if config.ct == LengthPrefix {
 			n += valuint642cbor(uint64(len(v)), out[n:])
 			out[n-1] = (out[n-1] & 0x1f) | cborType5 // fix the type
-			for key, value := range v {
+			for _, key := range sortProps1(v, keys) {
+				value := v[key]
 				n += valtext2cbor(key, out[n:])
 				n += value2cbor(value, out[n:], config)
 			}
 		} else if config.ct == Stream {
 			n += mapStart(out[n:])
-			for key, value := range v {
+			for _, key := range sortProps1(v, keys) {
+				value := v[key]
 				n += valtext2cbor(key, out[n:])
 				n += value2cbor(value, out[n:], config)
 			}
