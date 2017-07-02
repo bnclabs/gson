@@ -3,8 +3,9 @@
 
 package gson
 
-import "strconv"
 import "fmt"
+import "strconv"
+import "encoding/json"
 
 func gson2collate(obj interface{}, code []byte, config *Config) int {
 	if obj == nil {
@@ -66,6 +67,26 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		code[n] = Terminator
 		n++
 		return n
+
+	case json.Number:
+		if isnegative(value) {
+			n := 0
+			code[n] = TypeNumber
+			n++
+			n += collateInt64Str(string(value), code[n:])
+			code[n] = Terminator
+			n++
+			return n
+
+		} else {
+			n := 0
+			code[n] = TypeNumber
+			n++
+			n += collateUint64Str(string(value), code[n:])
+			code[n] = Terminator
+			n++
+			return n
+		}
 
 	case Missing:
 		if config.doMissing && MissingLiteral.Equal(string(value)) {

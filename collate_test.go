@@ -1,10 +1,8 @@
 package gson
 
+import "bytes"
 import "testing"
-import "fmt"
 import "reflect"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestCollateReset(t *testing.T) {
 	config := NewDefaultConfig()
@@ -49,4 +47,20 @@ func TestCollateEmpty(t *testing.T) {
 		}()
 		clt.Tocbor(cbr)
 	}()
+}
+
+// sort type for slice of []byte
+
+type ByteSlices [][]byte
+
+func (bs ByteSlices) Len() int {
+	return len(bs)
+}
+
+func (bs ByteSlices) Less(i, j int) bool {
+	return bytes.Compare(bs[i], bs[j]) < 0
+}
+
+func (bs ByteSlices) Swap(i, j int) {
+	bs[i], bs[j] = bs[j], bs[i]
 }

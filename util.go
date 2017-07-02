@@ -1,10 +1,11 @@
 package gson
 
+import "fmt"
 import "reflect"
 import "unsafe"
-import "fmt"
-import "encoding/json"
+import "unicode"
 import "strconv"
+import "encoding/json"
 
 func bytes2str(bytes []byte) string {
 	if bytes == nil {
@@ -180,6 +181,27 @@ func collateInt64(value int64, code []byte) int {
 	}
 }
 
+func collateUint64Str(value string, code []byte) int {
+	var fltx [64]byte
+	fltx[0], fltx[1] = value[0], '.'
+	n := 2 + copy(fltx[2:], value[1:])
+	fltx[n], fltx[n+1], n = 'e', '+', n+2
+	tmp := strconv.AppendInt(fltx[n:n], int64(len(value[1:])), 10)
+	ln := n + len(tmp)
+	return collateFloat(fltx[:ln], code)
+}
+
+// value is always negative
+func collateInt64Str(value string, code []byte) int {
+	var fltx [64]byte
+	fltx[0], fltx[1], fltx[2] = value[0], value[1], '.'
+	n := 3 + copy(fltx[3:], value[2:])
+	fltx[n], fltx[n+1], n = 'e', '+', n+2
+	tmp := strconv.AppendInt(fltx[n:n], int64(len(value[2:])), 10)
+	ln := n + len(tmp)
+	return collateFloat(fltx[:ln], code)
+}
+
 func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {
 	var mantissa, scratch [64]byte
 	_, y := collated2Float(code, scratch[:])
@@ -235,6 +257,18 @@ func parseFloat(text []byte, m []byte) (int, int, int, []byte) {
 		}
 	}
 	return dotat, expat, exp, m
+}
+
+func isnegative(s json.Number) bool {
+	for _, r := range s {
+		if unicode.IsSpace(r) {
+			continue
+		} else if r == '-' {
+			return true
+		}
+		break
+	}
+	return false
 }
 
 func collated2Json(code []byte, text []byte, nk NumberKind) int {

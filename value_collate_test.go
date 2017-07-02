@@ -1,12 +1,52 @@
 package gson
 
 import "fmt"
+import "sort"
+import "reflect"
 import "testing"
+import "encoding/json"
 
 var _ = fmt.Sprintf("dummy")
 
 // All test cases are folded into collate_value_test.go, contains only few
 // missing testcases (if any) and benchmarks.
+
+func TestValNumber2Coll(t *testing.T) {
+	testcases := [][2]interface{}{
+		{json.Number("0"), float64(0)},
+		{json.Number("-9223372036854775808"), int64(-9223372036854775808)},
+		{json.Number("24"), float64(24)},
+		{json.Number("9223372036854775808"), uint64(9223372036854775808)},
+		{json.Number("-24"), float64(-24)},
+	}
+
+	var items ByteSlices
+
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
+	col := config.NewCollate(make([]byte, 1024), 0)
+
+	for _, tcase := range testcases {
+		nums := tcase[0].(json.Number)
+		config.NewValue(nums).Tocollate(col.Reset(nil))
+		value := col.Tovalue()
+		if reflect.DeepEqual(value, tcase[1]) == false {
+			t.Errorf("expected %v, got %v", tcase[1], value)
+		}
+		items = append(items, append(make([]byte, 0), col.Bytes()...))
+	}
+
+	// do a sort
+	sort.Sort(items)
+	refs := []interface{}{testcases[1][1], testcases[4][1], testcases[0][1],
+		testcases[2][1], testcases[3][1]}
+	outs := []interface{}{}
+	for _, item := range items {
+		outs = append(outs, config.NewCollate(item, -1).Tovalue())
+	}
+	if reflect.DeepEqual(outs, refs) == false {
+		t.Errorf("expected %v, got %v", refs, outs)
+	}
+}
 
 func BenchmarkVal2CollNil(b *testing.B) {
 	config := NewDefaultConfig()
@@ -55,6 +95,26 @@ func BenchmarkVal2CollI64(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		val.Tocollate(clt.Reset(nil))
+	}
+}
+
+func BenchmarkVal2CollINum(b *testing.B) {
+	config := NewDefaultConfig()
+	col := config.NewCollate(make([]byte, 128), 0)
+	val := config.NewValue(json.Number("-9223372036854775808"))
+
+	for i := 0; i < b.N; i++ {
+		val.Tocollate(col.Reset(nil))
+	}
+}
+
+func BenchmarkVal2CollUNum(b *testing.B) {
+	config := NewDefaultConfig()
+	col := config.NewCollate(make([]byte, 128), 0)
+	val := config.NewValue(json.Number("9223372036854775808"))
+
+	for i := 0; i < b.N; i++ {
+		val.Tocollate(col.Reset(nil))
 	}
 }
 

@@ -3,8 +3,9 @@
 
 package gson
 
-import "strconv"
 import "fmt"
+import "strconv"
+import "encoding/json"
 
 func value2json(value interface{}, out []byte, config *Config) int {
 	var err error
@@ -89,6 +90,9 @@ func value2json(value interface{}, out []byte, config *Config) int {
 			panic("error encoding string")
 		}
 		return len(out)
+
+	case json.Number:
+		return copy(out, v)
 
 	case []interface{}:
 		n := 0

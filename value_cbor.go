@@ -4,11 +4,13 @@
 package gson
 
 import "math"
-import "math/big"
 import "regexp"
+import "strconv"
 import "time"
-import "encoding/binary"
 import "fmt"
+import "math/big"
+import "encoding/binary"
+import "encoding/json"
 
 func value2cbor(item interface{}, out []byte, config *Config) int {
 	n := 0
@@ -49,6 +51,20 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 		n += valbytes2cbor(v, out)
 	case string:
 		n += valtext2cbor(v, out)
+	case json.Number:
+		if isnegative(v) {
+			vi, err := strconv.ParseInt(string(v), 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			n += valint642cbor(vi, out)
+		} else {
+			vu, err := strconv.ParseUint(string(v), 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			n += valuint642cbor(vu, out)
+		}
 	case []interface{}:
 		n += valarray2cbor(v, out, config)
 	case [][2]interface{}:

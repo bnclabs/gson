@@ -1,9 +1,9 @@
 package gson
 
-import "encoding/json"
+import "fmt"
 import "reflect"
 import "testing"
-import "fmt"
+import "encoding/json"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -62,6 +62,28 @@ func TestNumber2Json(t *testing.T) {
 	json.Unmarshal(data, &ref)
 	if !reflect.DeepEqual(out, ref) {
 		t.Errorf("expected %v, got %v", ref, out)
+	}
+}
+
+func TestValNumber2Json(t *testing.T) {
+	testcases := [][2]interface{}{
+		{json.Number("9223372036854775808"), uint64(9223372036854775808)},
+		{json.Number("-9223372036854775808"), int64(-9223372036854775808)},
+	}
+
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
+	jsn := config.NewJson(make([]byte, 1024), 0)
+
+	for _, tcase := range testcases {
+		nums := tcase[0].(json.Number)
+		config.NewValue(nums).Tojson(jsn.Reset(nil))
+		if s := string(jsn.Bytes()); s != string(nums) {
+			t.Errorf("expected %q, got %q", nums, s)
+		}
+		_, value := jsn.Tovalue()
+		if reflect.DeepEqual(value, tcase[1]) == false {
+			t.Errorf("expected %v, got %v", tcase[1], value)
+		}
 	}
 }
 

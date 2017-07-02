@@ -1,12 +1,33 @@
 package gson
 
 import "fmt"
+import "reflect"
 import "testing"
+import "encoding/json"
 
 var _ = fmt.Sprintf("dummy")
 
 // All test cases are folded into cbor_value_test.go, contains only few
 // missing testcases (if any) and benchmarks.
+
+func TestValNumber2Cbor(t *testing.T) {
+	testcases := [][2]interface{}{
+		{json.Number("9223372036854775808"), uint64(9223372036854775808)},
+		{json.Number("-9223372036854775808"), int64(-9223372036854775808)},
+	}
+
+	config := NewDefaultConfig().SetNumberKind(SmartNumber)
+	cbr := config.NewCbor(make([]byte, 1024), 0)
+
+	for _, tcase := range testcases {
+		nums := tcase[0].(json.Number)
+		config.NewValue(nums).Tocbor(cbr.Reset(nil))
+		value := cbr.Tovalue()
+		if reflect.DeepEqual(value, tcase[1]) == false {
+			t.Errorf("expected %v, got %v", tcase[1], value)
+		}
+	}
+}
 
 func BenchmarkVal2CborNull(b *testing.B) {
 	config := NewDefaultConfig()
@@ -131,6 +152,26 @@ func BenchmarkVal2CborFlt64(b *testing.B) {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 128), 0)
 	val := config.NewValue(float64(10.2))
+
+	for i := 0; i < b.N; i++ {
+		val.Tocbor(cbr.Reset(nil))
+	}
+}
+
+func BenchmarkVal2CborINum(b *testing.B) {
+	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 128), 0)
+	val := config.NewValue(json.Number("-9223372036854775808"))
+
+	for i := 0; i < b.N; i++ {
+		val.Tocbor(cbr.Reset(nil))
+	}
+}
+
+func BenchmarkVal2CborUNum(b *testing.B) {
+	config := NewDefaultConfig()
+	cbr := config.NewCbor(make([]byte, 128), 0)
+	val := config.NewValue(json.Number("9223372036854775808"))
 
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
