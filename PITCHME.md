@@ -129,15 +129,15 @@ CBOR Vs JSON benchmarks
 =======================
 
 ```bash
-BenchmarkVal2CborBool  10000000    158 ns/op    0 B/op   0 allocs/op
-BenchmarkVal2CborFlt64  5000000    382 ns/op    0 B/op   0 allocs/op
-BenchmarkCbor2ValBool   5000000    303 ns/op    1 B/op   1 allocs/op
-BenchmarkCbor2ValFlt64  3000000    515 ns/op    8 B/op   1 allocs/op
+BenchmarkVal2CborTrue  100000000     12.7 ns/op  0 B/op   0 allocs/op
+BenchmarkVal2CborFlt64 100000000     15.4 ns/op  0 B/op   0 allocs/op
+BenchmarkCbor2ValTrue  20000000     62.3 ns/op   1 B/op   1 allocs/op
+BenchmarkCbor2ValFlt64 20000000     68.4 ns/op   8 B/op   1 allocs/op
 
-BenchmarkJson2ValBool   5000000    291 ns/op    1 B/op   1 allocs/op
-BenchmarkJson2ValNum    3000000    524 ns/op    8 B/op   1 allocs/op
-BenchmarkVal2JsonBool  10000000    210 ns/op    0 B/op   0 allocs/op
-BenchmarkVal2JsonNum   1000000    1736 ns/op    0 B/op   0 allocs/op
+BenchmarkJson2ValBool  30000000     43.8 ns/op   1 B/op   1 allocs/op
+BenchmarkJson2ValNum   20000000     88.1 ns/op   8 B/op   1 allocs/op
+BenchmarkVal2JsonBool 100000000     15.4 ns/op   0 B/op   0 allocs/op
+BenchmarkVal2JsonNum   10000000    135   ns/op   0 B/op   0 allocs/op
 ```
 
 We get improvements between  2x to 4x. Note that if encoding/json

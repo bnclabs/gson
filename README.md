@@ -122,9 +122,9 @@ BenchmarkColl2CborMap-8  1000000  1769 ns/op  440 B/op  6 allocs/op
 Though converting to golang value incurs cost.
 
 ```text
-BenchmarkJson2ValMap5 1000000   1912 ns/op  690 B/op 14 allocs/op
-BenchmarkCbor2ValMap5 1000000   2020 ns/op  496 B/op 18 allocs/op
-BenchmarkColl2ValMap  1000000   2222 ns/op  616 B/op 20 allocs/op
+BenchmarkJson2ValMap5    1000000  1621 ns/op   699 B/op  14 allocs/op
+BenchmarkCbor2ValMap5    1000000  1711 ns/op   496 B/op  18 allocs/op
+BenchmarkColl2ValMap     1000000  2235 ns/op  1440 B/op  33 allocs/op
 ```
 
 Configuration
