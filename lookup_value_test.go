@@ -2,10 +2,7 @@ package gson
 
 import "testing"
 import "reflect"
-import "fmt"
 import "encoding/json"
-
-var _ = fmt.Sprintf("dummy print")
 
 func TestValueGet(t *testing.T) {
 	var ref map[string]interface{}

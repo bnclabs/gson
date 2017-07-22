@@ -3,8 +3,6 @@ package gson
 import "fmt"
 import "testing"
 
-var _ = fmt.Sprintf("dummy")
-
 // All test cases are folded into collate_cbor_test.go, contains only few
 // missing testcases (if any) and benchmarks.
 

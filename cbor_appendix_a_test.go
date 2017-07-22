@@ -1,7 +1,6 @@
 package gson
 
 import "testing"
-import _ "fmt"
 import "reflect"
 import "encoding/json"
 import hexcodec "encoding/hex"

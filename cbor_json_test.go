@@ -1,11 +1,8 @@
 package gson
 
 import "testing"
-import "fmt"
 import "reflect"
 import "encoding/json"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestSkipWS(t *testing.T) {
 	ref := "hello  "

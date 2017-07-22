@@ -1,11 +1,8 @@
 package gson
 
-import "fmt"
 import "reflect"
 import "testing"
 import "encoding/json"
-
-var _ = fmt.Sprintf("dummy")
 
 // All test cases are folded into cbor_value_test.go, contains only few
 // missing testcases (if any) and benchmarks.

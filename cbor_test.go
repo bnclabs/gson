@@ -1,10 +1,7 @@
 package gson
 
-import "fmt"
 import "testing"
 import "reflect"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestCborMajor(t *testing.T) {
 	if typ := cborMajor(0xff); typ != 0xe0 {

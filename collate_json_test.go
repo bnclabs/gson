@@ -3,8 +3,6 @@ package gson
 import "testing"
 import "fmt"
 
-var _ = fmt.Sprintf("dummy")
-
 func TestJson2CollateNil(t *testing.T) {
 	inp, ref := "null", `\f\x00`
 

@@ -6,9 +6,6 @@ import "sort"
 import "io/ioutil"
 import "strings"
 import "path"
-import "fmt"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestValueCompare(t *testing.T) {
 	config := NewDefaultConfig()

@@ -3,9 +3,6 @@ package gson
 import "encoding/json"
 import "reflect"
 import "testing"
-import "fmt"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestJsonEmpty2Value(t *testing.T) {
 	config := NewDefaultConfig()

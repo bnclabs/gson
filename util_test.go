@@ -6,8 +6,6 @@ import "sort"
 import "reflect"
 import "fmt"
 
-var _ = fmt.Sprintf("dummy")
-
 func TestBytes2Str(t *testing.T) {
 	if bytes2str(nil) != "" {
 		t.Errorf("fail bytes2str(nil)")

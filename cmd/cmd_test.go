@@ -1,7 +1,6 @@
 package main
 
 import "os"
-import "fmt"
 import "strings"
 import "testing"
 import "bytes"
@@ -9,7 +8,6 @@ import "io/ioutil"
 import "os/exec"
 import "compress/gzip"
 
-var _ = fmt.Sprintf("dummy")
 var CMDEXEC = "./gson"
 
 var updateref = false

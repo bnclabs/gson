@@ -4,13 +4,10 @@ import "testing"
 import "bytes"
 import "reflect"
 import "encoding/json"
-import "fmt"
 import "os"
 import "strings"
 import "compress/gzip"
 import "io/ioutil"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestConfig(t *testing.T) {
 	config := NewDefaultConfig()

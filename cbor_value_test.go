@@ -1,14 +1,11 @@
 package gson
 
 import "testing"
-import "fmt"
 import "reflect"
 import "encoding/json"
 import "time"
 import "regexp"
 import "math/big"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestCborNil(t *testing.T) {
 	config := NewDefaultConfig()

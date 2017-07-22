@@ -3,9 +3,6 @@ package gson
 import "testing"
 import "strings"
 import "sort"
-import "fmt"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestParsePointer(t *testing.T) {
 	var tcasesJSONPointers = [][3]interface{}{

@@ -2,9 +2,6 @@ package gson
 
 import "strconv"
 import "testing"
-import "fmt"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestInteger(t *testing.T) {
 	var samples = [][2]string{

@@ -4,8 +4,6 @@ import "testing"
 import "fmt"
 import "reflect"
 
-var _ = fmt.Sprintf("dummy")
-
 func TestVal2CollateNil(t *testing.T) {
 	ref := `\f\x00`
 	config := NewDefaultConfig()

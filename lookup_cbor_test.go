@@ -1,11 +1,8 @@
 package gson
 
-import "fmt"
 import "testing"
 import "encoding/json"
 import "reflect"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestCborGet(t *testing.T) {
 	var ref map[string]interface{}

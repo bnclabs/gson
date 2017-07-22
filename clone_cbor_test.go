@@ -1,10 +1,7 @@
 package gson
 
 import "testing"
-import "fmt"
 import "reflect"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestCborClone(t *testing.T) {
 	dotest := func(config *Config) {

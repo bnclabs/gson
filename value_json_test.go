@@ -1,11 +1,8 @@
 package gson
 
-import "fmt"
 import "reflect"
 import "testing"
 import "encoding/json"
-
-var _ = fmt.Sprintf("dummy")
 
 func TestNil2Json(t *testing.T) {
 	config := NewDefaultConfig()

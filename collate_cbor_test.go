@@ -4,8 +4,6 @@ import "testing"
 import "bytes"
 import "fmt"
 
-var _ = fmt.Sprintf("dummy")
-
 func TestCbor2CollateNil(t *testing.T) {
 	inp, ref, config := "null", `\f\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)

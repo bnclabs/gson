@@ -1,9 +1,6 @@
 package gson
 
-import "fmt"
 import "testing"
-
-var _ = fmt.Sprintf("dummy text")
 
 func TestJsonEmpty(t *testing.T) {
 	config := NewDefaultConfig()
