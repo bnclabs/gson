@@ -145,7 +145,7 @@ integer values greater than 2^53. **DEFAULT choice**.
 
 - **SmartNumber** will use int64, uint64 for representing integer values and
 use float64 when decimal precision is required. Choosing this option, Gson
-might need more CPU time.
+might incur a slight performance penalty.
 
 Can be configured per configuration instance via `SetNumberKind()`.
 
