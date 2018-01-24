@@ -354,7 +354,7 @@ How to contribute
   the issue.
 * Assign the issue or get it assigned.
 * Work on the code, once finished, raise a pull request.
-* Golog is written in [golang](https://golang.org/), hence expected to follow the
+* Gson is written in [golang](https://golang.org/), hence expected to follow the
   global guidelines for writing go programs.
 
 **Task list**
