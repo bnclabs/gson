@@ -1,4 +1,4 @@
-// Package gson provides a toolkit for JSON representation, collation
+// Package gson provide a toolkit for JSON representation, collation
 // and transformation.
 //
 // Package provides APIs to convert data representation from one format
@@ -10,9 +10,9 @@
 //
 // CBOR:
 //
-// Package also provides a RFC-7049 (CBOR) implementation, to encode
-// golang data into machine friendly binary format. Following golang
-// native types are supported:
+// Concise Binary Object Representation, CBOR, is based on RFC-7049
+// specification to encode golang data into machine friendly format.
+// Following golang native types are supported:
 //   * nil, true, false.
 //   * native integer types, and its alias, of all width.
 //   * float32, float64.

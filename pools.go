@@ -3,11 +3,12 @@ package gson
 import "sync"
 
 // MaxStringLen maximum length of string value inside json document. Affects
-// memory pool. Changing this value will affect all new configuration objects.
+// memory pool. Changing this value will affect all new configuration
+// instances.
 var MaxStringLen = 1024 * 1024
 
 // MaxCollateLen maximum length of collated value. Affects memory pool.
-// Changing this value will affect all new configuration objects.
+// Changing this value will affect all new configuration instances.
 var MaxCollateLen = 1024 * 1024
 
 type memConfig struct {

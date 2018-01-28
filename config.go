@@ -16,7 +16,8 @@ const (
 )
 
 // MaxKeys maximum number of keys allowed in a property object. Affects
-// memory pool. Changing this value will affect all new configuration objects.
+// memory pool. Changing this value will affect all new configuration
+// instances.
 var MaxKeys = 1024
 
 // Config is the root object to access all transformations and APIs

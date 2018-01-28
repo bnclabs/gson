@@ -8,7 +8,7 @@ import "strings"
 import "unicode/utf8"
 
 // MaxJsonpointerLen size of json-pointer path. Affects memory pool.
-// Changing this value will affect all new configuration objects.
+// Changing this value will affect all new configuration instances.
 var MaxJsonpointerLen = 2048
 
 type jptrConfig struct {
