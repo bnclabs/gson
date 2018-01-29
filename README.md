@@ -230,18 +230,7 @@ Transforms
 
 ![transforms](docs/transforms.png)
 
-**JSON to value**
-
-* Gson uses custom parser that must be faster than encoding/JSON.
-* Numbers can be interpreted as integer, or float64,
-  -  `FloatNumber` to interpret JSON number as 64-bit floating point.
-  -  `SmartNumber` to interpret JSON number as int64, or uint64, or float64.
-* Whitespace can be interpreted, based on configuration type `SpaceKind`.
-  SpaceKind can be one of the following `AnsiSpace` or `UnicodeSpace`.
-  - `AnsiSpace` that should be faster
-  - `UnicodeSpace` supports unicode white-spaces as well.
-
-**value to CBOR**
+**Value to CBOR**
 
 * Golang types `nil`, `true`, `false` are encodable into CBOR
   format.
@@ -281,13 +270,35 @@ Transforms
     with tag-55799.
 * All other types shall cause a panic.
 
-**CBOR to value**
+**Value to collate**
 
-* Reverse of all `value to CBOR` encoding, described above, are
-  supported.
-* Cannot decode `float16` type and int64 > 9223372036854775807.
-* Indefinite byte-string chunks, text chunks shall be decoded outside
-  this package using `IsIndefinite*()` and `IsBreakstop()` APIs.
+* Types `nil`, `true`, `false`, `float64`, `int64`, `int`,
+  `string`, `[]byte`, `[]interface{}`, `map[string]interface{}`
+  are supported for collation.
+* All JSON numbers are collated as arbitrary sized floating point numbers.
+* Array-length (if configured) and property-length (if configured) are
+  collated as integer.
+
+**JSON to Value**
+
+* Gson uses custom parser that must be faster than encoding/JSON.
+* Numbers can be interpreted as integer, or float64,
+  -  `FloatNumber` to interpret JSON number as 64-bit floating point.
+  -  `SmartNumber` to interpret JSON number as int64, or uint64, or float64.
+* Whitespace can be interpreted, based on configuration type `SpaceKind`.
+  SpaceKind can be one of the following `AnsiSpace` or `UnicodeSpace`.
+  - `AnsiSpace` that should be faster
+  - `UnicodeSpace` supports unicode white-spaces as well.
+
+**JSON to collate**
+
+* All number are collated as float.
+* If config.nk is FloatNumber, all numbers are interpreted as float64
+  and collated as float64.
+* If config.nk is SmartNumber, all JSON numbers are collated as arbitrary
+  sized floating point numbers.
+* Array-length (if configured) and property-length (if configured) are
+  collated as integer.
 
 **JSON to CBOR**
 
@@ -307,6 +318,14 @@ Transforms
   scheme (`Stream`), or using CBOR's `LengthPrefix`.
 * Property-keys are always interpreted as string and encoded as 
   UTF-8 CBOR-text.
+
+**CBOR to Value**
+
+* Reverse of all `value to CBOR` encoding, described above, are
+  supported.
+* Cannot decode `float16` type and int64 > 9223372036854775807.
+* Indefinite byte-string chunks, text chunks shall be decoded outside
+  this package using `IsIndefinite*()` and `IsBreakstop()` APIs.
 
 **CBOR to JSON**
 
@@ -332,15 +351,46 @@ For transforming to and from binary-collation refer [here](docs/collate.md)
 * CBOR Types `null`, `true`, `false`, `float32`, `float64`, `integer`,
   `string`, `[]byte` (aka binary), `array`, `object` can be
   collated.
+* All number are collated as float.
+* If config.nk is FloatNumber, all numbers are interpreted as float64
+  and collated as float64.
+* If config.nk is SmartNumber, all JSON numbers are collated as arbitrary
+  sized floating point numbers.
+* Array-length (if configured) and property-length (if configured) are
+  collated as integer.
 * Indefinite-length encoding for text and binary are not supported.
 * LengthPrefix and Stream encoding for array and maps are supported.
-
 
 **Collate to CBOR**
 
 * `Missing`, `null`, `true`, `false`, `floating-point`, `small-decimal`,
   `integer`, `string`, `[]byte` (aka binary), `array`, `object` types
   from its collated from can be converted back to CBOR.
+* Since all numbers are collated as float, it is converted back to text
+  representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
+* If config.nk is FloatNumber, all number are encoded as CBOR-float64.
+* If config.nk is SmartNumber, all numbers whose exponent is >= 15 is encoded
+  as uint64 (if number is positive), or int64 (if number is negative).
+  Others are encoded as CBOR-float64.
+
+**Collate to JSON**
+
+* Since all numbers are collated as float, it is converted back to text
+  representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
+* If config.nk is FloatNumber, all number are encoded as JSON-float64.
+* If config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
+  as uint64 (if number is positive), or int64 (if number is negative).
+  Others are encoded as JSON-float64.
+
+**Collate to Value**
+
+* Since all numbers are collated as float, it is converted back to text
+  representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
+* If config.nk is FloatNumber, all number are encoded as JSON-float64.
+* If config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
+  as uint64 (if number is positive), or int64 (if number is negative).
+  Others are treated as float64.
+
 
 Articles
 --------

@@ -158,159 +158,164 @@ Sort order for each JSON type:
 Null
 ----
 
-This type shall be encoded with the type header.
+Since this is a single value type, and all null values shall be encoded
+into as:
 
-**bool**
+```go
+$ ./gson -inptxt null -json2collate
+Json: null
+Coll: "2\x00"
+Coll: [50 0]
+```
 
-There are two values, `false` and `true`. We shall assume that value
-`false` will sort before value `true`.
+Null values will sort before any other JSON value.
 
-**number**
+Boolean
+-------
 
-Number is the trickiest element of all JSON types. For one, JSON
+There are two values, `false` and `true`. Value `true` will sort after
+value `false`, while value `false` will always sort after JSON null value.
+Boolean false and true shall be encoded as:
+
+```shell
+./gson -inptxt false -json2collate
+Json: false
+Coll: "<\x00"
+Coll: [60 0]
+$ ./gson -inptxt true -json2collate
+Json: true
+Coll: "F\x00"
+Coll: [70 0]
+```
+
+Number
+------
+
+Number is the trickiest element of all JSON types. To begin with, JSON
 specification does not define an lower or upper bound for numbers.
 And many implementation treat JSON numbers as float64 type. But
-fortunately we have strong conception of number sequence.
+fortunately we have strong conception of number sequence. There are two
+choices that can be taken when encoding number:
 
-**string**
+* Numbers can be treated as **float64** defined by IEEE-754 specification.
+  This implies that, only integers less than 2^53 and greater than -2^53
+  can be represented using this format.
+* JSON parsers can automatically detect integers ouside than 2^53 boundary.
 
-ASCII formated strings are similar to binary comparision of byte
-arrays. Every character in ASCII has a corresponding byte value and
-byte order has one-one correspondence with character ordering. This
-get complicated once we move on to unicoded strings.
+The trade-off between the two is that, former implementation may consume less
+CPU while later implementation will be future proof. Either way, we will
+be encoding all number as arbitrarily sized floating point.
 
-**Array**
+A floating point number `f` takes a mantissa `m` and an integer exponent
+`e` such that `f = 10e × ±m`. Unlike the IEEE-754 specification mantissa and
+exponent can be of arbitrary length which helps us to encode very larger
+numbers. The mantissa will always have a non-zero digit after
+the point and for each number `f` will have a unique exponent. This is the
+normalised representation and ensures comparison can be determined by the
+exponent where it differs otherwise by the mantissa.
 
-Sorting arrays have two aspects to it. One, we should compare each item
-from both the array one after the other in their positional order. If
-items are of different types then we should follow the sort order between
-types. Second aspect of sorting array is its arity, whether array with
-larger number of items should sort after array with smaller number of
-items. If arity of array needs to be considered, then we shall compare
-the length of each array before comparing each item from both the array.
+The floating point number is then a triple `(+, e, m)` or `(−, −e, m)`
+consisiting of a sign followed by the exponent and mantissa. The exponent
+is represented as an integer using the recursive method and is negated for
+negative numbers to ensure ordering. The mantissa is represented as a
+postive small decimal but its sign must appear at the front of the entire
+representation. As with large decimals there is no need to include a
+delimiter since the exponent is length prefixed. Zero is represented as
+0 since a sign symbol will be used for all other numbers. The resulting
+representations look like the large decimals with a sign added except the
+integer is used multiplicatively to scale the number rather than as an
+additive offset. Following is a set of examples:
 
-**Property**
+```text
+float           binary compiled
 
-Sorting arrays have three aspects to it. A property object is made up
-`{key,value}` pairs, where key must be a JSON string, and value can be
-of any JSON type. For the purpose of sorting, we shall first sort the
-{key,value} pairs within a property object based on the `key` string.
+−0.1 × 10^11    - --7888+
+−0.1 × 10^10    - --7898+
+-1.4            - -885+
+-1.3            - -886+
+-1              - -88+
+-0.123          - 0876+
+-0.0123         - +1876+
+-0.001233       - +28766+
+-0.00123        - +2876+
+0               0
++0.00123        + -7123-
++0.001233       + -71233-
++0.0123         + -8123-
++0.123          + 0123-
++1              + +11-
++1.3            + +113-
++1.4            + +114-
++0.1 × 10^10    + ++2101-
++0.1 × 10^11    + ++2111-
+```
+
+String
+------
+
+ASCII formated strings are similar to binary comparision of byte arrays.
+Every character in ASCII has a corresponding byte value and byte order has
+one-one correspondence with character ordering. This get complicated once
+we move on to unicoded strings.
+
+Strings are collated as it is received from the input **without un-quoting**
+as JSON-string and **without unicode collation**. Encoded strings shall be
+byte stuffed to escape item Terminator.
+
+```shell
+$ ./gson -inptxt '"hello\x00world"' -json2collate
+Json: "hello\x00world"
+Coll: "Zhello\x00\x0100world\x00\x00"
+Coll: [90 104 101 108 108 111 0 1 48 48 119 111 114 108 100 0 0]
+```
+
+Array
+-----
+
+Sorting arrays have two aspects to it.
+
+One, we should compare each item from both the array one after the other in
+their positional order. If items are of different types then we should
+follow the sort order between types.
+
+Second aspect of sorting array is its arity, whether array with larger number
+of items should sort after array with smaller number of items. If arity of
+array needs to be considered, then we shall compare the length of each array
+before comparing each item from both the array.
+
+```shell
+$ ./gson -inptxt "[10,true,null]" -json2collate
+Json: [10,true,null]
+Coll: "nP>>21-\x00F\x002\x00\x00"
+Coll: [110 80 62 62 50 49 45 0 70 0 50 0 0]
+```
+
+**For partial compare between two binary-compiled arrays, prune the last byte
+from the encoded text of smaller array and continue with binary comparison.**
+
+Property
+--------
+
+Sorting arrays have three aspects to it.
+
+A property object is made up `{key,value}` pairs, where key must be a JSON
+string, and value can be of any JSON type. For the purpose of sorting, we
+shall first sort the {key,value} pairs within a property object based on
+the `key` string.
+
 Secondly, we pick each {key,value} pair from both the property in its
 positional order and start the comparision, `key` is compared first
 and `value` is compared only when `key` from each item compares equal.
-Thirdly aspect of sorting property is its arity, whether property with
+
+Third aspect of sorting property is its arity, whether property with
 larger number of items should sort after property with smaller number
 of items. If arity of property needs to be considered, then we shall
 compare the length of each property before comparing each `{key,value}`
 item from both the property.
 
-Encoding Nil, Boolean
----------------------
-
-Types `nil, true, and false` are encoded as single byte. Types `string`
-value will be encoded into UTF-8 format before collating it.
-
-**Encoding Number**
-
-The basic problem with numbers is that Javascript, from which JSON evolved,
-does not have any notion of integer numbers. All numbers are represented as
-64-bit floating point. In which case, only integers less than 2^53 and greater
-than -2^53 can be represented using this format.
-
-**Encoding golang values**
-
-* Types `nil`, `true`, `false`, `float64`, `int64`, `int`,
-  `string`, `[]byte`, `[]interface{}`, `map[string]interface{}`
-  are supported for collation.
-* All number are collated as float.
-* All JSON float64 numbers are collated as float64, and,
-  64-bit integers > 2^53 are preserved as integer and collated as float.
-* Array-length (if configured) and property-length (if configured) are
-  collated as integer.
-
-**Encoding JSON numbers**
-
-* All number are collated as float.
-* If config.nk is FloatNumber, all numbers are interpreted as float64
-  and collated as float64.
-* If config.nk is SmartNumber, all JSON float64 numbers are collated as
-  float64, and, 64-bit integers > 2^53 are preserved as integer and collated
-  as float.
-* Array-length (if configured) and property-length (if configured) are
-  collated as integer.
-
-**Encoding CBOR numbers**
-
-* All number are collated as float.
-* If config.nk is FloatNumber, 64-bit integers are converted to float64.
-* If config.nk is SmartNumber, 64-bit integers > 2^53 and < -2^53 are
-  preserved as integer and collated as float, without loosing its
-  precision.
-* Array-length (if configured) and property-length (if configured) are
-  collated as integer.
-
-**Decoding to CBOR numbers**
-
-* Since all numbers are collated as float, it is converted back to text
-  representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
-* If config.nk is FloatNumber, all number are encoded as CBOR-float64.
-* If config.nk is SmartNumber, all numbers whose exponent is >= 15 is encoded
-  as uint64 (if number is positive), or int64 (if number is negative).
-  Others are encoded as CBOR-float64.
-
-**Decoding to JSON numbers**
-
-* Since all numbers are collated as float, it is converted back to text
-  representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
-* If config.nk is FloatNumber, all number are encoded as JSON-float64.
-* If config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
-  as uint64 (if number is positive), or int64 (if number is negative).
-  Others are encoded as JSON-float64.
-
-**Decoding to golang value**
-
-* Since all numbers are collated as float, it is converted back to text
-  representation of float, in format: [+-]x.<mantissa>e[+-]<exp>.
-* If config.nk is FloatNumber, all number are encoded as JSON-float64.
-* If config.nk is SmartNumber, all numers whose exponent is >= 15 is encoded
-  as uint64 (if number is positive), or int64 (if number is negative).
-  Others are treated as float64.
-
-String
-------
-
-Strings are collated as it is received from the input **without
-un-quoting** as JSON-string and **without unicode collation**.
-Encoded strings are byte stuffed to escape item Terminator.
-
-Array:
-------
-
-By default array is not prefixed with length of the array, which means
-elements are compared one by one until binary-compare returns EQ, GT or
-LT. This is assuming that elements in both arrays (key1 and key2) have
-one-to-one correspondence with each other.
-
-If config.SortbyArrayLen() is true, arrays having more number of items
-sort after arrays having lesser number of items. Two arrays of same
-arity will follow the same procedure as described above.
-
-**Suppose number of elements in key1 is less that key2, or vice-versa,
-then prune the last byte from the encoded text of smaller array and
-continue with binary comparison.**
-
-Object:
--------
-
-By default objects are prefixed with length of the object (ie) number of
-elements in the object. This means objects with more number of {key,value}
-properties will sort after.
-
-While encoding collatejson will sort the object properties based on keys.
-This means the property key will be compared first and if equal, comparison
-will continue to its value.
-
-If config.SortbyPropertyLen() is false, then keys of each object are sorted
-and key from each maps is matched in the sort order, after which values
-will be matched. Note that sorting of keys and encoding of keys and values
-shall be done during encoding time.
+```shell
+$ ./gson -inptxt '{"first":true, "second":false}' -json2collate
+Json: {"first":true, "second":false}
+Coll: "xd>2\x00Zfirst\x00\x00F\x00Zsecond\x00\x00<\x00\x00"
+Coll: [120 100 62 50 0 90 102 105 114 115 116 0 0 70 0 90 115 101 99 111 110 100 0 0 60 0 0]
+```

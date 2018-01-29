@@ -1,0 +1,120 @@
+const CborMaxSmallInt = 23
+const MissingLiteral = Missing("~[]{}falsenilNA~")
+
+var (
+    Terminator  byte = 0
+    TypeMissing byte = 49
+    TypeNull    byte = 50
+    TypeFalse   byte = 60
+    TypeTrue    byte = 70
+    TypeNumber  byte = 80
+    TypeString  byte = 90
+    TypeLength  byte = 100
+    TypeArray   byte = 110
+    TypeObj     byte = 120
+    TypeBinary  byte = 130
+)
+
+var MaxCollateLen = 1024 * 1024
+var MaxJsonpointerLen = 2048
+var MaxKeys = 1024
+var MaxStringLen = 1024 * 1024
+
+type CborBreakStop byte
+type CborIndefinite byte
+type CborTagBytes []byte
+type CborTagEpoch int64
+type CborTagEpochMicro float64
+type CborTagFloat [2]int64
+type CborTagFraction [2]int64
+type CborTagPrefix []byte
+type CborUndefined byte
+
+func (cbr *Cbor) Reset(data []byte) *Cbor
+func (cbr *Cbor) Bytes() []byte
+func (cbr *Cbor) Tocollate(clt *Collate) *Collate
+func (cbr *Cbor) Tojson(jsn *Json) *Json
+func (cbr *Cbor) Tovalue() interface{}
+....
+func (cbr *Cbor) Append(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor
+func (cbr *Cbor) Delete(jptr *Jsonpointer, newdoc, deleted *Cbor) *Cbor
+func (cbr *Cbor) Get(jptr *Jsonpointer, item *Cbor) *Cbor
+func (cbr *Cbor) Prepend(jptr *Jsonpointer, item, newdoc *Cbor) *Cbor
+func (cbr *Cbor) Set(jptr *Jsonpointer, item, newdoc, old *Cbor) *Cbor
+func (cbr *Cbor) EncodeBytechunks(chunks [][]byte) *Cbor
+func (cbr *Cbor) EncodeMapslice(items [][2]interface{}) *Cbor
+func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor
+func (cbr *Cbor) EncodeSmallint(item int8) *Cbor
+func (cbr *Cbor) EncodeTextchunks(chunks []string) *Cbor
+
+func (clt *Collate) Bytes() []byte
+func (clt *Collate) Reset(data []byte) *Collate
+func (clt *Collate) Tocbor(cbr *Cbor) *Cbor
+func (clt *Collate) Tojson(jsn *Json) *Json
+func (clt *Collate) Tovalue() interface{}
+
+
+func (config *Config) NewCbor(buffer []byte, ln int) *Cbor
+func (config *Config) NewCollate(buffer []byte, ln int) *Collate
+func (config *Config) NewJson(buffer []byte, ln int) *Json
+func (config *Config) NewJsonpointer(path string) *Jsonpointer
+func (config *Config) NewValue(value interface{}) *Value
+func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config
+func (config Config) SetContainerEncoding(ct ContainerEncoding) *Config
+func (config Config) SetJptrlen(n int) *Config
+func (config Config) SetMaxkeys(n int) *Config
+func (config Config) SetNumberKind(nk NumberKind) *Config
+func (config Config) SetSpaceKind(ws SpaceKind) *Config
+func (config Config) SetStrict(what bool) *Config
+func (config Config) SortbyArrayLen(what bool) *Config
+func (config Config) SortbyPropertyLen(what bool) *Config
+func (config Config) UseMissing(what bool) *Config
+
+type ContainerEncoding byte
+    ContainerEncoding method to encode arrays and maps into cbor.
+const (
+    // LengthPrefix to encode number of items in the collection type.
+    LengthPrefix ContainerEncoding = iota + 1
+    // Stream to encode collection types as indefinite sequence of items.
+    Stream
+)
+
+func (jsn *Json) Bytes() []byte
+func (jsn *Json) Reset(data []byte) *Json
+func (jsn *Json) Tocbor(cbr *Cbor) *Cbor
+func (jsn *Json) Tocollate(clt *Collate) *Collate
+func (jsn *Json) Tovalue() (*Json, interface{})
+func (jsn *Json) Tovalues() []interface{}
+
+type NumberKind byte
+    NumberKind how to treat numbers.
+const (
+    // FloatNumber to treat number as float64.
+    FloatNumber NumberKind = iota + 1
+    // SmartNumber to treat number as either integer or fall back to float64.
+    SmartNumber
+)
+
+
+type SpaceKind byte
+    SpaceKind to skip white-spaces in JSON text.
+const (
+    // AnsiSpace will skip white space characters defined by ANSI spec.
+    AnsiSpace SpaceKind = iota + 1
+    // UnicodeSpace will skip white space characters defined by Unicode spec.
+    UnicodeSpace
+)
+
+
+func (val *Value) Compare(other *Value) int
+func (val *Value) Data() interface{}
+func (val *Value) Tocbor(cbr *Cbor) *Cbor
+func (val *Value) Tocollate(clt *Collate) *Collate
+func (val *Value) Tojson(jsn *Json) *Json
+
+func (val *Value) ListPointers(ptrs []string) []string
+func (val *Value) Get(jptr *Jsonpointer) (item interface{})
+func (val *Value) Set(jptr *Jsonpointer, item interface{}) (newval, oldval interface{})
+func (val *Value) Prepend(jptr *Jsonpointer, item interface{}) interface{}
+func (val *Value) Delete(jptr *Jsonpointer) (newval, deleted interface{})
+func (val *Value) Append(jptr *Jsonpointer, item interface{}) interface{}
