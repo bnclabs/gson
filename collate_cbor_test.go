@@ -5,7 +5,7 @@ import "bytes"
 import "fmt"
 
 func TestCbor2CollateNil(t *testing.T) {
-	inp, ref, config := "null", `\f\x00`, NewDefaultConfig()
+	inp, ref, config := "null", `2\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	cltback := config.NewCollate(make([]byte, 1024), 0)
@@ -19,7 +19,7 @@ func TestCbor2CollateNil(t *testing.T) {
 }
 
 func TestCbor2CollateTrue(t *testing.T) {
-	inp, ref, config := "true", `\x0e\x00`, NewDefaultConfig()
+	inp, ref, config := "true", `F\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	cltback := config.NewCollate(make([]byte, 1024), 0)
@@ -33,7 +33,7 @@ func TestCbor2CollateTrue(t *testing.T) {
 }
 
 func TestCbor2CollateFalse(t *testing.T) {
-	inp, ref, config := "false", `\r\x00`, NewDefaultConfig()
+	inp, ref, config := "false", `<\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
 	cltback := config.NewCollate(make([]byte, 1024), 0)
@@ -48,34 +48,33 @@ func TestCbor2CollateFalse(t *testing.T) {
 
 func TestCbor2CollateNumber(t *testing.T) {
 	testcases := [][3]interface{}{
-		{"10.2", `\x0f>>2102-\x00`, FloatNumber},
-		{"10", `\x0f>>21-\x00`, FloatNumber},
-		{"10.2", `\x0f>>2102-\x00`, SmartNumber},
-		{"10", `\x0f>>21-\x00`, SmartNumber},
-		{"10", `\x0f>>21-\x00`, FloatNumber},
-		{"-10", `\x0f--78>\x00`, SmartNumber},
-		{"-10", `\x0f--78>\x00`, FloatNumber},
-		{"200", `\x0f>>32-\x00`, SmartNumber},
-		{"200", `\x0f>>32-\x00`, FloatNumber},
-		{"-200", `\x0f--67>\x00`, SmartNumber},
-		{"-200", `\x0f--67>\x00`, FloatNumber},
+		{"10.2", `P>>2102-\x00`, FloatNumber},
+		{"10", `P>>21-\x00`, FloatNumber},
+		{"10.2", `P>>2102-\x00`, SmartNumber},
+		{"10", `P>>21-\x00`, SmartNumber},
+		{"10", `P>>21-\x00`, FloatNumber},
+		{"-10", `P--78>\x00`, SmartNumber},
+		{"-10", `P--78>\x00`, FloatNumber},
+		{"200", `P>>32-\x00`, SmartNumber},
+		{"200", `P>>32-\x00`, FloatNumber},
+		{"-200", `P--67>\x00`, SmartNumber},
+		{"-200", `P--67>\x00`, FloatNumber},
 		{
-			"4294967297", `\x0f>>>2104294967297-\x00`, FloatNumber},
+			"4294967297", `P>>>2104294967297-\x00`, FloatNumber},
 		{
-			"-4294967297", `\x0f---7895705032702>\x00`, FloatNumber},
+			"-4294967297", `P---7895705032702>\x00`, FloatNumber},
 		{
-			"4294967297", `\x0f>>>2104294967297-\x00`, SmartNumber},
+			"4294967297", `P>>>2104294967297-\x00`, SmartNumber},
 		{
-			"-4294967297", `\x0f---7895705032702>\x00`, SmartNumber},
+			"-4294967297", `P---7895705032702>\x00`, SmartNumber},
 		{
-			"9007199254740992", `\x0f>>>2169007199254740992-\x00`, FloatNumber},
+			"9007199254740992", `P>>>2169007199254740992-\x00`, FloatNumber},
 		{
-			"-9007199254740993", `\x0f---7830992800745259007>\x00`, FloatNumber},
+			"-9007199254740993", `P---7830992800745259007>\x00`, FloatNumber},
 		{
-			"9007199254740992", `\x0f>>>2169007199254740992-\x00`, SmartNumber},
-
+			"9007199254740992", `P>>>2169007199254740992-\x00`, SmartNumber},
 		{
-			"-9007199254740993", `\x0f---7830992800745259006>\x00`, SmartNumber},
+			"-9007199254740993", `P---7830992800745259006>\x00`, SmartNumber},
 	}
 
 	for _, tcase := range testcases {
@@ -101,9 +100,9 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 func TestCbor2CollateString(t *testing.T) {
 	testcases := [][2]string{
-		{`""`, `\x10\x00\x00`},
-		{`"hello world"`, `\x10hello world\x00\x00`},
-		{fmt.Sprintf(`"%s"`, MissingLiteral), `\v\x00`},
+		{`""`, `Z\x00\x00`},
+		{`"hello world"`, `Zhello world\x00\x00`},
+		{fmt.Sprintf(`"%s"`, MissingLiteral), `1\x00`},
 	}
 
 	config := NewDefaultConfig()
@@ -128,28 +127,28 @@ func TestCbor2CollateString(t *testing.T) {
 	}
 
 	// missing string without doMissing configuration
-	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
-	refcode := `\x10~[]{}falsenilNA~\x00\x00`
+	inp := []byte(fmt.Sprintf(`"%s"`, MissingLiteral))
+	refcode := `Z~[]{}falsenilNA~\x00\x00`
 	config = NewDefaultConfig().UseMissing(false)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
+	config.NewJson(inp, -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
 	seqn := fmt.Sprintf("%q", cltback.Bytes())
 	if seqn = seqn[1 : len(seqn)-1]; seqn != refcode {
 		t.Errorf("expected %v, got %v", refcode, seqn)
 	}
 
 	// utf8 string
-	inp = `"汉语 / 漢語; Hàn\b \t\uef24yǔ "`
+	inp = []byte(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`)
 
 	config = NewDefaultConfig()
 	clt = config.NewCollate(make([]byte, 1024), 0)
 	cbr = config.NewCbor(make([]byte, 1024), 0)
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
+	config.NewJson(inp, -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
 
 	if bytes.Compare(clt.Bytes(), cltback.Bytes()) != 0 {
 		t.Errorf("expected %v, got %v", clt.Bytes(), cltback.Bytes())
@@ -157,7 +156,7 @@ func TestCbor2CollateString(t *testing.T) {
 }
 
 func TestCbor2CollateBytes(t *testing.T) {
-	inp, refcode := []byte("hello world"), `\x14hello world\x00`
+	inp, refcode := []byte("hello world"), `\x82hello world\x00`
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	cbr := config.NewCbor(make([]byte, 1024), 0)
@@ -175,20 +174,18 @@ func TestCbor2CollateArray(t *testing.T) {
 	// without length prefix
 	testcases := [][4]string{
 		{`[]`,
-			`\x12\x00`,
-			`\x12\x110\x00\x00`,
+			`n\x00`,
+			`nd0\x00\x00`,
 			`[]`},
 		{`[null,true,false,10.0,"hello"]`,
-			`\x12\f\x00\x0e\x00\r\x00\x0f>>21-\x00\x10hello\x00\x00\x00`,
-			`\x12\x11>5\x00\f\x00\x0e\x00\r\x00\x0f>>21-\x00\x10hello\x00` +
-				`\x00\x00`,
+			`n2\x00F\x00<\x00P>>21-\x00Zhello\x00\x00\x00`,
+			`nd>5\x002\x00F\x00<\x00P>>21-\x00Zhello\x00\x00\x00`,
 			`[null,true,false,+0.1e+2,"hello"]`},
 		{`[null,true,10.0,10.2,[],{"key":{}}]`,
-			`\x12\f\x00\x0e\x00\x0f>>21-\x00\x0f>>2102-\x00\x12\x00` +
-				`\x13\x11>1\x00\x10key\x00\x00\x13\x110\x00\x00\x00\x00`,
-			`\x12\x11>6\x00\f\x00\x0e\x00\x0f>>21-\x00\x0f>>2102-\x00` +
-				`\x12\x110\x00\x00\x13\x11>1\x00\x10key\x00\x00\x13\x110` +
-				`\x00\x00\x00\x00`,
+			`n2\x00F\x00P>>21-\x00P>>2102-\x00n\x00xd>1\x00Zkey\x00` +
+				`\x00xd0\x00\x00\x00\x00`,
+			`nd>6\x002\x00F\x00P>>21-\x00P>>2102-\x00nd0\x00\x00xd>1` +
+				`\x00Zkey\x00\x00xd0\x00\x00\x00\x00`,
 			`[null,true,+0.1e+2,+0.102e+2,[],{"key":{}}]`},
 	}
 
@@ -258,17 +255,17 @@ func TestCbor2CollateMap(t *testing.T) {
 	testcases := [][4]string{
 		{
 			`{}`,
-			`\x13\x110\x00\x00`,
-			`\x13\x00`,
+			`xd0\x00\x00`,
+			`x\x00`,
 			`{}`},
 		{
 			`{"a":null,"b":true,"c":false,"d":10.0,"e":"hello","f":["wo"]}`,
-			`\x13\x11>6\x00\x10a\x00\x00\f\x00\x10b\x00\x00\x0e\x00\x10c` +
-				`\x00\x00\r\x00\x10d\x00\x00\x0f>>21-\x00\x10e\x00\x00\x10hello` +
-				`\x00\x00\x10f\x00\x00\x12\x10wo\x00\x00\x00\x00`,
-			`\x13\x10a\x00\x00\f\x00\x10b\x00\x00\x0e\x00\x10c\x00\x00` +
-				`\r\x00\x10d\x00\x00\x0f>>21-\x00\x10e\x00\x00\x10hello` +
-				`\x00\x00\x10f\x00\x00\x12\x10wo\x00\x00\x00\x00`,
+			`xd>6\x00Za\x00\x002\x00Zb\x00\x00F\x00Zc\x00\x00<\x00Zd\x00` +
+				`\x00P>>21-\x00Ze\x00\x00Zhello\x00\x00Zf\x00\x00nZwo\x00` +
+				`\x00\x00\x00`,
+			`xZa\x00\x002\x00Zb\x00\x00F\x00Zc\x00\x00<\x00Zd\x00\x00P` +
+				`>>21-\x00Ze\x00\x00Zhello\x00\x00Zf\x00\x00nZwo\x00\x00` +
+				`\x00\x00`,
 			`{"a":null,"b":true,"c":false,"d":+0.1e+2,"e":"hello","f":["wo"]}`},
 	}
 

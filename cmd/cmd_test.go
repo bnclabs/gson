@@ -40,14 +40,14 @@ func TestCmdArgs(t *testing.T) {
 		{
 			[]string{"-inpfile", "example.json", "-json2collate"},
 			[]byte("Json: \"hello world\"\n" +
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
-				"Coll: [16 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
+				"Coll: [90 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
 		},
 		{
 			[]string{"-inptxt", `"hello world"`, "-json2collate"},
 			[]byte("Json: \"hello world\"\n" +
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
-				"Coll: [16 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
+				"Coll: [90 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
 		},
 		// json options
 		{
@@ -78,20 +78,20 @@ func TestCmdArgs(t *testing.T) {
 		{
 			[]string{"-inpfile", "example.cbor", "-cbor2collate"},
 			[]byte("Cbor: \"khello world\"\n" +
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
-				"Coll: [16 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
+				"Coll: [90 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
 		},
 		{
 			[]string{"-inptxt", "khello world", "-cbor2collate"},
 			[]byte("Cbor: \"khello world\"\n" +
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
-				"Coll: [16 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
+				"Coll: [90 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
 		},
 		{
 			[]string{"-inptxt", "khello world", "-cbor2collate"},
 			[]byte("Cbor: \"khello world\"\n" +
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
-				"Coll: [16 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
+				"Coll: [90 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
 		},
 		// cbor options
 		{
@@ -113,16 +113,16 @@ func TestCmdArgs(t *testing.T) {
 		// collate transformations
 		{
 			[]string{"-inpfile", "example.coll", "-collate2value"},
-			[]byte("Coll: \"\\x10hello world\\x00\\x00\"\nValu: hello world\n"),
+			[]byte("Coll: \"Zhello world\\x00\\x00\"\nValu: hello world\n"),
 		},
 		{
 			[]string{"-inpfile", "example.coll", "-collate2json"},
-			[]byte("Coll: \"\\x10hello world\\x00\\x00\"\nJson: \"hello world\"\n"),
+			[]byte("Coll: \"Zhello world\\x00\\x00\"\nJson: \"hello world\"\n"),
 		},
 		{
 			[]string{"-inpfile", "example.coll", "-collate2cbor"},
 			[]byte(
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
 					"Cbor: \"khello world\"\n" +
 					"Cbor: [107 104 101 108 108 111 32 119 111 114 108 100]\n"),
 		},
@@ -139,8 +139,8 @@ func TestCmdArgs(t *testing.T) {
 		{
 			[]string{"-inptxt", `"hello world"`, "-value2collate"},
 			[]byte("Valu: hello world\n" +
-				"Coll: \"\\x10hello world\\x00\\x00\"\n" +
-				"Coll: [16 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
+				"Coll: \"Zhello world\\x00\\x00\"\n" +
+				"Coll: [90 104 101 108 108 111 32 119 111 114 108 100 0 0]\n"),
 		},
 	}
 	for _, testcase := range testcases {

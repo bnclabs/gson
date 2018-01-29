@@ -3,20 +3,21 @@ package gson
 import "encoding/json"
 import "bytes"
 
-// Collation order for supported types, to change the order set these
-// values in your init() function.
+// Collation order for supported types. Applications desiring different
+// ordering between types can initialize these bytes values before
+// using this package.
 var (
 	Terminator  byte = 0
-	TypeMissing byte = 11
-	TypeNull    byte = 12
-	TypeFalse   byte = 13
-	TypeTrue    byte = 14
-	TypeNumber  byte = 15
-	TypeString  byte = 16
-	TypeLength  byte = 17
-	TypeArray   byte = 18
-	TypeObj     byte = 19
-	TypeBinary  byte = 20
+	TypeMissing byte = 49
+	TypeNull    byte = 50
+	TypeFalse   byte = 60
+	TypeTrue    byte = 70
+	TypeNumber  byte = 80
+	TypeString  byte = 90
+	TypeLength  byte = 100
+	TypeArray   byte = 110
+	TypeObj     byte = 120
+	TypeBinary  byte = 130
 )
 
 // Missing denotes a special type for an item that evaluates to _nothing_.

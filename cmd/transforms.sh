@@ -38,7 +38,7 @@ echo "cbor2collate ..."
 echo
 
 echo "collate2cbor ..."
-./gson -quote -collate2cbor -inptxt '"\x13\x11>3\x00\x10perl\x00\x00\x10ugly\x00\x00\x10php\x00\x00\x10bad\x00\x00\x10python\x00\x00\x10good\x00\x00\x00"'
+./gson -quote -collate2cbor -inptxt '"xd>3\x00Zperl\x00\x00Zugly\x00\x00Zphp\x00\x00Zbad\x00\x00Zpython\x00\x00Zgood\x00\x00\x00"'
 echo
 
 echo "value2cbor ..."
@@ -54,5 +54,5 @@ echo "json2collate ..."
 echo
 
 echo "collate2json ..."
-./gson -quote -collate2json -inptxt '"\x13\x11>3\x00\x10perl\x00\x00\x10ugly\x00\x00\x10php\x00\x00\x10bad\x00\x00\x10python\x00\x00\x10good\x00\x00\x00"'
+./gson -quote -collate2json -inptxt '"xd>3\x00Zperl\x00\x00Zugly\x00\x00Zphp\x00\x00Zbad\x00\x00Zpython\x00\x00Zgood\x00\x00\x00"'
 echo
