@@ -179,6 +179,7 @@ func (cbr *Cbor) Tocollate(clt *Collate) *Collate {
 
 // EncodeSmallint to encode tiny integers between -23..+23 into cbor buffer.
 func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
+	cbr.data = cbr.data[:cbr.n+1]
 	if item < 0 {
 		cbr.data[cbr.n] = cborHdr(cborType1, byte(-(item + 1))) // -23 to -1
 	} else {
@@ -191,7 +192,8 @@ func (cbr *Cbor) EncodeSmallint(item int8) *Cbor {
 // EncodeSimpletype to encode simple type into cbor buffer.
 // Code points 0..19 and 32..255 are un-assigned.
 func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
-	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:])
+	cbr.n += simpletypeToCbor(typcode, cbr.data[cbr.n:cap(cbr.data)])
+	cbr.data = cbr.data[:cbr.n]
 	return cbr
 }
 
@@ -200,6 +202,7 @@ func (cbr *Cbor) EncodeSimpletype(typcode byte) *Cbor {
 // pairs is decided by config.ContainerEncoding.
 func (cbr *Cbor) EncodeMapslice(items [][2]interface{}) *Cbor {
 	cbr.n += mapl2cbor(items, cbr.data[cbr.n:cap(cbr.data)], cbr.config)
+	cbr.data = cbr.data[:cbr.n]
 	return cbr
 }
 
@@ -208,8 +211,9 @@ func (cbr *Cbor) EncodeMapslice(items [][2]interface{}) *Cbor {
 func (cbr *Cbor) EncodeBytechunks(chunks [][]byte) *Cbor {
 	cbr.n += bytesStart(cbr.data[cbr.n:cap(cbr.data)])
 	for _, chunk := range chunks {
-		cbr.n += valbytes2cbor(chunk, cbr.data[cbr.n:])
+		cbr.n += valbytes2cbor(chunk, cbr.data[cbr.n:cap(cbr.data)])
 	}
+	cbr.data = cbr.data[:cbr.n+1]
 	cbr.data[cbr.n] = cborType7 | cborItemBreak
 	cbr.n++
 	return cbr
@@ -220,8 +224,9 @@ func (cbr *Cbor) EncodeBytechunks(chunks [][]byte) *Cbor {
 func (cbr *Cbor) EncodeTextchunks(chunks []string) *Cbor {
 	cbr.n += textStart(cbr.data[cbr.n:cap(cbr.data)])
 	for _, chunk := range chunks {
-		cbr.n += valtext2cbor(chunk, cbr.data[cbr.n:])
+		cbr.n += valtext2cbor(chunk, cbr.data[cbr.n:cap(cbr.data)])
 	}
+	cbr.data = cbr.data[:cbr.n+1]
 	cbr.data[cbr.n] = cborType7 | cborItemBreak
 	cbr.n++
 	return cbr

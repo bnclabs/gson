@@ -9,7 +9,7 @@ import "math/big"
 
 func TestCborNil(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 	val := config.NewValue(nil)
 
 	if rv := val.Tocbor(cbr).Tovalue(); rv != nil {
@@ -19,7 +19,7 @@ func TestCborNil(t *testing.T) {
 
 func TestCborBoolean(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 
 	// test true
 	val := config.NewValue(true)
@@ -36,7 +36,7 @@ func TestCborBoolean(t *testing.T) {
 
 func TestCborSmallNumber(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 
 	// test uint8
 	for i := uint16(0); i <= 255; i++ {
@@ -61,7 +61,7 @@ func TestCborSmallNumber(t *testing.T) {
 
 func TestCborNum(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 
 	tests := [][2]interface{}{
 		{'a', uint64(97)},
@@ -194,12 +194,12 @@ func TestCborFloat16(t *testing.T) {
 			t.Errorf("expected panic while decoding float16")
 		}
 	}()
-	config.NewCbor([]byte{0xf9, 0, 0, 0, 0}, -1).Tovalue()
+	config.NewCbor([]byte{0xf9, 0, 0, 0, 0}).Tovalue()
 }
 
 func TestCborFloat32(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 	val := config.NewValue(float32(10.11))
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
@@ -209,7 +209,7 @@ func TestCborFloat32(t *testing.T) {
 
 func TestCborFloat64(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 	val := config.NewValue(float64(10.11))
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
@@ -224,7 +224,7 @@ func TestCborTagBytes(t *testing.T) {
 	}
 
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 200), 0)
+	cbr := config.NewCbor(make([]byte, 0, 200))
 	val := config.NewValue(ref)
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
@@ -234,7 +234,7 @@ func TestCborTagBytes(t *testing.T) {
 
 func TestCborText(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 200), 0)
+	cbr := config.NewCbor(make([]byte, 0, 200))
 	val := config.NewValue("hello world")
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
@@ -247,7 +247,7 @@ func TestCborArray(t *testing.T) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	config = config.SetContainerEncoding(LengthPrefix)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	val := config.NewValue([]interface{}{10.2, "hello world"})
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
@@ -258,7 +258,7 @@ func TestCborArray(t *testing.T) {
 	config = NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	config = config.SetContainerEncoding(Stream)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	val = config.NewValue([]interface{}{10.2, "hello world"})
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(val.data, rv) {
@@ -277,7 +277,7 @@ func TestCborMapSlice(t *testing.T) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	config = config.SetContainerEncoding(LengthPrefix)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	val := config.NewValue(ref)
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(refm, rv) {
@@ -288,7 +288,7 @@ func TestCborMapSlice(t *testing.T) {
 	config = NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	config = config.SetContainerEncoding(Stream)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	val = config.NewValue(ref)
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(refm, rv) {
@@ -308,7 +308,7 @@ func TestCborMap(t *testing.T) {
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	config = config.SetContainerEncoding(LengthPrefix)
 	val := config.NewValue(ref)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(refm, rv) {
 		t.Errorf("expected %v, got %v", refm, rv)
@@ -319,7 +319,7 @@ func TestCborMap(t *testing.T) {
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(UnicodeSpace)
 	config = config.SetContainerEncoding(Stream)
 	val = config.NewValue(ref)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 
 	if rv := val.Tocbor(cbr).Tovalue(); !reflect.DeepEqual(refm, rv) {
 		t.Errorf("expected %v, got %v", refm, rv)
@@ -339,9 +339,9 @@ func TestCborMaster(t *testing.T) {
 
 	config := NewDefaultConfig()
 	jsn := config.NewJson(nil, 0)
-	cbr := config.NewCbor(make([]byte, 1024*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024*1024))
 	jsn1 := config.NewJson(make([]byte, 1024*1024), 0)
-	cbr1 := config.NewCbor(make([]byte, 1024*1024), 0)
+	cbr1 := config.NewCbor(make([]byte, 0, 1024*1024))
 	jsn2 := config.NewJson(make([]byte, 1024*1024), 0)
 
 	for _, tcase := range testcases {
@@ -380,7 +380,7 @@ func TestCborSmartnum(t *testing.T) {
 
 	config := NewDefaultConfig()
 	jsn := config.NewJson(data, -1)
-	cbr := config.NewCbor(make([]byte, 1024*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024*1024))
 	jsnback := config.NewJson(make([]byte, 1024*1024), 0)
 
 	// test json->cbor->json->value
@@ -398,7 +398,7 @@ func TestCborSmartnum(t *testing.T) {
 	// test cbor->value->cbor->json->value
 	val := config.NewValue(cbr.Tovalue())
 	jsn = config.NewJson(make([]byte, 1024*1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024*1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024*1024))
 
 	val.Tocbor(cbr)
 	cbr.Tojson(jsn)
@@ -426,7 +426,7 @@ func TestCborMalformed(t *testing.T) {
 			config := NewDefaultConfig()
 			config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
 			jsn := config.NewJson(make([]byte, 1024), 0)
-			jsn.Tocbor(config.NewCbor(make([]byte, 1024), 0))
+			jsn.Tocbor(config.NewCbor(make([]byte, 0, 1024)))
 		}()
 	}
 }
@@ -439,7 +439,7 @@ func TestCborCodeJSON(t *testing.T) {
 
 	config := NewDefaultConfig()
 	jsn := config.NewJson(data, -1)
-	cbr := config.NewCbor(make([]byte, 10*1024*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 10*1024*1024))
 	jsnback := config.NewJson(make([]byte, 10*1024*1024), 0)
 
 	t.Logf("%v %v", len(data), len(jsnback.Bytes()))
@@ -459,7 +459,7 @@ func TestCborCodeJSON(t *testing.T) {
 
 	// cbor->value->cbor->json->value
 	jsn = config.NewJson(make([]byte, 10*1024*1024), 0)
-	cbrback := config.NewCbor(make([]byte, 10*1024*1024), 0)
+	cbrback := config.NewCbor(make([]byte, 0, 10*1024*1024))
 	val := config.NewValue(cbr.Tovalue())
 	val.Tocbor(cbrback)
 	cbrback.Tojson(jsn)
@@ -481,7 +481,7 @@ func TestCborTypical(t *testing.T) {
 
 	config := NewDefaultConfig()
 	jsn := config.NewJson(data, -1)
-	cbr := config.NewCbor(make([]byte, 1024*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024*1024))
 	jsnback := config.NewJson(make([]byte, 1024*1024), 0)
 
 	// test json->cbor->json->value
@@ -527,7 +527,7 @@ func TestDateTime(t *testing.T) {
 	}
 
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 
 	val := config.NewValue(ref)
 	val.Tocbor(cbr)
@@ -549,7 +549,7 @@ func TestDateTime(t *testing.T) {
 
 func TestTagEpoch(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	// positive and negative epoch
 	for _, v := range [2]int64{1000000, -100000} {
@@ -581,13 +581,13 @@ func TestTagEpoch(t *testing.T) {
 		buf := make([]byte, 16)
 		n := tag2cbor(tagEpoch, buf)
 		n += valbytes2cbor([]byte{1, 2}, buf[n:])
-		config.NewCbor(buf, n).Tovalue()
+		config.NewCbor(buf).Tovalue()
 	}()
 }
 
 func TestTagEpochMicro(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	// positive and negative epoch in uS.
 	for _, v := range [2]float64{1000000.123456, -100000.123456} {
@@ -601,7 +601,7 @@ func TestTagEpochMicro(t *testing.T) {
 
 func TestBigNum(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	// positive and negative bignums
 	for _, v := range [2]int64{1000, -1000} {
@@ -616,7 +616,7 @@ func TestBigNum(t *testing.T) {
 
 func TestDecimalFraction(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	refs := []CborTagFraction{
 		CborTagFraction([2]int64{int64(-10), int64(-23)}),
@@ -636,7 +636,7 @@ func TestDecimalFraction(t *testing.T) {
 
 func TestBigFloat(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	refs := []CborTagFloat{
 		CborTagFloat([2]int64{int64(-10), int64(-23)}),
@@ -655,7 +655,7 @@ func TestBigFloat(t *testing.T) {
 
 func TestCbor(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	val := config.NewValue(CborTagBytes([]byte("hello world")))
 	val.Tocbor(cbr)
@@ -666,7 +666,7 @@ func TestCbor(t *testing.T) {
 
 func TestRegexp(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	ref, _ := regexp.Compile(`a([0-9]t*)+`)
 	val := config.NewValue(ref)
@@ -685,13 +685,13 @@ func TestRegexp(t *testing.T) {
 		buf := make([]byte, 1024)
 		n := tag2cbor(tagRegexp, buf)
 		n += valtext2cbor(`a([0-9]t*+`, buf[n:])
-		config.NewCbor(buf, n).Tovalue()
+		config.NewCbor(buf).Tovalue()
 	}()
 }
 
 func TestCborTagPrefix(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 
 	val := config.NewValue(CborTagPrefix([]byte("hello world")))
 	val.Tocbor(cbr)
@@ -716,7 +716,7 @@ func TestCborBreakStop(t *testing.T) {
 
 func BenchmarkCbor2ValNull(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(nil).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -726,7 +726,7 @@ func BenchmarkCbor2ValNull(b *testing.B) {
 
 func BenchmarkCbor2ValTrue(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(true).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -736,7 +736,7 @@ func BenchmarkCbor2ValTrue(b *testing.B) {
 
 func BenchmarkCbor2ValFalse(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(false).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -746,7 +746,7 @@ func BenchmarkCbor2ValFalse(b *testing.B) {
 
 func BenchmarkCbor2ValUint8(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(uint8(255)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -756,7 +756,7 @@ func BenchmarkCbor2ValUint8(b *testing.B) {
 
 func BenchmarkCbor2ValInt8(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(int8(-128)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -766,7 +766,7 @@ func BenchmarkCbor2ValInt8(b *testing.B) {
 
 func BenchmarkCbor2ValUint16(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(uint16(65535)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -776,7 +776,7 @@ func BenchmarkCbor2ValUint16(b *testing.B) {
 
 func BenchmarkCbor2ValInt16(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(int16(-32768)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -786,7 +786,7 @@ func BenchmarkCbor2ValInt16(b *testing.B) {
 
 func BenchmarkCbor2ValUint32(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(uint32(4294967295)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -796,7 +796,7 @@ func BenchmarkCbor2ValUint32(b *testing.B) {
 
 func BenchmarkCbor2ValInt32(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(int32(-2147483648)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -806,7 +806,7 @@ func BenchmarkCbor2ValInt32(b *testing.B) {
 
 func BenchmarkCbor2ValUint64(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(uint64(18446744073709551615)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -816,7 +816,7 @@ func BenchmarkCbor2ValUint64(b *testing.B) {
 
 func BenchmarkCbor2ValInt64(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(int64(-2147483648)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -826,7 +826,7 @@ func BenchmarkCbor2ValInt64(b *testing.B) {
 
 func BenchmarkCbor2ValFlt32(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(float32(10.2)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -836,7 +836,7 @@ func BenchmarkCbor2ValFlt32(b *testing.B) {
 
 func BenchmarkCbor2ValFlt64(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(float64(10.2)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -846,7 +846,7 @@ func BenchmarkCbor2ValFlt64(b *testing.B) {
 
 func BenchmarkCbor2ValBytes(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue([]byte("hello world")).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -856,7 +856,7 @@ func BenchmarkCbor2ValBytes(b *testing.B) {
 
 func BenchmarkCbor2ValText(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue("hello world").Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -866,7 +866,7 @@ func BenchmarkCbor2ValText(b *testing.B) {
 
 func BenchmarkCbor2ValArr0(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(make([]interface{}, 0)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -876,7 +876,7 @@ func BenchmarkCbor2ValArr0(b *testing.B) {
 
 func BenchmarkCbor2ValArr5(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(nil)
 	value := []interface{}{5, 5.0, "hello world", true, nil}
 	config.NewValue(value).Tocbor(cbr)
 
@@ -887,7 +887,7 @@ func BenchmarkCbor2ValArr5(b *testing.B) {
 
 func BenchmarkCbor2ValMap0(b *testing.B) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(nil)
 	config.NewValue(make([][2]interface{}, 0)).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -903,7 +903,7 @@ func BenchmarkCbor2ValMap5(b *testing.B) {
 	}
 
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	config.NewValue(value).Tocbor(cbr)
 
 	for i := 0; i < b.N; i++ {
@@ -914,7 +914,7 @@ func BenchmarkCbor2ValMap5(b *testing.B) {
 func BenchmarkCbor2ValTyp(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
-	cbr := config.NewCbor(make([]byte, 10*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 10*1024))
 	jsn.Tocbor(cbr)
 
 	b.ResetTimer()

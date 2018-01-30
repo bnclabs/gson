@@ -326,7 +326,7 @@ func json2cbor(inp []byte) { // catch: input comes as json-str
 
 	config := makeConfig()
 	jsn := config.NewJson(inp, -1)
-	cbr := config.NewCbor(make([]byte, (len(inp)*2)+128), 0)
+	cbr := config.NewCbor(make([]byte, 0, (len(inp)*2)+128))
 
 	if options.mprof == "" {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -351,7 +351,7 @@ func json2cbor(inp []byte) { // catch: input comes as json-str
 
 func cbor2json(inp []byte) { // catch: input comes as cbor-str
 	config := makeConfig()
-	cbr := config.NewCbor(inp, -1)
+	cbr := config.NewCbor(inp)
 	jsn := config.NewJson(make([]byte, (len(inp)*4+128)), 0)
 
 	if options.mprof == "" {
@@ -375,7 +375,7 @@ func cbor2collate(inp []byte) { // catch: input comes as cbor-str
 
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
-	cbr := config.NewCbor(inp, -1)
+	cbr := config.NewCbor(inp)
 	clt := config.NewCollate(make([]byte, len(inp)*2), -1)
 
 	if options.mprof == "" {
@@ -401,7 +401,7 @@ func collate2cbor(inp []byte) { // catch: input comes as collate-str
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	clt := config.NewCollate(inp, -1)
-	cbr := config.NewCbor(make([]byte, (len(inp)*2+128)), 0)
+	cbr := config.NewCbor(make([]byte, 0, (len(inp)*2 + 128)))
 
 	if options.mprof == "" {
 		clt.Tocbor(cbr.Reset(nil))
@@ -461,7 +461,7 @@ func value2cbor(inp []byte) { // catch: input comes as json-str
 
 	config := makeConfig()
 	jsn := config.NewJson(inp, -1)
-	cbr := config.NewCbor(make([]byte, (len(inp)*2+128)), 0)
+	cbr := config.NewCbor(make([]byte, 0, (len(inp)*2 + 128)))
 
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
@@ -479,7 +479,7 @@ func cbor2value(inp []byte) { // catch: input comes as cbor-str
 	var value interface{}
 
 	config := makeConfig()
-	cbr := config.NewCbor(inp, -1)
+	cbr := config.NewCbor(inp)
 
 	if options.mprof == "" {
 		value = cbr.Tovalue()
@@ -565,7 +565,7 @@ func computeOverheads() {
 		`{"a":10000,"b":10.23456789012,"c":null,"d":true,"e":false,"f":"hello world"}`,
 	}
 	config := makeConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 	for _, item := range items {
 		fmt.Printf("item: %v\n", item)

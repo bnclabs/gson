@@ -7,7 +7,7 @@ import "fmt"
 func TestCbor2CollateNil(t *testing.T) {
 	inp, ref, config := "null", `2\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(inp), -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
@@ -21,7 +21,7 @@ func TestCbor2CollateNil(t *testing.T) {
 func TestCbor2CollateTrue(t *testing.T) {
 	inp, ref, config := "true", `F\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(inp), -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
@@ -35,7 +35,7 @@ func TestCbor2CollateTrue(t *testing.T) {
 func TestCbor2CollateFalse(t *testing.T) {
 	inp, ref, config := "false", `<\x00`, NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson([]byte(inp), -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
@@ -85,7 +85,7 @@ func TestCbor2CollateNumber(t *testing.T) {
 
 		config := NewDefaultConfig().SetNumberKind(nk)
 		clt := config.NewCollate(make([]byte, 1024), 0)
-		cbr := config.NewCbor(make([]byte, 1024), 0)
+		cbr := config.NewCbor(make([]byte, 0, 1024))
 		cltback := config.NewCollate(make([]byte, 1024), 0)
 
 		config.NewJson(
@@ -107,7 +107,7 @@ func TestCbor2CollateString(t *testing.T) {
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
@@ -131,7 +131,7 @@ func TestCbor2CollateString(t *testing.T) {
 	refcode := `Z~[]{}falsenilNA~\x00\x00`
 	config = NewDefaultConfig().UseMissing(false)
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson(inp, -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
@@ -145,7 +145,7 @@ func TestCbor2CollateString(t *testing.T) {
 
 	config = NewDefaultConfig()
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewJson(inp, -1).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
@@ -159,7 +159,7 @@ func TestCbor2CollateBytes(t *testing.T) {
 	inp, refcode := []byte("hello world"), `\x82hello world\x00`
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	config.NewValue(inp).Tocollate(clt).Tocbor(cbr).Tocollate(cltback)
@@ -191,7 +191,7 @@ func TestCbor2CollateArray(t *testing.T) {
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
@@ -212,7 +212,7 @@ func TestCbor2CollateArray(t *testing.T) {
 	// with sort by length and length prefix
 	config = config.SortbyArrayLen(true).SetContainerEncoding(LengthPrefix)
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
@@ -232,7 +232,7 @@ func TestCbor2CollateArray(t *testing.T) {
 	// with sort by length and stream encoding
 	config = config.SortbyArrayLen(true).SetContainerEncoding(Stream)
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
@@ -271,7 +271,7 @@ func TestCbor2CollateMap(t *testing.T) {
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	cltback := config.NewCollate(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
@@ -292,7 +292,7 @@ func TestCbor2CollateMap(t *testing.T) {
 	config = NewDefaultConfig().SetMaxkeys(10).SortbyPropertyLen(false)
 	config = config.SetContainerEncoding(LengthPrefix)
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
 	cltback = config.NewCollate(make([]byte, 1024), 0)
 
 	for _, tcase := range testcases {
@@ -314,7 +314,7 @@ func BenchmarkColl2CborNil(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("null"), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -326,7 +326,7 @@ func BenchmarkColl2CborNil(b *testing.B) {
 func BenchmarkColl2CborTrue(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("true"), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
 	jsn.Tocollate(clt)
@@ -340,7 +340,7 @@ func BenchmarkColl2CborFalse(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("false"), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -353,7 +353,7 @@ func BenchmarkColl2CborF64(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("10.121312213123123"), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -366,7 +366,7 @@ func BenchmarkColl2CborI64(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("123456789"), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -379,7 +379,7 @@ func BenchmarkColl2CborMiss(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(fmt.Sprintf(`"%s"`, MissingLiteral)), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -392,7 +392,7 @@ func BenchmarkColl2CborStr(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(`"hello world"`), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -407,7 +407,7 @@ func BenchmarkColl2CborArr(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(in, -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -423,7 +423,7 @@ func BenchmarkColl2CborMap(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(inp), -1)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	jsn.Tocollate(clt)
 
@@ -438,7 +438,7 @@ func BenchmarkColl2CborTyp(b *testing.B) {
 	config := NewDefaultConfig().SetMaxkeys(100)
 	jsn := config.NewJson(data, -1)
 	clt := config.NewCollate(make([]byte, 10*1024), 0)
-	cbr := config.NewCbor(make([]byte, 10*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 10*1024))
 
 	jsn.Tocollate(clt)
 

@@ -22,7 +22,7 @@ func TestCborMap2Golang(t *testing.T) {
 	ref := `{"a":10,"b":[true,false,null]}`
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(ref), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	_, val1 := jsn.Tovalue()
 	value := config.NewValue(GolangMap2cborMap(val1))

@@ -7,7 +7,7 @@ import "testing"
 
 func TestStrictFloat(t *testing.T) {
 	config := NewDefaultConfig().SetNumberKind(FloatNumber)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	jsn := config.NewJson([]byte("10.2"), -1)
 	jsn.Tocbor(cbr)
 	if value := cbr.Tovalue(); value != 10.2 {
@@ -18,7 +18,7 @@ func TestStrictFloat(t *testing.T) {
 func BenchmarkJson2CborNull(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("null"), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -30,7 +30,7 @@ func BenchmarkJson2CborNull(b *testing.B) {
 func BenchmarkJson2CborInt(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("123456567"), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -41,7 +41,7 @@ func BenchmarkJson2CborInt(b *testing.B) {
 func BenchmarkJson2CborFlt(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("1234.12312"), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -52,7 +52,7 @@ func BenchmarkJson2CborFlt(b *testing.B) {
 func BenchmarkJson2CborBool(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte("false"), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -64,7 +64,7 @@ func BenchmarkJson2CborBool(b *testing.B) {
 func BenchmarkJson2CborStr(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(`"汉语 / 漢語; Hàn\b \t\uef24yǔ "`), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -76,7 +76,7 @@ func BenchmarkJson2CborArr(b *testing.B) {
 	in := ` [null,true,false,10,"tru\"e"]`
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(in), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -88,7 +88,7 @@ func BenchmarkJson2CborMap(b *testing.B) {
 	in := `{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`
 	config := NewDefaultConfig()
 	jsn := config.NewJson([]byte(in), -1)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	for i := 0; i < b.N; i++ {
 		jsn.Tocbor(cbr.Reset(nil))
@@ -100,7 +100,7 @@ func BenchmarkJson2CborTyp(b *testing.B) {
 	in := testdataFile("testdata/typical.json")
 	config := NewDefaultConfig()
 	jsn := config.NewJson(in, -1)
-	cbr := config.NewCbor(make([]byte, 10*1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 10*1024))
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

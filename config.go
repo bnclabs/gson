@@ -40,9 +40,9 @@ type Config struct {
 //		+FloatNumber        +Stream
 //		+UnicodeSpace       -strict
 //		+doMissing          -arrayLenPrefix     +propertyLenPrefix
-//		MaxJsonpointerLen
-//		MaxStringLen        MaxKeys
-//		MaxCollateLen       MaxJsonpointerLen
+//		MaxJsonpointerLen   MaxKeys
+//		MaxStringLen
+//		MaxCollateLen
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk: FloatNumber,
@@ -131,7 +131,9 @@ func (config Config) SetMaxkeys(n int) *Config {
 	return config.init()
 }
 
-// ResetPools configure a new set of pools with specified size.
+// ResetPools configure a new set of pools with specified size, instead
+// of using the default size: MaxStringLen, MaxKeys, MaxCollateLen, and,
+// MaxJsonpointerLen.
 //	 strlen  - maximum length of string value inside JSON document
 //	 numkeys - maximum number of keys that a property object can have
 //	 itemlen - maximum length of collated value.
@@ -143,19 +145,17 @@ func (config Config) ResetPools(strlen, numkeys, itemlen, ptrlen int) *Config {
 	return config.init()
 }
 
-// NewCbor factory to create a new Cbor instance. Buffer can't be nil.
-// If length is less than 0, ln will be assumed as len(buffer).
-// Otherwise if ln >= 0, it should atleast be 128 or greater. This also
-// implies that len(buffer) >= 128. Cbor object can be re-used after a
-// Reset() call.
-func (config *Config) NewCbor(buffer []byte, ln int) *Cbor {
-	if buffer != nil && ln >= 0 && len(buffer) < 128 {
+// NewCbor factory to create a new Cbor instance. If buffer is nil,
+// a new buffer of 128 byte capacity will be allocated. Cbor object can
+// be re-used after a Reset() call.
+func (config *Config) NewCbor(buffer []byte) *Cbor {
+	if buffer == nil {
+		buffer = make([]byte, 0, 128)
+	}
+	if len(buffer) == 0 && cap(buffer) < 128 {
 		panic("cbor buffer should atleast be 128 bytes")
 	}
-	if ln == -1 {
-		ln = len(buffer)
-	}
-	return &Cbor{config: config, data: buffer, n: ln}
+	return &Cbor{config: config, data: buffer, n: len(buffer)}
 }
 
 // NewJson factory to create a new Json instance. Buffer can't be nil.

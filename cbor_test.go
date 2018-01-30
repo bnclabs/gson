@@ -11,7 +11,7 @@ func TestCborMajor(t *testing.T) {
 
 func TestCborSmallInt(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 
 	for i := int8(-24); i < 24; i++ { // SmallInt is -24..23
 		cbr.EncodeSmallint(i)
@@ -27,7 +27,7 @@ func TestCborSmallInt(t *testing.T) {
 
 func TestCborSimpleType(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 
 	// test encoding type7/simpletype < 20
 	for i := 0; i < 20; i++ {
@@ -51,7 +51,7 @@ func TestCborSimpleType(t *testing.T) {
 
 func TestCborMapslice(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 
 	items := [][2]interface{}{
 		{"first", true},
@@ -66,9 +66,11 @@ func TestCborMapslice(t *testing.T) {
 		},
 	}
 
+	cbr.data = cbr.data[:cbr.n+1]
 	cbr.data[0] = cborType5 | cborIndefiniteLength
 	cbr.n++
 	cbr.EncodeMapslice(items)
+	cbr.data = cbr.data[:cbr.n+1]
 	cbr.data[cbr.n] = cborType7 | cborItemBreak
 	cbr.n++
 	value, ref := cbr.Tovalue(), CborMap2golangMap(items)
@@ -109,8 +111,8 @@ func TestCborItem(t *testing.T) {
 
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	config = config.SetContainerEncoding(Stream)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
-	item := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
+	item := config.NewCbor(make([]byte, 0, 1024))
 	config.NewJson([]byte(txt), -1).Tocbor(cbr)
 	for _, tcase := range testcases {
 		ptr := config.NewJsonpointer(tcase[0].(string))
@@ -119,8 +121,8 @@ func TestCborItem(t *testing.T) {
 
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	config = config.SetContainerEncoding(LengthPrefix)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	item = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
+	item = config.NewCbor(make([]byte, 0, 1024))
 	config.NewJson([]byte(txt), -1).Tocbor(cbr)
 	for _, tcase := range testcases {
 		ptr := config.NewJsonpointer(tcase[0].(string))
@@ -129,9 +131,10 @@ func TestCborItem(t *testing.T) {
 
 	// special cases
 	config = NewDefaultConfig().SetContainerEncoding(Stream)
-	cbr = config.NewCbor(make([]byte, 1024), 0)
-	item = config.NewCbor(make([]byte, 1024), 0)
+	cbr = config.NewCbor(make([]byte, 0, 1024))
+	item = config.NewCbor(make([]byte, 0, 1024))
 
+	cbr.data = cbr.data[:cbr.n+1]
 	cbr.data[0] = cborType4 | cborIndefiniteLength
 	cbr.n++
 	cbr.EncodeSmallint(10).EncodeSmallint(-10).EncodeSimpletype(128)
@@ -140,6 +143,7 @@ func TestCborItem(t *testing.T) {
 	config.NewValue(CborTagEpoch(1234567890)).Tocbor(cbr)
 	cbr.EncodeBytechunks([][]byte{[]byte("hello"), []byte("world")})
 	cbr.EncodeTextchunks([]string{"sound", "ok", "horn"})
+	cbr.data = cbr.data[:cbr.n+1]
 	cbr.data[cbr.n] = brkstp
 	cbr.n++
 
@@ -169,7 +173,7 @@ func TestCborItem(t *testing.T) {
 
 func TestCborEmpty(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 	jsn := config.NewJson(make([]byte, 128), 0)
 	clt := config.NewCollate(make([]byte, 128), 0)
 

@@ -187,10 +187,10 @@ CBOR, Value, Collate. Reuse the objects, avoid GC pressure.
 **buffer objects are not thread-safe**
 
 ```go
-val := config.NewValue("any golang value")      // *gson.Value
-jsn := config.NewCbor(json_byteslice, -1)       // *gson.Json
-cbr := config.NewCbor(cbor_byteslice, -1)       // *gson.Cbor
-clt := config.NewCbor(collated_byteslice, -1)   // *gson.Collate
+val := config.NewValue("any golang value")  // *gson.Value
+jsn := config.NewCbor(json_byteslice)       // *gson.Json
+cbr := config.NewCbor(cbor_byteslice)       // *gson.Cbor
+clt := config.NewCbor(collated_byteslice)   // *gson.Collate
 ...
 jsn.Reset(nil)
 cbr.Reset(nil)

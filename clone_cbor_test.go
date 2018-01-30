@@ -5,7 +5,8 @@ import "reflect"
 
 func TestCborClone(t *testing.T) {
 	dotest := func(config *Config) {
-		cbr := config.NewCbor(make([]byte, 1024), 0)
+		cbr := config.NewCbor(make([]byte, 0, 1024))
+		cbr.data = cbr.data[:cbr.n+1]
 		cbr.data[0] = hdrIndefiniteArray
 		cbr.n++
 		config.NewValue(nil).Tocbor(cbr)
@@ -34,12 +35,13 @@ func TestCborClone(t *testing.T) {
 			}).Tocbor(cbr)
 		cbr.EncodeBytechunks([][]byte{[]byte("hello"), []byte("world")})
 		cbr.EncodeTextchunks([]string{"hello", "world"})
+		cbr.data = cbr.data[:cbr.n+1]
 		cbr.data[cbr.n] = brkstp
 		cbr.n++
 
 		out := make([]byte, 1024)
 		n := cborclone(cbr.Bytes(), out, config)
-		cloned := config.NewCbor(out[:n], -1)
+		cloned := config.NewCbor(out[:n])
 
 		ref := cbr.Tovalue()
 		value := cloned.Tovalue()

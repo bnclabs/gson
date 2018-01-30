@@ -41,19 +41,19 @@ instances as much as possible, to avoid memory pressure on GC.
 **GSON objects:**
 
 ```go
-val := config.NewValue("any golang value")      // *gson.Value
-jsn := config.NewCbor(json_byteslice, -1)       // *gson.Json
-cbr := config.NewCbor(cbor_byteslice, -1)       // *gson.Cbor
-clt := config.NewCbor(collated_byteslice, -1)   // *gson.Collate
+val := config.NewValue("any golang value")  // *gson.Value
+jsn := config.NewJson(json_byteslice)       // *gson.Json
+cbr := config.NewCbor(cbor_byteslice)       // *gson.Cbor
+clt := config.NewCollate(collated_byteslice)   // *gson.Collate
 ```
 
 Json, Cbor, and Collate can also be initialized with empty buffer,
 that have adequate capacity:
 
 ```go
-jsn := config.NewCbor(make([]byte, 1024), 0)
-cbr := config.NewCbor(make([]byte, 1024), 0)
-clt := config.NewCbor(make([]byte, 1024), 0)
+jsn := config.NewJson(make([]byte, 1024))
+cbr := config.NewCbor(make([]byte, 0, 1024))
+clt := config.NewCollate(make([]byte, 1024))
 ```
 
 To reuse Json, Cbor, or Collate objects:

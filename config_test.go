@@ -11,7 +11,7 @@ import "io/ioutil"
 
 func TestConfig(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 	val := config.NewValue(10.2)
 	val.Tocbor(cbr)
 	if value := cbr.Tovalue(); !reflect.DeepEqual(val.data, value) {
@@ -23,7 +23,7 @@ type testLocal byte
 
 func TestUndefined(t *testing.T) {
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 128), 0)
+	cbr := config.NewCbor(make([]byte, 0, 128))
 	val := config.NewValue(CborUndefined(cborSimpleUndefined))
 	val.Tocbor(cbr)
 	if value := cbr.Tovalue(); !reflect.DeepEqual(val.data, value) {
@@ -99,9 +99,9 @@ func TestGsonToCollate(t *testing.T) {
 
 func TestCborToCollate(t *testing.T) {
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	out := config.NewCbor(make([]byte, 1024), 0)
+	out := config.NewCbor(make([]byte, 0, 1024))
 
 	o := [][2]interface{}{
 		{"a", 10.0},
@@ -169,7 +169,7 @@ func TestCheckSortedkeys(t *testing.T) {
 
 	config := NewDefaultConfig()
 	jsn := config.NewJson(make([]byte, 1024), 0)
-	cbr := config.NewCbor(make([]byte, 1024), 0)
+	cbr := config.NewCbor(make([]byte, 0, 1024))
 	col := config.NewCollate(make([]byte, 1024), 0)
 
 	json := config.NewValue(val).Tojson(jsn.Reset(nil)).Bytes()

@@ -13,7 +13,7 @@ func TestCborAppendixA(t *testing.T) {
 	json.Unmarshal(data, &testcases)
 
 	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 10), -1)
+	cbr := config.NewCbor(make([]byte, 0, 10))
 
 	for _, tcase := range testcases {
 		tcmap := tcase.(map[string]interface{})
