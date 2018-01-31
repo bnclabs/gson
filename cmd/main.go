@@ -207,7 +207,7 @@ func main() {
 
 func listpointers(inp []byte) {
 	config := gson.NewDefaultConfig()
-	jsn := config.NewJson([]byte(inp), -1)
+	jsn := config.NewJson([]byte(inp))
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
 
@@ -267,7 +267,7 @@ func collatefile(filename string) (outs []string) {
 func collateLines(config *gson.Config, s []byte) []string {
 	texts, codes := lines(s), make(codeList, 0)
 	for i, text := range texts {
-		jsn := config.NewJson(text, -1)
+		jsn := config.NewJson(text)
 		clt := config.NewCollate(make([]byte, 1024), -1)
 		jsn.Tocollate(clt.Reset(nil))
 		codes = append(codes, codeObj{i, clt.Bytes()})
@@ -292,8 +292,8 @@ func lines(content []byte) [][]byte {
 func value2json(inp []byte) { // catch: input comes as json-str
 	// json->value->json
 	config := makeConfig()
-	jsn := config.NewJson(inp, -1)
-	jsnback := config.NewJson(make([]byte, (len(inp)*2+128)), 0)
+	jsn := config.NewJson(inp)
+	jsnback := config.NewJson(make([]byte, 0, (len(inp)*2 + 128)))
 
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
@@ -310,7 +310,7 @@ func value2json(inp []byte) { // catch: input comes as json-str
 func json2value(inp []byte) {
 	inp = bytes.TrimRight(inp, "\n")
 	config := makeConfig()
-	jsn := config.NewJson(inp, -1)
+	jsn := config.NewJson(inp)
 
 	if options.mprof == "" {
 		_, value := jsn.Tovalue()
@@ -325,7 +325,7 @@ func json2cbor(inp []byte) { // catch: input comes as json-str
 	inp = bytes.TrimRight(inp, "\n")
 
 	config := makeConfig()
-	jsn := config.NewJson(inp, -1)
+	jsn := config.NewJson(inp)
 	cbr := config.NewCbor(make([]byte, 0, (len(inp)*2)+128))
 
 	if options.mprof == "" {
@@ -352,7 +352,7 @@ func json2cbor(inp []byte) { // catch: input comes as json-str
 func cbor2json(inp []byte) { // catch: input comes as cbor-str
 	config := makeConfig()
 	cbr := config.NewCbor(inp)
-	jsn := config.NewJson(make([]byte, (len(inp)*4+128)), 0)
+	jsn := config.NewJson(make([]byte, 0, (len(inp)*4 + 128)))
 
 	if options.mprof == "" {
 		cbr.Tojson(jsn.Reset(nil))
@@ -426,7 +426,7 @@ func value2collate(inp []byte) { // catch: input comes as json-str
 
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
-	_, value := config.NewJson(inp, -1).Tovalue()
+	_, value := config.NewJson(inp).Tovalue()
 	val := config.NewValue(value)
 	clt := config.NewCollate(make([]byte, (len(inp)*2+128)), 0)
 
@@ -460,7 +460,7 @@ func value2cbor(inp []byte) { // catch: input comes as json-str
 	// json->value->cbor
 
 	config := makeConfig()
-	jsn := config.NewJson(inp, -1)
+	jsn := config.NewJson(inp)
 	cbr := config.NewCbor(make([]byte, 0, (len(inp)*2 + 128)))
 
 	_, value := jsn.Tovalue()
@@ -498,7 +498,7 @@ func json2collate(inp []byte) { // catch: input comes as json-str
 
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
-	jsn := config.NewJson(inp, -1)
+	jsn := config.NewJson(inp)
 	clt := config.NewCollate(make([]byte, (len(inp)*2)+128), 0)
 
 	fn := func() {
@@ -528,7 +528,7 @@ func collate2json(inp []byte) { // catch: input comes as collate-str
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	clt := config.NewCollate(inp, -1)
-	jsn := config.NewJson(make([]byte, (len(inp)*4+128)), 0)
+	jsn := config.NewJson(make([]byte, 0, (len(inp)*4 + 128)))
 
 	if options.mprof == "" {
 		clt.Tojson(jsn.Reset(nil))
@@ -570,7 +570,7 @@ func computeOverheads() {
 	for _, item := range items {
 		fmt.Printf("item: %v\n", item)
 
-		jsn := config.NewJson([]byte(item), -1)
+		jsn := config.NewJson([]byte(item))
 		jsn.Tocbor(cbr.Reset(nil))
 		jsn.Tocollate(clt.Reset(nil))
 		fmsg := "Json: %v bytes, Cbor: %v bytes, Collated: %v bytes\n"

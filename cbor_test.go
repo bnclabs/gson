@@ -113,7 +113,7 @@ func TestCborItem(t *testing.T) {
 	config = config.SetContainerEncoding(Stream)
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	item := config.NewCbor(make([]byte, 0, 1024))
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
+	config.NewJson([]byte(txt)).Tocbor(cbr)
 	for _, tcase := range testcases {
 		ptr := config.NewJsonpointer(tcase[0].(string))
 		fn(ptr, tcase[1], cbr, item.Reset(nil))
@@ -123,7 +123,7 @@ func TestCborItem(t *testing.T) {
 	config = config.SetContainerEncoding(LengthPrefix)
 	cbr = config.NewCbor(make([]byte, 0, 1024))
 	item = config.NewCbor(make([]byte, 0, 1024))
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
+	config.NewJson([]byte(txt)).Tocbor(cbr)
 	for _, tcase := range testcases {
 		ptr := config.NewJsonpointer(tcase[0].(string))
 		fn(ptr, tcase[1], cbr, item.Reset(nil))
@@ -174,7 +174,7 @@ func TestCborItem(t *testing.T) {
 func TestCborEmpty(t *testing.T) {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 0, 128))
-	jsn := config.NewJson(make([]byte, 128), 0)
+	jsn := config.NewJson(nil)
 	clt := config.NewCollate(make([]byte, 128), 0)
 
 	func() {

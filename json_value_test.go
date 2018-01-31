@@ -11,12 +11,12 @@ func TestJsonEmpty2Value(t *testing.T) {
 			t.Errorf("expected panic")
 		}
 	}()
-	config.NewJson([]byte(""), -1).Tovalue()
+	config.NewJson([]byte("")).Tovalue()
 }
 
 func TestScanNull(t *testing.T) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	if jsnrem, val := jsn.Reset([]byte("null")).Tovalue(); jsnrem != nil {
 		t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
@@ -39,7 +39,7 @@ func TestScanBool(t *testing.T) {
 	testcases := []string{"true", "false"}
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		var refval interface{}
@@ -76,7 +76,7 @@ func TestScanIntegers(t *testing.T) {
 
 		config := NewDefaultConfig()
 		config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
-		jsn := config.NewJson(make([]byte, 1024), 0)
+		jsn := config.NewJson(make([]byte, 0, 1024))
 		if jsnrem, val := jsn.Reset([]byte(tcase)).Tovalue(); jsnrem != nil {
 			t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
 		} else if v, ok := val.(int64); !ok || v != int64(ref.(float64)) {
@@ -92,7 +92,7 @@ func TestScanIntegers(t *testing.T) {
 
 		config := NewDefaultConfig()
 		config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-		jsn := config.NewJson(make([]byte, 1024), 0)
+		jsn := config.NewJson(make([]byte, 0, 1024))
 		_, val := jsn.Reset([]byte(tcase)).Tovalue()
 		if v, ok := val.(float64); !ok || v != ref.(float64) {
 			t.Errorf("%q int should be parsed to %v", tcase, ref)
@@ -128,7 +128,7 @@ func TestScanValues(t *testing.T) {
 	}...)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024*1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024*1024))
 
 	for _, tcase := range testcases {
 		var ref interface{}
@@ -154,7 +154,7 @@ func TestCodeJSON(t *testing.T) {
 	json.Unmarshal(data, &ref)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(data, -1)
+	jsn := config.NewJson(data)
 	if jsnrem, val := jsn.Tovalue(); jsnrem != nil {
 		t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
 	} else if reflect.DeepEqual(val, ref) == false {
@@ -165,7 +165,7 @@ func TestCodeJSON(t *testing.T) {
 func BenchmarkJson2ValNil(b *testing.B) {
 	config := NewDefaultConfig()
 	in := "null"
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -186,7 +186,7 @@ func BenchmarkUnmarshalNil(b *testing.B) {
 func BenchmarkJson2ValBool(b *testing.B) {
 	config := NewDefaultConfig()
 	in := "true"
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -208,7 +208,7 @@ func BenchmarkJson2ValNum(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
 	in := "10.2"
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -229,7 +229,7 @@ func BenchmarkUnmarshalNum(b *testing.B) {
 func BenchmarkJson2ValString(b *testing.B) {
 	config := NewDefaultConfig()
 	in := `"汉语 / 漢語; Hàn\b \tyǔ "`
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -251,7 +251,7 @@ func BenchmarkJson2ValArr5(b *testing.B) {
 	in := ` [null,true,false,10,"tru\"e"]`
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -274,7 +274,7 @@ func BenchmarkJson2ValMap5(b *testing.B) {
 	in := `{"a": null, "b" : true,"c":false, "d\"":-10E-1, "e":"tru\"e" }`
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
@@ -298,7 +298,7 @@ func BenchmarkJson2ValTyp(b *testing.B) {
 
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson([]byte(in), -1)
+	jsn := config.NewJson([]byte(in))
 	b.SetBytes(int64(len(in)))
 	for i := 0; i < b.N; i++ {
 		jsn.Tovalue()
@@ -323,7 +323,7 @@ func BenchmarkJson2ValCgz(b *testing.B) {
 	data := testdataFile("testdata/code.json.gz")
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson(data, -1)
+	jsn := config.NewJson(data)
 	b.SetBytes(int64(len(data)))
 	for i := 0; i < b.N; i++ {
 		jsn.Tovalue()

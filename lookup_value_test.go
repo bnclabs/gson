@@ -30,7 +30,7 @@ func TestValueGet(t *testing.T) {
 		{"", ref},
 	}
 	config := NewDefaultConfig()
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("")
 
@@ -66,7 +66,7 @@ func TestValueSet(t *testing.T) {
 		{"/dict/b", 2.0, 20.0},
 	}
 	config := NewDefaultConfig()
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("")
 
@@ -116,7 +116,7 @@ func TestValuePrepend(t *testing.T) {
 	testcases := []string{"/-", "/arr"}
 
 	config := NewDefaultConfig()
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("")
 
@@ -135,7 +135,7 @@ func TestValuePrepend(t *testing.T) {
 	json.Unmarshal([]byte(reftxt), &ref)
 
 	config = NewDefaultConfig()
-	_, value = config.NewJson([]byte(txt), -1).Tovalue()
+	_, value = config.NewJson([]byte(txt)).Tovalue()
 	val = config.NewValue(value)
 	ptr = config.NewJsonpointer("")
 	val = config.NewValue(val.Prepend(ptr, 10.0))
@@ -147,7 +147,7 @@ func TestValuePrepend(t *testing.T) {
 
 	// panic case
 	config = NewDefaultConfig()
-	_, value = config.NewJson([]byte(`{"a": 10}`), -1).Tovalue()
+	_, value = config.NewJson([]byte(`{"a": 10}`)).Tovalue()
 	val = config.NewValue(value)
 	fn := func(jptr *Jsonpointer, v interface{}) {
 		defer func() {
@@ -170,7 +170,7 @@ func TestValueAppend(t *testing.T) {
 	testcases := []string{"/-", "/arr"}
 
 	config := NewDefaultConfig()
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("")
 
@@ -188,7 +188,7 @@ func TestValueAppend(t *testing.T) {
 	json.Unmarshal([]byte(reftxt), &ref)
 
 	config = NewDefaultConfig()
-	_, value = config.NewJson([]byte(txt), -1).Tovalue()
+	_, value = config.NewJson([]byte(txt)).Tovalue()
 	val = config.NewValue(value)
 	ptr = config.NewJsonpointer("")
 	val = config.NewValue(val.Append(ptr, 10.0))
@@ -200,7 +200,7 @@ func TestValueAppend(t *testing.T) {
 
 	// panic case
 	config = NewDefaultConfig()
-	_, value = config.NewJson([]byte(`{"a": 10}`), -1).Tovalue()
+	_, value = config.NewJson([]byte(`{"a": 10}`)).Tovalue()
 	val = config.NewValue(value)
 	fn := func(jptr *Jsonpointer, v interface{}) {
 		defer func() {
@@ -229,7 +229,7 @@ func TestValueDelete(t *testing.T) {
 	}
 
 	config := NewDefaultConfig()
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("")
 
@@ -245,7 +245,7 @@ func TestValueDelete(t *testing.T) {
 	}
 
 	remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
-	_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
+	_, remvalue := config.NewJson([]byte(remtxt)).Tovalue()
 	if !reflect.DeepEqual(val.data, remvalue) {
 		t.Errorf("expected %v, got %v", remvalue, val.data)
 	}
@@ -268,7 +268,7 @@ func TestValueDelete(t *testing.T) {
 func BenchmarkValueGet(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("/projects/Sherri/members/0")
 
@@ -281,7 +281,7 @@ func BenchmarkValueGet(b *testing.B) {
 func BenchmarkValueSet(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 	ptr := config.NewJsonpointer("/projects/Sherri/members/0")
 
@@ -294,7 +294,7 @@ func BenchmarkValueSet(b *testing.B) {
 func BenchmarkValuePrepend(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 	ptrp := config.NewJsonpointer("/projects/Sherri/members")
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
@@ -309,7 +309,7 @@ func BenchmarkValuePrepend(b *testing.B) {
 func BenchmarkValueAppend(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 	ptra := config.NewJsonpointer("/projects/Sherri/members")
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
@@ -324,7 +324,7 @@ func BenchmarkValueAppend(b *testing.B) {
 func BenchmarkValueDelete(b *testing.B) {
 	config := NewDefaultConfig()
 	data := testdataFile("testdata/typical.json")
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")

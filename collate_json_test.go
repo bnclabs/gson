@@ -9,13 +9,13 @@ func TestJson2CollateNil(t *testing.T) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != ref {
 		t.Errorf("expected %v, got %v", ref, out)
 	}
 
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != inp {
 		t.Errorf("expected %v, got %v", inp, s)
@@ -28,13 +28,13 @@ func TestJson2CollateTrue(t *testing.T) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != ref {
 		t.Errorf("expected %v, got %v", ref, out)
 	}
 
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != inp {
 		t.Errorf("expected %v, got %v", inp, s)
@@ -47,13 +47,13 @@ func TestJson2CollateFalse(t *testing.T) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != ref {
 		t.Errorf("expected %v, got %v", ref, out)
 	}
 
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != inp {
 		t.Errorf("expected %v, got %v", inp, s)
@@ -66,13 +66,13 @@ func TestJson2CollateNumber(t *testing.T) {
 	config := NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v, got %v", reftxt, s)
@@ -83,13 +83,13 @@ func TestJson2CollateNumber(t *testing.T) {
 	config = NewDefaultConfig().SetNumberKind(FloatNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v got %v", reftxt, s)
@@ -100,13 +100,13 @@ func TestJson2CollateNumber(t *testing.T) {
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v, got %v", reftxt, s)
@@ -117,13 +117,13 @@ func TestJson2CollateNumber(t *testing.T) {
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", string(clt.Bytes()))
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v, got %v", reftxt, s)
@@ -136,13 +136,13 @@ func TestJson2CollateString(t *testing.T) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v, got %v", reftxt, s)
@@ -153,13 +153,13 @@ func TestJson2CollateString(t *testing.T) {
 	dotest := func(config *Config) {
 		clt = config.NewCollate(make([]byte, 1024), 0)
 
-		config.NewJson([]byte(inp), -1).Tocollate(clt)
+		config.NewJson([]byte(inp)).Tocollate(clt)
 		out = fmt.Sprintf("%q", clt.Bytes())
 		if out = out[1 : len(out)-1]; out != refcode {
 			t.Errorf("expected %v, got %v", refcode, out)
 		}
 
-		jsn = config.NewJson(make([]byte, 1024), 0)
+		jsn = config.NewJson(make([]byte, 0, 1024))
 		clt.Tojson(jsn)
 		if s := string(jsn.Bytes()); s != inp {
 			t.Errorf("expected %v, got %v", inp, s)
@@ -174,13 +174,13 @@ func TestJson2CollateString(t *testing.T) {
 	config = NewDefaultConfig()
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != reftxt {
 		t.Errorf("expected %v, got %v", reftxt, s)
@@ -192,13 +192,13 @@ func TestJson2CollateString(t *testing.T) {
 	config = NewDefaultConfig().UseMissing(false)
 	clt = config.NewCollate(make([]byte, 1024), 0)
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
 	if out = out[1 : len(out)-1]; out != refcode {
 		t.Errorf("expected %v, got %v", refcode, out)
 	}
 
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 	clt.Tojson(jsn)
 	if s := string(jsn.Bytes()); s != inp {
 		t.Errorf("expected %v, got %v", inp, s)
@@ -228,14 +228,14 @@ func TestJson2CollateArray(t *testing.T) {
 
 	config = NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 
 		inp, refcode, reftxt := tcase[0], tcase[1], tcase[3]
 
-		config.NewJson([]byte(inp), -1).Tocollate(clt.Reset(nil))
+		config.NewJson([]byte(inp)).Tocollate(clt.Reset(nil))
 		out := fmt.Sprintf("%q", clt.Bytes())
 		if out = out[1 : len(out)-1]; out != refcode {
 			t.Errorf("expected %v, got %v", refcode, out)
@@ -250,13 +250,13 @@ func TestJson2CollateArray(t *testing.T) {
 	// with length prefix
 	config = NewDefaultConfig().SortbyArrayLen(true)
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 
 		inp, refcode, reftxt := tcase[0], tcase[2], tcase[3]
-		config.NewJson([]byte(inp), -1).Tocollate(clt.Reset(nil))
+		config.NewJson([]byte(inp)).Tocollate(clt.Reset(nil))
 		out := fmt.Sprintf("%q", clt.Bytes())
 		if out = out[1 : len(out)-1]; out != refcode {
 			t.Errorf("expected %v, got %v", refcode, out)
@@ -285,12 +285,12 @@ func TestJson2CollateMap(t *testing.T) {
 	}
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 
 		inp, refcode, reftxt := tcase[0], tcase[1], tcase[3]
-		config.NewJson([]byte(inp), -1).Tocollate(clt.Reset(nil))
+		config.NewJson([]byte(inp)).Tocollate(clt.Reset(nil))
 		out := fmt.Sprintf("%q", clt.Bytes())
 		if out = out[1 : len(out)-1]; out != refcode {
 			t.Errorf("expected %v, got %v", refcode, out)
@@ -305,13 +305,13 @@ func TestJson2CollateMap(t *testing.T) {
 	// without length prefix, and different length for keys
 	config = NewDefaultConfig().SetMaxkeys(10).SortbyPropertyLen(false)
 	clt = config.NewCollate(make([]byte, 1024), 0)
-	jsn = config.NewJson(make([]byte, 1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 
 		inp, refcode, reftxt := tcase[0], tcase[2], tcase[3]
-		config.NewJson([]byte(inp), -1).Tocollate(clt.Reset(nil))
+		config.NewJson([]byte(inp)).Tocollate(clt.Reset(nil))
 		out := fmt.Sprintf("%q", clt.Bytes())
 		if out = out[1 : len(out)-1]; out != refcode {
 			t.Errorf("expected %v, got %v", refcode, out)
@@ -327,9 +327,9 @@ func TestJson2CollateMap(t *testing.T) {
 func BenchmarkColl2JsonNil(b *testing.B) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte("null"), -1).Tocollate(clt)
+	config.NewJson([]byte("null")).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -340,9 +340,9 @@ func BenchmarkColl2JsonNil(b *testing.B) {
 func BenchmarkColl2JsonTrue(b *testing.B) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte("true"), -1).Tocollate(clt)
+	config.NewJson([]byte("true")).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -353,9 +353,9 @@ func BenchmarkColl2JsonTrue(b *testing.B) {
 func BenchmarkColl2JsonFalse(b *testing.B) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte("false"), -1).Tocollate(clt)
+	config.NewJson([]byte("false")).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -366,9 +366,9 @@ func BenchmarkColl2JsonFalse(b *testing.B) {
 func BenchmarkColl2JsonF64(b *testing.B) {
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte("10.121312213123123"), -1).Tocollate(clt)
+	config.NewJson([]byte("10.121312213123123")).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -379,9 +379,9 @@ func BenchmarkColl2JsonF64(b *testing.B) {
 func BenchmarkColl2JsonI64(b *testing.B) {
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte("123456789"), -1).Tocollate(clt)
+	config.NewJson([]byte("123456789")).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -393,9 +393,9 @@ func BenchmarkColl2JsonMiss(b *testing.B) {
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -406,9 +406,9 @@ func BenchmarkColl2JsonMiss(b *testing.B) {
 func BenchmarkColl2JsonStr(b *testing.B) {
 	config := NewDefaultConfig().SetStrict(false)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(`"hello world"`), -1).Tocollate(clt)
+	config.NewJson([]byte(`"hello world"`)).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -419,9 +419,9 @@ func BenchmarkColl2JsonStr(b *testing.B) {
 func BenchmarkColl2JsonStrS(b *testing.B) {
 	config := NewDefaultConfig().SetStrict(true)
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(`"hello world"`), -1).Tocollate(clt)
+	config.NewJson([]byte(`"hello world"`)).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -434,9 +434,9 @@ func BenchmarkColl2JsonArr(b *testing.B) {
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -450,9 +450,9 @@ func BenchmarkColl2JsonMap(b *testing.B) {
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 1024), 0)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -465,9 +465,9 @@ func BenchmarkColl2JsonTyp(b *testing.B) {
 
 	config := NewDefaultConfig()
 	clt := config.NewCollate(make([]byte, 10*1024), 0)
-	jsn := config.NewJson(make([]byte, 10*1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 10*1024))
 
-	config.NewJson([]byte(inp), -1).Tocollate(clt)
+	config.NewJson([]byte(inp)).Tocollate(clt)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

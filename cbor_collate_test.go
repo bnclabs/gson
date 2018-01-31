@@ -8,7 +8,7 @@ import "testing"
 
 func BenchmarkCbor2CollNil(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte("null"), -1)
+	jsn := config.NewJson([]byte("null"))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -21,7 +21,7 @@ func BenchmarkCbor2CollNil(b *testing.B) {
 
 func BenchmarkCbor2CollTrue(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte("true"), -1)
+	jsn := config.NewJson([]byte("true"))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -34,7 +34,7 @@ func BenchmarkCbor2CollTrue(b *testing.B) {
 
 func BenchmarkCbor2CollFalse(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte("false"), -1)
+	jsn := config.NewJson([]byte("false"))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -47,7 +47,7 @@ func BenchmarkCbor2CollFalse(b *testing.B) {
 
 func BenchmarkCbor2CollF64(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte("10.121312213123123"), -1)
+	jsn := config.NewJson([]byte("10.121312213123123"))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -60,7 +60,7 @@ func BenchmarkCbor2CollF64(b *testing.B) {
 
 func BenchmarkCbor2CollI64(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte("123456789"), -1)
+	jsn := config.NewJson([]byte("123456789"))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -73,7 +73,7 @@ func BenchmarkCbor2CollI64(b *testing.B) {
 
 func BenchmarkCbor2CollMiss(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte(fmt.Sprintf(`"%s"`, MissingLiteral)), -1)
+	jsn := config.NewJson([]byte(fmt.Sprintf(`"%s"`, MissingLiteral)))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -86,7 +86,7 @@ func BenchmarkCbor2CollMiss(b *testing.B) {
 
 func BenchmarkCbor2CollStr(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson([]byte(`"hello world"`), -1)
+	jsn := config.NewJson([]byte(`"hello world"`))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -101,7 +101,7 @@ func BenchmarkCbor2CollArr(b *testing.B) {
 	in := []byte(`[null,true,false,"hello world",10.23122312]`)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(in, -1)
+	jsn := config.NewJson(in)
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -116,7 +116,7 @@ func BenchmarkCbor2CollMap(b *testing.B) {
 	inp := `{"key1":null,"key2":true,"key3":false,"key4":"hello world",` +
 		`"key5":10.23122312}`
 	config := NewDefaultConfig().SetMaxkeys(10)
-	jsn := config.NewJson([]byte(inp), -1)
+	jsn := config.NewJson([]byte(inp))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	clt := config.NewCollate(make([]byte, 1024), 0)
 
@@ -131,7 +131,7 @@ func BenchmarkCbor2CollTyp(b *testing.B) {
 	data := testdataFile("testdata/typical.json")
 
 	config := NewDefaultConfig().SetMaxkeys(100)
-	jsn := config.NewJson(data, -1)
+	jsn := config.NewJson(data)
 	cbr := config.NewCbor(make([]byte, 0, 10*1024))
 	clt := config.NewCollate(make([]byte, 10*1024), 0)
 

@@ -6,7 +6,7 @@ import "encoding/json"
 
 func TestNil2Json(t *testing.T) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewValue(nil).Tojson(jsn)
 	if s := string(jsn.Bytes()); s != "null" {
@@ -16,7 +16,7 @@ func TestNil2Json(t *testing.T) {
 
 func TestBool2Json(t *testing.T) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewValue(true).Tojson(jsn)
 	if s := string(jsn.Bytes()); s != "true" {
@@ -37,7 +37,7 @@ func TestNumber2Json(t *testing.T) {
 		int64(-1099511627776), uint64(1099511627776),
 	}
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		var ref, out interface{}
@@ -69,7 +69,7 @@ func TestValNumber2Json(t *testing.T) {
 	}
 
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		nums := tcase[0].(json.Number)
@@ -87,9 +87,9 @@ func TestValNumber2Json(t *testing.T) {
 func TestMaptoJson(t *testing.T) {
 	txt := `{"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}`
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	config.NewValue(GolangMap2cborMap(value)).Tojson(jsn)
 	if _, val := jsn.Tovalue(); !reflect.DeepEqual(value, val) {
 		t.Errorf("expected %v, got %v", value, val)
@@ -99,9 +99,9 @@ func TestMaptoJson(t *testing.T) {
 func TestMapUint64toJson(t *testing.T) {
 	txt := `{"key1":10, "key2":9223372036854775808, "key3":-9223372036854775808}`
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 
-	_, value := config.NewJson([]byte(txt), -1).Tovalue()
+	_, value := config.NewJson([]byte(txt)).Tovalue()
 	config.NewValue(value).Tojson(jsn)
 	if _, val := jsn.Tovalue(); !reflect.DeepEqual(value, val) {
 		t.Errorf("expected %v, got %v", value, val)
@@ -118,7 +118,7 @@ func TestValues2Json(t *testing.T) {
 	}...)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024*1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024*1024))
 
 	for _, tcase := range testcases {
 		var value interface{}
@@ -144,7 +144,7 @@ func TestCodeVal2Json(t *testing.T) {
 	data := testdataFile("testdata/code.json.gz")
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, len(data)*2), 0)
+	jsn := config.NewJson(make([]byte, 0, len(data)*2))
 	json.Unmarshal(data, &value)
 	jsnrem, outval := config.NewValue(value).Tojson(jsn).Tovalue()
 
@@ -158,7 +158,7 @@ func TestCodeVal2Json(t *testing.T) {
 func BenchmarkVal2JsonNil(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue(nil)
 
 	for i := 0; i < b.N; i++ {
@@ -179,7 +179,7 @@ func BenchmarkMarshalNil(b *testing.B) {
 func BenchmarkVal2JsonBool(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue(true)
 
 	for i := 0; i < b.N; i++ {
@@ -200,7 +200,7 @@ func BenchmarkMarshalBool(b *testing.B) {
 func BenchmarkVal2JsonNum(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue(10.2)
 
 	for i := 0; i < b.N; i++ {
@@ -220,7 +220,7 @@ func BenchmarkMarshalNum(b *testing.B) {
 
 func BenchmarkVal2JsonString(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue(`"汉语 / 漢語; Hàn\b \tyǔ "`)
 
 	for i := 0; i < b.N; i++ {
@@ -241,7 +241,7 @@ func BenchmarkMarshalString(b *testing.B) {
 func BenchmarkVal2JsonArr5(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue([]interface{}{nil, true, false, 10, "tru\"e"})
 
 	for i := 0; i < b.N; i++ {
@@ -263,7 +263,7 @@ func BenchmarkMarshalArr5(b *testing.B) {
 func BenchmarkVal2JsonMap5(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue(map[string]interface{}{
 		"a": nil, "b": true, "c": false, "d\"": -10E-1, "e": "tru\"e",
 	})
@@ -277,7 +277,7 @@ func BenchmarkVal2JsonMap5(b *testing.B) {
 func BenchmarkVal2JsonMapUint64(b *testing.B) {
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	val := config.NewValue(map[string]interface{}{
 		"key1": 10,
 		"key2": int64(9223372036854775807),
@@ -311,7 +311,7 @@ func BenchmarkVal2JsonTyp(b *testing.B) {
 
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson(make([]byte, len(data)*2), 0)
+	jsn := config.NewJson(make([]byte, 0, len(data)*2))
 	val := config.NewValue(ref)
 
 	b.ResetTimer()
@@ -349,7 +349,7 @@ func BenchmarkVal2JsonCgz(b *testing.B) {
 	}
 	config := NewDefaultConfig()
 	config = config.SetNumberKind(FloatNumber).SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson(make([]byte, len(data)*2), 0)
+	jsn := config.NewJson(make([]byte, 0, len(data)*2))
 	val := config.NewValue(ref)
 
 	b.ResetTimer()

@@ -45,7 +45,7 @@ func (jsn *Json) Reset(data []byte) *Json {
 func (jsn *Json) Tovalue() (*Json, interface{}) {
 	remaining, value := json2value(bytes2str(jsn.data[:jsn.n]), jsn.config)
 	if remaining != "" {
-		return jsn.config.NewJson(str2bytes(remaining), -1), value
+		return jsn.config.NewJson(str2bytes(remaining)), value
 	}
 	return nil, value
 }

@@ -338,11 +338,11 @@ func TestCborMaster(t *testing.T) {
 	}...)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(nil, 0)
+	jsn := config.NewJson(nil)
 	cbr := config.NewCbor(make([]byte, 0, 1024*1024))
-	jsn1 := config.NewJson(make([]byte, 1024*1024), 0)
+	jsn1 := config.NewJson(make([]byte, 0, 1024*1024))
 	cbr1 := config.NewCbor(make([]byte, 0, 1024*1024))
-	jsn2 := config.NewJson(make([]byte, 1024*1024), 0)
+	jsn2 := config.NewJson(make([]byte, 0, 1024*1024))
 
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase)
@@ -379,9 +379,9 @@ func TestCborSmartnum(t *testing.T) {
 	json.Unmarshal(data, &ref)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(data, -1)
+	jsn := config.NewJson(data)
 	cbr := config.NewCbor(make([]byte, 0, 1024*1024))
-	jsnback := config.NewJson(make([]byte, 1024*1024), 0)
+	jsnback := config.NewJson(make([]byte, 0, 1024*1024))
 
 	// test json->cbor->json->value
 	jsn.Tocbor(cbr)
@@ -397,7 +397,7 @@ func TestCborSmartnum(t *testing.T) {
 
 	// test cbor->value->cbor->json->value
 	val := config.NewValue(cbr.Tovalue())
-	jsn = config.NewJson(make([]byte, 1024*1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 1024*1024))
 	cbr = config.NewCbor(make([]byte, 0, 1024*1024))
 
 	val.Tocbor(cbr)
@@ -425,7 +425,7 @@ func TestCborMalformed(t *testing.T) {
 
 			config := NewDefaultConfig()
 			config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
-			jsn := config.NewJson(make([]byte, 1024), 0)
+			jsn := config.NewJson(make([]byte, 0, 1024))
 			jsn.Tocbor(config.NewCbor(make([]byte, 0, 1024)))
 		}()
 	}
@@ -438,9 +438,9 @@ func TestCborCodeJSON(t *testing.T) {
 	json.Unmarshal(data, &ref)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(data, -1)
+	jsn := config.NewJson(data)
 	cbr := config.NewCbor(make([]byte, 0, 10*1024*1024))
-	jsnback := config.NewJson(make([]byte, 10*1024*1024), 0)
+	jsnback := config.NewJson(make([]byte, 0, 10*1024*1024))
 
 	t.Logf("%v %v", len(data), len(jsnback.Bytes()))
 
@@ -458,7 +458,7 @@ func TestCborCodeJSON(t *testing.T) {
 	}
 
 	// cbor->value->cbor->json->value
-	jsn = config.NewJson(make([]byte, 10*1024*1024), 0)
+	jsn = config.NewJson(make([]byte, 0, 10*1024*1024))
 	cbrback := config.NewCbor(make([]byte, 0, 10*1024*1024))
 	val := config.NewValue(cbr.Tovalue())
 	val.Tocbor(cbrback)
@@ -480,9 +480,9 @@ func TestCborTypical(t *testing.T) {
 	json.Unmarshal(data, &ref)
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(data, -1)
+	jsn := config.NewJson(data)
 	cbr := config.NewCbor(make([]byte, 0, 1024*1024))
-	jsnback := config.NewJson(make([]byte, 1024*1024), 0)
+	jsnback := config.NewJson(make([]byte, 0, 1024*1024))
 
 	// test json->cbor->json->value
 	jsn.Tocbor(cbr)
@@ -913,7 +913,7 @@ func BenchmarkCbor2ValMap5(b *testing.B) {
 
 func BenchmarkCbor2ValTyp(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
+	jsn := config.NewJson(testdataFile("testdata/typical.json"))
 	cbr := config.NewCbor(make([]byte, 0, 10*1024))
 	jsn.Tocbor(cbr)
 

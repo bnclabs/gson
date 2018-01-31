@@ -42,13 +42,13 @@ func TestUndefined(t *testing.T) {
 
 func TestJsonToValue(t *testing.T) {
 	config := NewDefaultConfig().SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `), -1)
+	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `))
 	jsnrmn, value := jsn.Tovalue()
 	if string(jsnrmn.Bytes()) != `  "xyz" "10" ` {
 		t.Errorf("expected %q, got %q", `  "xyz" "10" `, string(jsnrmn.Bytes()))
 	}
 
-	jsnback := config.NewJson(make([]byte, 1024), 0)
+	jsnback := config.NewJson(make([]byte, 0, 1024))
 	config.NewValue(value).Tojson(jsnback)
 	if ref := `"abcd"`; string(jsnback.Bytes()) != ref {
 		t.Errorf("expected %v, got %v", ref, string(jsnback.Bytes()))
@@ -62,7 +62,7 @@ func TestJsonToValues(t *testing.T) {
 	ref := []interface{}{"abcd", "xyz", "10", s}
 
 	config := NewDefaultConfig().SetSpaceKind(AnsiSpace)
-	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" `+uniStr), -1)
+	jsn := config.NewJson([]byte(`"abcd"  "xyz" "10" ` + uniStr))
 	if values := jsn.Tovalues(); !reflect.DeepEqual(values, ref) {
 		t.Errorf("expected %v, got %v", ref, values)
 	}
@@ -168,7 +168,7 @@ func TestCheckSortedkeys(t *testing.T) {
 	srtjson := `{"aaa":null,"bbb":[1,2],"ccc":false,"ddd":true,"fff":true}`
 
 	config := NewDefaultConfig()
-	jsn := config.NewJson(make([]byte, 1024), 0)
+	jsn := config.NewJson(make([]byte, 0, 1024))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	col := config.NewCollate(make([]byte, 1024), 0)
 

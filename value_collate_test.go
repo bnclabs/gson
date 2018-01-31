@@ -162,7 +162,7 @@ func BenchmarkVal2CollMap(b *testing.B) {
 
 func BenchmarkVal2CollTyp(b *testing.B) {
 	config := NewDefaultConfig()
-	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
+	jsn := config.NewJson(testdataFile("testdata/typical.json"))
 	clt := config.NewCollate(make([]byte, 10*1024), 0)
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)

@@ -120,7 +120,7 @@ func collatefile(filename string) (outs []string) {
 func collateLines(config *Config, s []byte) []string {
 	texts, values := lines(s), make(valueList, 0)
 	for i, text := range texts {
-		jsn := config.NewJson(text, -1)
+		jsn := config.NewJson(text)
 		_, val := jsn.Tovalue()
 		values = append(values, valObj{i, config.NewValue(val)})
 	}

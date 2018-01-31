@@ -244,7 +244,7 @@ func BenchmarkVal2CborMap5(b *testing.B) {
 func BenchmarkVal2CborTyp(b *testing.B) {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 0, 10*1024))
-	jsn := config.NewJson(testdataFile("testdata/typical.json"), -1)
+	jsn := config.NewJson(testdataFile("testdata/typical.json"))
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
 

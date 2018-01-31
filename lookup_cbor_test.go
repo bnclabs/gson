@@ -30,7 +30,7 @@ func TestCborGet(t *testing.T) {
 		cbr := config.NewCbor(make([]byte, 0, 1024))
 		item := config.NewCbor(make([]byte, 0, 1024))
 
-		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewJson([]byte(txt)).Tocbor(cbr)
 		ptr := config.NewJsonpointer("")
 
 		t.Logf("%v", txt)
@@ -75,7 +75,7 @@ func TestCborSet(t *testing.T) {
 		newcbr := config.NewCbor(make([]byte, 0, 1024))
 		old := config.NewCbor(make([]byte, 0, 1024))
 
-		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewJson([]byte(txt)).Tocbor(cbr)
 		ptr := config.NewJsonpointer("")
 
 		for _, tcase := range testcases {
@@ -121,7 +121,7 @@ func TestCborPrepend(t *testing.T) {
 		newcbr := config.NewCbor(make([]byte, 0, 1024))
 		item := config.NewCbor(make([]byte, 0, 1024))
 
-		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewJson([]byte(txt)).Tocbor(cbr)
 		config.NewValue(10.0).Tocbor(item)
 		ptr := config.NewJsonpointer("")
 
@@ -148,7 +148,7 @@ func TestCborPrepend(t *testing.T) {
 	newcbr := config.NewCbor(make([]byte, 0, 1024))
 	item := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
+	config.NewJson([]byte(txt)).Tocbor(cbr)
 	ptr := config.NewJsonpointer("")
 
 	cbr.Prepend(ptr, config.NewValue(10.0).Tocbor(item.Reset(nil)), newcbr)
@@ -163,7 +163,7 @@ func TestCborPrepend(t *testing.T) {
 	newcbr = config.NewCbor(make([]byte, 0, 1024))
 	item = config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(`{"a": 10}`), -1).Tocbor(cbr)
+	config.NewJson([]byte(`{"a": 10}`)).Tocbor(cbr)
 	fn := func(jptr *Jsonpointer, v interface{}) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -190,7 +190,7 @@ func TestCborAppend(t *testing.T) {
 		newcbr := config.NewCbor(make([]byte, 0, 1024))
 		item := config.NewCbor(make([]byte, 0, 1024))
 
-		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewJson([]byte(txt)).Tocbor(cbr)
 		config.NewValue(10.0).Tocbor(item)
 		ptr := config.NewJsonpointer("")
 
@@ -217,7 +217,7 @@ func TestCborAppend(t *testing.T) {
 	newcbr := config.NewCbor(make([]byte, 0, 1024))
 	item := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(txt), -1).Tocbor(cbr)
+	config.NewJson([]byte(txt)).Tocbor(cbr)
 	ptr := config.NewJsonpointer("")
 
 	cbr.Append(ptr, config.NewValue(10.0).Tocbor(item.Reset(nil)), newcbr)
@@ -232,7 +232,7 @@ func TestCborAppend(t *testing.T) {
 	newcbr = config.NewCbor(make([]byte, 0, 1024))
 	item = config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson([]byte(`{"a": 10}`), -1).Tocbor(cbr)
+	config.NewJson([]byte(`{"a": 10}`)).Tocbor(cbr)
 	fn := func(jptr *Jsonpointer, v interface{}) {
 		defer func() {
 			if r := recover(); r == nil {
@@ -265,7 +265,7 @@ func TestCborDelete(t *testing.T) {
 		newcbr := config.NewCbor(make([]byte, 0, 1024))
 		deleted := config.NewCbor(make([]byte, 0, 1024))
 
-		config.NewJson([]byte(txt), -1).Tocbor(cbr)
+		config.NewJson([]byte(txt)).Tocbor(cbr)
 		ptr := config.NewJsonpointer("")
 
 		for _, tcase := range testcases {
@@ -279,7 +279,7 @@ func TestCborDelete(t *testing.T) {
 			cbr, newcbr = newcbr, cbr
 		}
 		remtxt := `{"arr": [], "-": [], "nestd": [[]], "dict":{}}"`
-		_, remvalue := config.NewJson([]byte(remtxt), -1).Tovalue()
+		_, remvalue := config.NewJson([]byte(remtxt)).Tovalue()
 		if value := cbr.Tovalue(); !reflect.DeepEqual(remvalue, value) {
 			t.Errorf("expected %v, got %v", remvalue, value)
 		}
@@ -313,7 +313,7 @@ func BenchmarkCborGet(b *testing.B) {
 	cbr := config.NewCbor(make([]byte, 0, 10*1024))
 	item := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson(data, -1).Tocbor(cbr)
+	config.NewJson(data).Tocbor(cbr)
 	ptr := config.NewJsonpointer("/projects/Sherri/members/0")
 
 	b.ResetTimer()
@@ -331,7 +331,7 @@ func BenchmarkCborSet(b *testing.B) {
 	item := config.NewCbor(make([]byte, 0, 1024))
 	olditem := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson(data, -1).Tocbor(cbr)
+	config.NewJson(data).Tocbor(cbr)
 	ptr := config.NewJsonpointer("/projects/Sherri/members/0")
 
 	b.ResetTimer()
@@ -348,7 +348,7 @@ func BenchmarkCborAppend(b *testing.B) {
 	newcbr := config.NewCbor(make([]byte, 0, 10*1024))
 	item := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson(data, -1).Tocbor(cbr)
+	config.NewJson(data).Tocbor(cbr)
 	config.NewValue("bench").Tocbor(item)
 	ptra := config.NewJsonpointer("/projects/Sherri/members")
 
@@ -366,7 +366,7 @@ func BenchmarkCborPrepend(b *testing.B) {
 	newcbr := config.NewCbor(make([]byte, 0, 10*1024))
 	item := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson(data, -1).Tocbor(cbr)
+	config.NewJson(data).Tocbor(cbr)
 	config.NewValue("bench").Tocbor(item)
 	ptrp := config.NewJsonpointer("/projects/Sherri/members")
 
@@ -384,7 +384,7 @@ func BenchmarkCborDelete(b *testing.B) {
 	newcbr := config.NewCbor(make([]byte, 0, 10*1024))
 	deleted := config.NewCbor(make([]byte, 0, 1024))
 
-	config.NewJson(data, -1).Tocbor(cbr)
+	config.NewJson(data).Tocbor(cbr)
 	ptrd := config.NewJsonpointer("/projects/Sherri/members/0")
 
 	b.ResetTimer()

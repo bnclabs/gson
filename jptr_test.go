@@ -57,7 +57,7 @@ func TestTypicalPointers(t *testing.T) {
 	config := NewDefaultConfig()
 
 	data := testdataFile("testdata/typical.json")
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 
 	// test list pointers
@@ -134,7 +134,7 @@ func BenchmarkToJsonPtr5(b *testing.B) {
 func BenchmarkListPtrsTyp(b *testing.B) {
 	data := testdataFile("testdata/typical.json")
 	config := NewDefaultConfig()
-	_, value := config.NewJson(data, -1).Tovalue()
+	_, value := config.NewJson(data).Tovalue()
 	val := config.NewValue(value)
 
 	pointers := []string{}

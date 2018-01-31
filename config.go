@@ -158,19 +158,17 @@ func (config *Config) NewCbor(buffer []byte) *Cbor {
 	return &Cbor{config: config, data: buffer, n: len(buffer)}
 }
 
-// NewJson factory to create a new Json instance. Buffer can't be nil.
-// If length is less than 0, ln will be assumed as len(buffer).
-// Otherwise if ln >= 0, it should atleast be 128 or greater. This also
-// implies that len(buffer) >= 128. Json object can be re-used after a
-// Reset() call.
-func (config *Config) NewJson(buffer []byte, ln int) *Json {
-	if buffer != nil && ln >= 0 && len(buffer) < 128 {
+// NewJson factory to create a new Json instance. If buffer is nil,
+// a new buffer of 128 byte capacity will be allocated. Json object can
+// be re-used after a Reset() call.
+func (config *Config) NewJson(buffer []byte) *Json {
+	if buffer == nil {
+		buffer = make([]byte, 0, 128)
+	}
+	if len(buffer) == 0 && cap(buffer) < 128 {
 		panic("json buffer should atleast be 128 bytes")
 	}
-	if ln == -1 {
-		ln = len(buffer)
-	}
-	return &Json{config: config, data: buffer, n: ln}
+	return &Json{config: config, data: buffer, n: len(buffer)}
 }
 
 // NewCollate factor to create a new Collate instance. Buffer can't be nil.
