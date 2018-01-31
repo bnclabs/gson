@@ -43,6 +43,7 @@ type Config struct {
 //		MaxJsonpointerLen   MaxKeys
 //		MaxStringLen
 //		MaxCollateLen
+// Several methods are available to change configuration parameters.
 func NewDefaultConfig() *Config {
 	config := &Config{
 		nk: FloatNumber,
