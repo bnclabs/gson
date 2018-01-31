@@ -7,7 +7,7 @@ func TestJson2CollateNil(t *testing.T) {
 	inp, ref := "null", `2\x00`
 
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
@@ -26,7 +26,7 @@ func TestJson2CollateTrue(t *testing.T) {
 	inp, ref := "true", `F\x00`
 
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
@@ -45,7 +45,7 @@ func TestJson2CollateFalse(t *testing.T) {
 	inp, ref := "false", `<\x00`
 
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
@@ -64,7 +64,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	// as float64 using FloatNumber configuration
 	inp, refcode, reftxt := "10.2", `P>>2102-\x00`, "1.02e+01"
 	config := NewDefaultConfig().SetNumberKind(FloatNumber)
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", string(clt.Bytes()))
@@ -81,7 +81,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	// as int64 using FloatNumber configuration
 	inp, refcode, reftxt = "10", `P>>21-\x00`, "1e+01"
 	config = NewDefaultConfig().SetNumberKind(FloatNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", string(clt.Bytes()))
@@ -98,7 +98,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	// as float64 using IntNumber configuration
 	inp, refcode, reftxt = "10.2", `P>>2102-\x00`, "1.02e+01"
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", string(clt.Bytes()))
@@ -115,7 +115,7 @@ func TestJson2CollateNumber(t *testing.T) {
 	// as int64 using IntNumber configuration
 	inp, refcode, reftxt = "10", `P>>21-\x00`, "1e+01"
 	config = NewDefaultConfig().SetNumberKind(SmartNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", string(clt.Bytes()))
@@ -134,7 +134,7 @@ func TestJson2CollateString(t *testing.T) {
 	// empty string
 	inp, refcode, reftxt := `""`, `Z\x00\x00`, `""`
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
@@ -151,7 +151,7 @@ func TestJson2CollateString(t *testing.T) {
 	// normal string
 	inp, refcode = `"hello world"`, `Zhello world\x00\x00`
 	dotest := func(config *Config) {
-		clt = config.NewCollate(make([]byte, 1024), 0)
+		clt = config.NewCollate(make([]byte, 0, 1024))
 
 		config.NewJson([]byte(inp)).Tocollate(clt)
 		out = fmt.Sprintf("%q", clt.Bytes())
@@ -172,7 +172,7 @@ func TestJson2CollateString(t *testing.T) {
 	inp, refcode = fmt.Sprintf(`"%s"`, MissingLiteral), `1\x00`
 	reftxt = string(MissingLiteral)
 	config = NewDefaultConfig()
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -190,7 +190,7 @@ func TestJson2CollateString(t *testing.T) {
 	inp = fmt.Sprintf(`"%s"`, MissingLiteral)
 	refcode = `Z~[]{}falsenilNA~\x00\x00`
 	config = NewDefaultConfig().UseMissing(false)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -227,7 +227,7 @@ func TestJson2CollateArray(t *testing.T) {
 	}
 
 	config = NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
@@ -249,7 +249,7 @@ func TestJson2CollateArray(t *testing.T) {
 
 	// with length prefix
 	config = NewDefaultConfig().SortbyArrayLen(true)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 	jsn = config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
@@ -284,7 +284,7 @@ func TestJson2CollateMap(t *testing.T) {
 		},
 	}
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
@@ -304,7 +304,7 @@ func TestJson2CollateMap(t *testing.T) {
 
 	// without length prefix, and different length for keys
 	config = NewDefaultConfig().SetMaxkeys(10).SortbyPropertyLen(false)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 	jsn = config.NewJson(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
@@ -326,7 +326,7 @@ func TestJson2CollateMap(t *testing.T) {
 
 func BenchmarkColl2JsonNil(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte("null")).Tocollate(clt)
@@ -339,7 +339,7 @@ func BenchmarkColl2JsonNil(b *testing.B) {
 
 func BenchmarkColl2JsonTrue(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte("true")).Tocollate(clt)
@@ -352,7 +352,7 @@ func BenchmarkColl2JsonTrue(b *testing.B) {
 
 func BenchmarkColl2JsonFalse(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte("false")).Tocollate(clt)
@@ -365,7 +365,7 @@ func BenchmarkColl2JsonFalse(b *testing.B) {
 
 func BenchmarkColl2JsonF64(b *testing.B) {
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte("10.121312213123123")).Tocollate(clt)
@@ -378,7 +378,7 @@ func BenchmarkColl2JsonF64(b *testing.B) {
 
 func BenchmarkColl2JsonI64(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte("123456789")).Tocollate(clt)
@@ -392,7 +392,7 @@ func BenchmarkColl2JsonI64(b *testing.B) {
 func BenchmarkColl2JsonMiss(b *testing.B) {
 	inp := fmt.Sprintf(`"%s"`, MissingLiteral)
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
@@ -405,7 +405,7 @@ func BenchmarkColl2JsonMiss(b *testing.B) {
 
 func BenchmarkColl2JsonStr(b *testing.B) {
 	config := NewDefaultConfig().SetStrict(false)
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(`"hello world"`)).Tocollate(clt)
@@ -418,7 +418,7 @@ func BenchmarkColl2JsonStr(b *testing.B) {
 
 func BenchmarkColl2JsonStrS(b *testing.B) {
 	config := NewDefaultConfig().SetStrict(true)
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(`"hello world"`)).Tocollate(clt)
@@ -433,7 +433,7 @@ func BenchmarkColl2JsonArr(b *testing.B) {
 	inp := `[null,true,false,"hello world",10.23122312]`
 
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
@@ -449,7 +449,7 @@ func BenchmarkColl2JsonMap(b *testing.B) {
 		`"key5":10.23122312}`
 
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)
@@ -464,7 +464,7 @@ func BenchmarkColl2JsonTyp(b *testing.B) {
 	inp := testdataFile("testdata/typical.json")
 
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 10*1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 10*1024))
 	jsn := config.NewJson(make([]byte, 0, 10*1024))
 
 	config.NewJson([]byte(inp)).Tocollate(clt)

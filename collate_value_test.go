@@ -7,7 +7,7 @@ import "reflect"
 func TestVal2CollateNil(t *testing.T) {
 	ref := `2\x00`
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(interface{}(nil)).Tocollate(clt)
 
@@ -22,7 +22,7 @@ func TestVal2CollateNil(t *testing.T) {
 func TestVal2CollateTrue(t *testing.T) {
 	ref := `F\x00`
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(true).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
@@ -36,7 +36,7 @@ func TestVal2CollateTrue(t *testing.T) {
 func TestVal2CollateFalse(t *testing.T) {
 	ref := `<\x00`
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(false).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
@@ -51,7 +51,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	// as float64 using FloatNumber configuration
 	objf, ref := float64(10.2), `P>>2102-\x00`
 	config := NewDefaultConfig().SetNumberKind(FloatNumber)
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(objf).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
@@ -64,7 +64,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	// as int64 using FloatNumber configuration
 	obji, ref := int64(10), `P>>21-\x00`
 	config = config.SetNumberKind(FloatNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(obji).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -77,7 +77,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	// as float32 using FloatNumber configuration: FIXME
 	objf32, ref := float32(10.2), `P>>210199999809265137-\x00`
 	config = config.SetNumberKind(FloatNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(objf32).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -93,7 +93,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	objf, ref = float64(10.2), `P>>2102-\x00`
 	objr := float64(10.2)
 	config = config.SetNumberKind(FloatNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(objf).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -106,7 +106,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	// as int64 using SmartNumber configuration
 	obji, ref = int64(10), `P>>21-\x00`
 	config = config.SetNumberKind(SmartNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(obji).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -119,7 +119,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	// as uint64 using SmartNumber configuration
 	obju, ref := uint64(10), `P>>21-\x00`
 	config = config.SetNumberKind(SmartNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(obju).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -134,7 +134,7 @@ func TestVal2CollateNumber(t *testing.T) {
 	// as float64 using SmartNumber configuration
 	objf, ref = float64(0.2), `P>02-\x00`
 	config = config.SetNumberKind(SmartNumber)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(objf).Tocollate(clt)
 	out = fmt.Sprintf("%q", clt.Bytes())
@@ -148,7 +148,7 @@ func TestVal2CollateNumber(t *testing.T) {
 func TestVal2CollateMissing(t *testing.T) {
 	obj, ref := MissingLiteral, `1\x00`
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(obj).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
@@ -166,14 +166,14 @@ func TestVal2CollateMissing(t *testing.T) {
 			}
 		}()
 		config = config.UseMissing(false)
-		clt := config.NewCollate(make([]byte, 1024), 0)
+		clt := config.NewCollate(make([]byte, 0, 1024))
 		config.NewValue(MissingLiteral).Tocollate(clt)
 	}()
 }
 
 func TestVal2CollateString(t *testing.T) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	testcases := [][2]interface{}{
 		{"", `Z\x00\x00`},
@@ -214,7 +214,7 @@ func TestVal2CollateString(t *testing.T) {
 func TestVal2CollateBytes(t *testing.T) {
 	obj, ref := []byte("hello world"), `\x82hello world\x00`
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(obj).Tocollate(clt)
 	out := fmt.Sprintf("%q", clt.Bytes())
@@ -227,7 +227,7 @@ func TestVal2CollateBytes(t *testing.T) {
 
 func TestVal2CollateArray(t *testing.T) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	// without length prefix
 	testcases := [][2]interface{}{
@@ -257,7 +257,7 @@ func TestVal2CollateArray(t *testing.T) {
 
 	// with length prefix
 	config = config.SortbyArrayLen(true)
-	clt = config.NewCollate(make([]byte, 1024), 0)
+	clt = config.NewCollate(make([]byte, 0, 1024))
 	testcases = [][2]interface{}{
 		{[]interface{}{nil, true, false, 10.0, "hello"},
 			`nd>5\x002\x00F\x00<\x00P>>21-\x00Zhello\x00\x00\x00`},
@@ -286,7 +286,7 @@ func TestVal2CollateArray(t *testing.T) {
 
 func TestVal2CollateMap(t *testing.T) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	// with length prefix
 	testcases := [][2]interface{}{
 		{
@@ -320,7 +320,7 @@ func TestVal2CollateMap(t *testing.T) {
 	for _, tcase := range testcases {
 		t.Logf("%v", tcase[0])
 		obj, ref := tcase[0], tcase[1].(string)
-		clt := config.NewCollate(make([]byte, 1024), 0)
+		clt := config.NewCollate(make([]byte, 0, 1024))
 
 		config.NewValue(obj).Tocollate(clt.Reset(nil))
 		out := fmt.Sprintf("%q", clt.Bytes())
@@ -334,7 +334,7 @@ func TestVal2CollateMap(t *testing.T) {
 
 func BenchmarkColl2ValNil(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(nil).Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -344,7 +344,7 @@ func BenchmarkColl2ValNil(b *testing.B) {
 
 func BenchmarkColl2ValTrue(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(interface{}(true)).Tocollate(clt)
 	for i := 0; i < b.N; i++ {
@@ -354,7 +354,7 @@ func BenchmarkColl2ValTrue(b *testing.B) {
 
 func BenchmarkColl2ValFalse(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 
 	config.NewValue(interface{}(false)).Tocollate(clt)
 	for i := 0; i < b.N; i++ {
@@ -364,7 +364,7 @@ func BenchmarkColl2ValFalse(b *testing.B) {
 
 func BenchmarkColl2ValF64(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(float64(10.121312213123123)).Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -374,7 +374,7 @@ func BenchmarkColl2ValF64(b *testing.B) {
 
 func BenchmarkColl2ValI64(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(int64(123456789)).Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -384,7 +384,7 @@ func BenchmarkColl2ValI64(b *testing.B) {
 
 func BenchmarkColl2ValMiss(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(MissingLiteral).Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -394,7 +394,7 @@ func BenchmarkColl2ValMiss(b *testing.B) {
 
 func BenchmarkColl2ValStr(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue("hello world").Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -405,7 +405,7 @@ func BenchmarkColl2ValStr(b *testing.B) {
 func BenchmarkColl2ValArr(b *testing.B) {
 	arr := []interface{}{nil, true, false, "hello world", 10.23122312}
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(arr).Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -419,7 +419,7 @@ func BenchmarkColl2ValMap(b *testing.B) {
 		"key5": 10.23122312,
 	}
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(obj).Tocollate(clt)
 
 	for i := 0; i < b.N; i++ {
@@ -430,7 +430,7 @@ func BenchmarkColl2ValMap(b *testing.B) {
 func BenchmarkColl2ValTyp(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(testdataFile("testdata/typical.json"))
-	clt := config.NewCollate(make([]byte, 10*1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 10*1024))
 	jsn.Tocollate(clt)
 
 	b.ResetTimer()

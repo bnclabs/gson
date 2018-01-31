@@ -89,7 +89,7 @@ func TestToJsonPointer(t *testing.T) {
 
 func TestGsonToCollate(t *testing.T) {
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	config.NewValue(map[string]interface{}{"a": 10, "b": 20}).Tocollate(clt)
 	ref := map[string]interface{}{"a": 10.0, "b": 20.0}
 	if value := clt.Tovalue(); !reflect.DeepEqual(ref, value) {
@@ -100,7 +100,7 @@ func TestGsonToCollate(t *testing.T) {
 func TestCborToCollate(t *testing.T) {
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
 	cbr := config.NewCbor(make([]byte, 0, 1024))
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	out := config.NewCbor(make([]byte, 0, 1024))
 
 	o := [][2]interface{}{
@@ -130,7 +130,7 @@ func TestResetPool(t *testing.T) {
 
 func TestNewCollate(t *testing.T) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 123), -1)
+	clt := config.NewCollate(make([]byte, 123))
 	if clt.n != 123 {
 		t.Errorf("expected %v, got %v", 123, clt.n)
 	}
@@ -170,7 +170,7 @@ func TestCheckSortedkeys(t *testing.T) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(make([]byte, 0, 1024))
 	cbr := config.NewCbor(make([]byte, 0, 1024))
-	col := config.NewCollate(make([]byte, 1024), 0)
+	col := config.NewCollate(make([]byte, 0, 1024))
 
 	json := config.NewValue(val).Tojson(jsn.Reset(nil)).Bytes()
 	if string(json) != srtjson {

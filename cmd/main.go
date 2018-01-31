@@ -268,7 +268,7 @@ func collateLines(config *gson.Config, s []byte) []string {
 	texts, codes := lines(s), make(codeList, 0)
 	for i, text := range texts {
 		jsn := config.NewJson(text)
-		clt := config.NewCollate(make([]byte, 1024), -1)
+		clt := config.NewCollate(make([]byte, 1024))
 		jsn.Tocollate(clt.Reset(nil))
 		codes = append(codes, codeObj{i, clt.Bytes()})
 	}
@@ -376,7 +376,7 @@ func cbor2collate(inp []byte) { // catch: input comes as cbor-str
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	cbr := config.NewCbor(inp)
-	clt := config.NewCollate(make([]byte, len(inp)*2), -1)
+	clt := config.NewCollate(make([]byte, len(inp)*2))
 
 	if options.mprof == "" {
 		cbr.Tocollate(clt.Reset(nil))
@@ -400,7 +400,7 @@ func collate2cbor(inp []byte) { // catch: input comes as collate-str
 
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
-	clt := config.NewCollate(inp, -1)
+	clt := config.NewCollate(inp)
 	cbr := config.NewCbor(make([]byte, 0, (len(inp)*2 + 128)))
 
 	if options.mprof == "" {
@@ -428,7 +428,7 @@ func value2collate(inp []byte) { // catch: input comes as json-str
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	_, value := config.NewJson(inp).Tovalue()
 	val := config.NewValue(value)
-	clt := config.NewCollate(make([]byte, (len(inp)*2+128)), 0)
+	clt := config.NewCollate(make([]byte, (len(inp)*2 + 128)))
 
 	if options.mprof == "" {
 		val.Tocollate(clt.Reset(nil))
@@ -445,7 +445,7 @@ func collate2value(inp []byte) { // catch: input comes as collate-str
 
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
-	clt := config.NewCollate(inp, -1)
+	clt := config.NewCollate(inp)
 
 	if options.mprof == "" {
 		value := clt.Tovalue()
@@ -499,7 +499,7 @@ func json2collate(inp []byte) { // catch: input comes as json-str
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
 	jsn := config.NewJson(inp)
-	clt := config.NewCollate(make([]byte, (len(inp)*2)+128), 0)
+	clt := config.NewCollate(make([]byte, (len(inp)*2)+128))
 
 	fn := func() {
 		jsn.Tocollate(clt.Reset(nil))
@@ -527,7 +527,7 @@ func collate2json(inp []byte) { // catch: input comes as collate-str
 
 	config := makeConfig()
 	config = config.ResetPools(strlen, numkeys, itemlen, ptrlen)
-	clt := config.NewCollate(inp, -1)
+	clt := config.NewCollate(inp)
 	jsn := config.NewJson(make([]byte, 0, (len(inp)*4 + 128)))
 
 	if options.mprof == "" {
@@ -566,7 +566,7 @@ func computeOverheads() {
 	}
 	config := makeConfig()
 	cbr := config.NewCbor(make([]byte, 0, 1024))
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 1024))
 	for _, item := range items {
 		fmt.Printf("item: %v\n", item)
 

@@ -7,7 +7,7 @@ import "testing"
 func TestSortedkeys(t *testing.T) {
 	json := []byte(`{"three":10, "two":20, "one":30}`)
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 0, 1024), -1)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	jsn := config.NewJson(json)
 
 	ref := "xd>3\x00Zone\x00\x00P>>23-\x00Zthree\x00\x00P>>21-\x00Ztwo\x00\x00P>>22-\x00\x00"

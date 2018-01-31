@@ -6,8 +6,8 @@ import "reflect"
 
 func TestCollateReset(t *testing.T) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
-	cltr := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
+	cltr := config.NewCollate(make([]byte, 0, 1024))
 
 	ref := []interface{}{"sound", "ok", "horn"}
 	config.NewValue(ref).Tocollate(clt)
@@ -21,7 +21,7 @@ func TestCollateEmpty(t *testing.T) {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 0, 128))
 	jsn := config.NewJson(nil)
-	clt := config.NewCollate(make([]byte, 128), 0)
+	clt := config.NewCollate(nil)
 
 	func() {
 		defer func() {

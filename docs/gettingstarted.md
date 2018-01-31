@@ -51,9 +51,9 @@ Json, Cbor, and Collate can also be initialized with empty buffer,
 that have adequate capacity:
 
 ```go
-jsn := config.NewJson(make([]byte, 1024))
+jsn := config.NewJson(make([]byte, 0, 1024))
 cbr := config.NewCbor(make([]byte, 0, 1024))
-clt := config.NewCollate(make([]byte, 1024))
+clt := config.NewCollate(make([]byte, 0, 1024))
 ```
 
 To reuse Json, Cbor, or Collate objects:

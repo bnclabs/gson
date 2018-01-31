@@ -171,19 +171,17 @@ func (config *Config) NewJson(buffer []byte) *Json {
 	return &Json{config: config, data: buffer, n: len(buffer)}
 }
 
-// NewCollate factor to create a new Collate instance. Buffer can't be nil.
-// If length is less than 0, ln will be assumed as len(buffer).
-// Otherwise if ln >= 0, it should atleast be 128 or greater. This also
-// implies that len(buffer) >= 128. Collate object can be re-used after a
-// Reset() call.
-func (config *Config) NewCollate(buffer []byte, ln int) *Collate {
-	if buffer != nil && ln >= 0 && len(buffer) < 128 {
+// NewCollate factor to create a new Collate instance. If buffer is nil,
+// a new buffer of 128 byte capacity will be allocated. Collate object can
+// be re-used after a Reset() call.
+func (config *Config) NewCollate(buffer []byte) *Collate {
+	if buffer == nil {
+		buffer = make([]byte, 0, 128)
+	}
+	if len(buffer) == 0 && cap(buffer) < 128 {
 		panic("collate buffer should atleast be 128 bytes")
 	}
-	if ln == -1 {
-		ln = len(buffer)
-	}
-	return &Collate{config: config, data: buffer, n: ln}
+	return &Collate{config: config, data: buffer, n: len(buffer)}
 }
 
 // NewValue factory to create a new Value instance. Value instances are

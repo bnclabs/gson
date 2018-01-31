@@ -20,7 +20,7 @@ func TestValNumber2Coll(t *testing.T) {
 	var items ByteSlices
 
 	config := NewDefaultConfig().SetNumberKind(SmartNumber)
-	col := config.NewCollate(make([]byte, 1024), 0)
+	col := config.NewCollate(make([]byte, 0, 1024))
 
 	for _, tcase := range testcases {
 		nums := tcase[0].(json.Number)
@@ -38,7 +38,7 @@ func TestValNumber2Coll(t *testing.T) {
 		testcases[2][1], testcases[3][1]}
 	outs := []interface{}{}
 	for _, item := range items {
-		outs = append(outs, config.NewCollate(item, -1).Tovalue())
+		outs = append(outs, config.NewCollate(item).Tovalue())
 	}
 	if reflect.DeepEqual(outs, refs) == false {
 		t.Errorf("expected %v, got %v", refs, outs)
@@ -47,7 +47,7 @@ func TestValNumber2Coll(t *testing.T) {
 
 func BenchmarkVal2CollNil(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(nil)
 
 	for i := 0; i < b.N; i++ {
@@ -57,7 +57,7 @@ func BenchmarkVal2CollNil(b *testing.B) {
 
 func BenchmarkVal2CollTrue(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(true))
 
 	for i := 0; i < b.N; i++ {
@@ -67,7 +67,7 @@ func BenchmarkVal2CollTrue(b *testing.B) {
 
 func BenchmarkVal2CollFalse(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(false))
 
 	for i := 0; i < b.N; i++ {
@@ -77,7 +77,7 @@ func BenchmarkVal2CollFalse(b *testing.B) {
 
 func BenchmarkVal2CollF64(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(float64(10.121312213123123)))
 
 	for i := 0; i < b.N; i++ {
@@ -87,7 +87,7 @@ func BenchmarkVal2CollF64(b *testing.B) {
 
 func BenchmarkVal2CollI64(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(int64(123456789)))
 
 	for i := 0; i < b.N; i++ {
@@ -97,7 +97,7 @@ func BenchmarkVal2CollI64(b *testing.B) {
 
 func BenchmarkVal2CollINum(b *testing.B) {
 	config := NewDefaultConfig()
-	col := config.NewCollate(make([]byte, 128), 0)
+	col := config.NewCollate(nil)
 	val := config.NewValue(json.Number("-9223372036854775808"))
 
 	for i := 0; i < b.N; i++ {
@@ -107,7 +107,7 @@ func BenchmarkVal2CollINum(b *testing.B) {
 
 func BenchmarkVal2CollUNum(b *testing.B) {
 	config := NewDefaultConfig()
-	col := config.NewCollate(make([]byte, 128), 0)
+	col := config.NewCollate(nil)
 	val := config.NewValue(json.Number("9223372036854775808"))
 
 	for i := 0; i < b.N; i++ {
@@ -117,7 +117,7 @@ func BenchmarkVal2CollUNum(b *testing.B) {
 
 func BenchmarkVal2CollMiss(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(MissingLiteral))
 
 	for i := 0; i < b.N; i++ {
@@ -127,7 +127,7 @@ func BenchmarkVal2CollMiss(b *testing.B) {
 
 func BenchmarkVal2CollStr(b *testing.B) {
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}("hello world"))
 
 	for i := 0; i < b.N; i++ {
@@ -138,7 +138,7 @@ func BenchmarkVal2CollStr(b *testing.B) {
 func BenchmarkVal2CollArr(b *testing.B) {
 	arr := []interface{}{nil, true, false, "hello world", 10.23122312}
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(arr))
 
 	for i := 0; i < b.N; i++ {
@@ -152,7 +152,7 @@ func BenchmarkVal2CollMap(b *testing.B) {
 		"key5": 10.23122312,
 	}
 	config := NewDefaultConfig()
-	clt := config.NewCollate(make([]byte, 1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 1024))
 	val := config.NewValue(interface{}(obj))
 
 	for i := 0; i < b.N; i++ {
@@ -163,7 +163,7 @@ func BenchmarkVal2CollMap(b *testing.B) {
 func BenchmarkVal2CollTyp(b *testing.B) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(testdataFile("testdata/typical.json"))
-	clt := config.NewCollate(make([]byte, 10*1024), 0)
+	clt := config.NewCollate(make([]byte, 0, 10*1024))
 	_, value := jsn.Tovalue()
 	val := config.NewValue(value)
 
