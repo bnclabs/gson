@@ -1,13 +1,12 @@
 Object formats and notations
 ============================
 
+[![talk on matrix](https://github.com/prataprc/dotfiles/blob/master/assets/talkonmatrix.svg)](https://riot.im/app/#/user/@prataprc:matrix.org?action=chat)
 [![Build Status](https://travis-ci.org/prataprc/gson.png)](https://travis-ci.org/prataprc/gson)
 [![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.png?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
 [![GoDoc](https://godoc.org/github.com/prataprc/gson?status.png)](https://godoc.org/github.com/prataprc/gson)
 [![Go Report Card](https://goreportcard.com/badge/github.com/prataprc/gson)](https://goreportcard.com/report/github.com/prataprc/gson)
 [![GitPitch](https://gitpitch.com/assets/badge.svg)](https://gitpitch.com/prataprc/gson/master?grs=github&t=white)
-
-**Goals**:
 
 - High performance algorithms for data transformation, serialization and
   manipulation.
@@ -23,7 +22,7 @@ Object formats and notations
 Quick Links
 -----------
 
-* [slides on gson](https://gitpitch.com/prataprc/gson/master?grs=github&t=white)
+* [slides on gson][gitpitch-link]
 * [What is what](#what-is-what)
 * [Configuration](#configuration)
 * [Transforms](#transforms)
@@ -38,8 +37,8 @@ What is what
 
 **JSON**
 
-* Java Script Object Notation, also called [JSON](http://www.json.org/),
-  [RFC-7159](https://tools.ietf.org/html/rfc7159).
+* Java Script Object Notation, also called [JSON][JSON-link],
+  [RFC-7159][RFC7159-link]
 * Fast becoming the internet standard for data exchange.
 * Human readable format, not so friendly for machine representation.
 
@@ -59,12 +58,12 @@ What is what
   second item is treated as value, hence equivalent to
   `map[string]interface{}`.
 * Gson objects support operations like, Get(), Set(), and
-  Delete() on individual fields located by the JSON-POINTER.
+  Delete() on individual fields located by the json-pointer.
 
 **CBOR**
 
-* Concise Binary Object Representation, also called [CBOR](http://cbor.io/),
-  [RFC-7049](https://tools.ietf.org/html/rfc7049).
+* Concise Binary Object Representation, also called [CBOR][CBOR-link],
+  [RFC-7049link][RFC7049-link].
 * Machine friendly, designed for IoT, inter-networking of light weight
   devices, and easy to implement in many languages.
 * Can be used for more than data exchange, left to user
@@ -76,33 +75,31 @@ What is what
   handle JSON specification.
 * Binary representation preserving the sort order.
 * Transform back to original JSON from binary representation.
-* Numbers can be encoded in three ways - as integers, or as
-  small-decimals, or as floating-point represented in exponent
-  form.
+* Numbers can be treated as floating-point, for better performance or either as
+  floating-point or integer, for flexibility.
 * More details can be found [here](docs/collate.md)
 
 **JSON-Pointer**
 
-* URL like field locator within a JSON object,
-  [RFC-6901](https://tools.ietf.org/html/rfc6901).
-* Make sense only for JSON arrays and objects, but to any level
-  of nesting.
-* JSON-pointers shall be unquoted before they are used for
-  accessing into JSON text (or an equivalent representation),
-  after unquoting segments within the pointer, each segment shall
-  be binary compared with property keys.
+* URL like field locator within a JSON object, [RFC-6901][RFC6901-link].
+* For navigating through JSON arrays and objects, but to any level of nesting.
+* JSON-pointers shall be unquoted before they are used as path into
+  JSON document.
 * Documents encoded in CBOR format using LengthPrefix are not
   supported by lookup APIs.
 
-**Performance and memory pressure**
+Performance and memory pressure
+-------------------------------
 
 Following Benchmark is made on a map data which has a shape similar to:
 
-```go
+```json
 {"key1": nil, "key2": true, "key3": false,
 "key4": "hello world", "key5": 10.23122312}
 ```
+
 or,
+
 ```go
 {"a":null,"b":true,"c":false,"d\"":10,"e":"tru\"e", "f":[1,2]}
 ```
@@ -126,7 +123,6 @@ BenchmarkJson2ValMap5    1000000  1621 ns/op   699 B/op  14 allocs/op
 BenchmarkCbor2ValMap5    1000000  1711 ns/op   496 B/op  18 allocs/op
 BenchmarkColl2ValMap     1000000  2235 ns/op  1440 B/op  33 allocs/op
 ```
-
 Configuration
 -------------
 
@@ -395,10 +391,12 @@ For transforming to and from binary-collation refer [here](docs/collate.md)
 Articles
 --------
 
-* [Note on sorting](http://prataprc.github.io/sorting-data.html).
+* [Note on sorting][article1-link]
 
 How to contribute
 -----------------
+
+[![Issue Stats](http://issuestats.com/github/prataprc/gson/badge/issue)](http://issuestats.com/github/prataprc/gson)
 
 * Pick an issue, or create an new issue. Provide adequate documentation for
   the issue.
@@ -406,11 +404,14 @@ How to contribute
 * Work on the code, once finished, raise a pull request.
 * Gson is written in [golang](https://golang.org/), hence expected to follow the
   global guidelines for writing go programs.
+* If the changeset is more than few lines, please generate a
+  [report card](https://goreportcard.com/report/github.com/prataprc/gson).
+* As of now, branch `master` is the development branch.
 
 **Task list**
 
 * [x] Binary collation: transparently handle int64, uint64 and float64.
-* [ ] Support for json.Number
+* [x] Support for json.Number.
 * [ ] UTF-8 collation of strings.
 * [ ] JSON-pointer.
   - [ ] JSON pointer for looking up within CBOR map.
@@ -430,12 +431,19 @@ Notes
 **list of changes from github.com/prataprc/collatejson**
 
 * Codec type is renamed to Config.
-* caller should make sure that the o/p buffer passed to encoding
+* Caller should make sure that the o/p buffer passed to encoding
   and decoding APIs are adequately sized.
 * Name and signature of NewCodec() (now, NewDefaultConfig) has changed.
-* configuration APIs,
-  SortbyArrayLen, SortbyPropertyLen, UseMissing, NumberType all now return
-  the config object back the caller - helps in call-chaining.
-* all APIs panic instead of returning an error.
-* output buffer should have its len() == cap(), so that encoder and decoder
+* Configuration APIs,SortbyArrayLen, SortbyPropertyLen, UseMissing, NumberType
+  all now return the config object back the caller - helps in call-chaining.
+* All APIs panic instead of returning an error.
+* Output buffer should have its len() == cap(), so that encoder and decoder
   can avoid append and instead use buffer index.
+
+[gitpitch-link]: https://gitpitch.com/prataprc/gson/master?grs=github&t=white
+[JSON-link]: http://www.json.org/
+[RFC7159-link]: https://tools.ietf.org/html/rfc7159
+[CBOR-link]: http://cbor.io/
+[RFC7049-link]: https://tools.ietf.org/html/rfc7049
+[RFC6901-link]: https://tools.ietf.org/html/rfc6901
+[article1-link]: http://prataprc.github.io/sorting-data.html

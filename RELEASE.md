@@ -30,12 +30,13 @@ Repository structure
 Badges
 ------
 
+* Talk on matrix.
 * CI badge
 * Coverage badge
 * Godoc reference.
 * Issue stats badge for response time.
-  http://issuestats.com/github/prataprc/goparsec
+  http://issuestats.com/github/prataprc/gson
 * Sourcegraph for "used by projects" badge
-  https://sourcegraph.com/github.com/prataprc/goparsec/-/badge.svg
+  https://sourcegraph.com/github.com/prataprc/gson/-/badge.svg
 * Report card.
-  https://goreportcard.com/report/github.com/prataprc/goparsec
+  https://goreportcard.com/report/github.com/prataprc/gson

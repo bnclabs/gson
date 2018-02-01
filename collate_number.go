@@ -353,7 +353,7 @@ func collated2Float(code, text []byte) (int, int) {
 		// adjust 0.xyz as x.yz
 		text[1] = text[3]
 		copy(text[3:], text[4:y])
-		y -= 1
+		y--
 		text[y] = 'e'
 		// adjust exponent by 1
 		i, err := strconv.Atoi(bytes2str(exp))

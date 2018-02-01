@@ -200,7 +200,7 @@ choices that can be taken when encoding number:
 * Numbers can be treated as **float64** defined by IEEE-754 specification.
   This implies that, only integers less than 2^53 and greater than -2^53
   can be represented using this format.
-* JSON parsers can automatically detect integers ouside than 2^53 boundary.
+* JSON parsers can automatically detect integers outside 2^53 boundary.
 
 The trade-off between the two is that, former implementation may consume less
 CPU while later implementation will be future proof. Either way, we will
@@ -215,10 +215,10 @@ normalised representation and ensures comparison can be determined by the
 exponent where it differs otherwise by the mantissa.
 
 The floating point number is then a triple `(+, e, m)` or `(−, −e, m)`
-consisiting of a sign followed by the exponent and mantissa. The exponent
+consisting of a sign followed by the exponent and mantissa. The exponent
 is represented as an integer using the recursive method and is negated for
 negative numbers to ensure ordering. The mantissa is represented as a
-postive small decimal but its sign must appear at the front of the entire
+positive small decimal but its sign must appear at the front of the entire
 representation. As with large decimals there is no need to include a
 delimiter since the exponent is length prefixed. Zero is represented as
 0 since a sign symbol will be used for all other numbers. The resulting
@@ -253,10 +253,10 @@ float           binary compiled
 String
 ------
 
-ASCII formated strings are similar to binary comparision of byte arrays.
+ASCII formatted strings are similar to binary comparison of byte arrays.
 Every character in ASCII has a corresponding byte value and byte order has
 one-one correspondence with character ordering. This get complicated once
-we move on to unicoded strings.
+we move on to Unicoded strings.
 
 Strings are collated as it is received from the input **without un-quoting**
 as JSON-string and **without unicode collation**. Encoded strings shall be
@@ -304,7 +304,7 @@ shall first sort the {key,value} pairs within a property object based on
 the `key` string.
 
 Secondly, we pick each {key,value} pair from both the property in its
-positional order and start the comparision, `key` is compared first
+positional order and start the comparison, `key` is compared first
 and `value` is compared only when `key` from each item compares equal.
 
 Third aspect of sorting property is its arity, whether property with

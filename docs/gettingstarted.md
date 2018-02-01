@@ -32,7 +32,7 @@ Config{} objects are immutable. Call to one of the config API will return
 a new config instance with new settings. This also allows config-apis to be
 chained.
 
-Use the config instance to create Cbor, Json, Value and Collate instances.
+Use the config instance to create CBOR, JSON, Value and Collate instances.
 It is not encouraged to create these instances directly. The created instances
 will adhere to the configuration settings available from the config object
 that was used to instantiate them. Once configured try to re-use these
@@ -47,7 +47,7 @@ cbr := config.NewCbor(cbor_byteslice)       // *gson.Cbor
 clt := config.NewCollate(collated_byteslice)   // *gson.Collate
 ```
 
-Json, Cbor, and Collate can also be initialized with empty buffer,
+JSON, CBOR, and Collate can also be initialized with empty buffer,
 that have adequate capacity:
 
 ```go
@@ -56,7 +56,7 @@ cbr := config.NewCbor(make([]byte, 0, 1024))
 clt := config.NewCollate(make([]byte, 0, 1024))
 ```
 
-To reuse Json, Cbor, or Collate objects:
+To reuse JSON, CBOR, or Collate objects:
 
 ```go
 jsn.Reset(nil)
@@ -64,7 +64,7 @@ cbr.Reset(nil)
 clt.Reset(nil)
 ```
 
-To reset Json, Cbor, or Collate objects with another buffer.
+To reset JSON, CBOR, or Collate objects with another buffer.
 
 ```go
 jsn.Reset(another_json)

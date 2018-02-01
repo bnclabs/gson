@@ -34,7 +34,7 @@ func TestCborAppendixA(t *testing.T) {
 			cborbytes := v.Tocbor(cbr.Reset(make([]byte, 1024*1024))).Bytes()
 			s := hexcodec.EncodeToString(cborbytes)
 			if s != hexinp {
-				t.Logf("roundtrip", tcase)
+				t.Logf("roundtrip %v", tcase)
 				t.Errorf("expected %q, got %q", hexinp, s)
 			}
 		}

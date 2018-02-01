@@ -1,16 +1,17 @@
 General options
 ---------------
 
-* ``-inpfile`` process file containing json doc(s) based on other options.
+* ``-inpfile`` process file containing JSON doc(s) based on other options.
 * ``-inptxt`` process input text based on their options.
 * ``-mprof`` take memory profile for testdata/code.json.gz.
 * ``-outfile`` write output to file.
-* ``-overheads`` compute overheads on cbor and collation encoding.
+* ``-overheads`` compute overheads on CBOR and collation encoding.
 * ``-quote`` use strconv.Unquote on inptxt/inpfile.
 * ``-repeat`` repeat count.
 * ``-nk`` can be ``smart``, treat number as int64 or fall back to float64, or,
   ``float``, treat number only as float64 (default "float").
-* ``-ws`` can be ``ansi`` whitespace, or, ``unicode`` whitespace, default "ansi".
+* ``-ws`` can be ``ansi`` white space, or, ``unicode`` white space, default
+  "ANSI".
 
 To include [n1ql](https://www.couchbase.com/products/n1ql), compile it with
 ``-tags n1ql``.
@@ -18,7 +19,7 @@ To include [n1ql](https://www.couchbase.com/products/n1ql), compile it with
 Convert from JSON
 -----------------
 
-* ``-json2cbor`` convert inptxt or content in inpfile to cbor output.
+* ``-json2cbor`` convert inptxt or content in inpfile to CBOR output.
 * ``-json2collate`` convert inptxt or content in inpfile to collated output.
 * ``-json2value`` convert inptxt or content in inpfile to golang value.
 
@@ -30,19 +31,19 @@ Convert from CBOR
 -----------------
 
 * ``-cbor2collate`` convert inptxt or content in inpfile to collated output.
-* ``-cbor2json`` convert inptxt or content in inpfile to json output.
+* ``-cbor2json`` convert inptxt or content in inpfile to JSON output.
 * ``-cbor2value`` convert inptxt or content in inpfile to golang value.
 
 **options for CBOR**
 
-* ``-ct`` container encoding for cbor, allowed ``stream`` (default), or,
+* ``-ct`` container encoding for CBOR, allowed ``stream`` (default), or,
   ``lenprefix``.
 
 Convert from Collate
 --------------------
 
-* ``-collate2cbor`` convert inptxt or content in inpfile to cbor output.
-* ``-collate2json`` convert inptxt or content in inpfile to json output.
+* ``-collate2cbor`` convert inptxt or content in inpfile to CBOR output.
+* ``-collate2json`` convert inptxt or content in inpfile to JSON output.
 * ``-collate2value`` convert inptxt or content in inpfile to value.
 
 
@@ -62,9 +63,9 @@ Convert from Collate
 Convert from value
 ------------------
 
-* ``-value2cbor`` convert inptxt json to value and then to cbor
-* ``-value2json`` convert inptxt json to value and then back to json
-* ``-value2collate`` convert inptxt json to value and then back to binary
+* ``-value2cbor`` convert inptxt JSON to value and then to CBOR.
+* ``-value2json`` convert inptxt JSON to value and then back to JSON.
+* ``-value2collate`` convert inptxt JSON to value and then back to binary.
 
 
 Examples
@@ -98,7 +99,7 @@ Coll: "\x06hello world\x00\x00"
 Coll: [6 104 101 108 108 111 32 119 111 114 108 100 0 0]
 ```
 
-Similary to transform from CBOR:
+Similarly to transform from CBOR:
 
 ```bash
 $ gson -inptxt "khello world" -cbor2value
@@ -121,7 +122,7 @@ Cbor: "\x9f\xfb@$\x00\x00\x00\x00\x00\x00\xfb@4\x00\x00\x00\x00\x00\x00\xff"
 Json: [10,20]
 ```
 
-Similary to transform from collate:
+Similarly to transform from collate:
 
 ```bash
 $ gson -inpfile example.coll -collate2value
@@ -129,7 +130,7 @@ $ gson -inpfile example.coll -collate2json
 $ gson -inpfile example.coll -collate2cbor
 ```
 
-Similary to transform from value:
+Similarly to transform from value:
 
 ```bash
 $ gson -inptxt '"hello world"' -value2json
