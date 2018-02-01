@@ -2,10 +2,6 @@ package gson
 
 import "fmt"
 
-func init() {
-	ExampleJson_Transforms()
-}
-
 func ExampleConfig() {
 	config := NewDefaultConfig()
 	// override default configuration options.
@@ -45,11 +41,24 @@ func ExampleCbor() {
 	fmt.Printf("value: %v cbor: %q\n", val5, cbr.Bytes())
 	cbr.Reset(nil)
 
+	config = NewDefaultConfig()
+	cbr = config.NewCbor(make([]byte, 0, 1024))
+	jsn := config.NewJson(make([]byte, 0, 1024))
+	clt := config.NewCollate(make([]byte, 0, 1024))
+
+	config.NewValue([]interface{}{10, 20, 100}).Tocbor(cbr)
+	fmt.Printf("to json   : %q\n", cbr.Tojson(jsn).Bytes())
+	fmt.Printf("to collate: %q\n", cbr.Tocollate(clt).Bytes())
+	fmt.Printf("to value  : %v\n", cbr.Tovalue())
+
 	// Output:
 	// value: [[104 101 108 108 111] [119 111 114 108 100]] cbor: "_EhelloEworld\xff"
 	// value: [[first true]] cbor: "efirst\xf5"
 	// value: {128,-10} cbor: "\xf8\x80)"
 	// value: [sound ok horn] cbor: "\u007fesoundbokdhorn\xff"
+	// to json   : "[10,20,100]"
+	// to collate: "nP>>21-\x00P>>22-\x00P>>31-\x00\x00"
+	// to value  : [10 20 100]
 }
 
 func ExampleCbor_Append() {
@@ -100,23 +109,7 @@ func ExampleCbor_Append() {
 	// after deleting first item [30], deleted value 20
 }
 
-func ExampleCbor_Transforms() {
-	config := NewDefaultConfig()
-	cbr := config.NewCbor(make([]byte, 0, 1024))
-	jsn := config.NewJson(make([]byte, 0, 1024))
-	clt := config.NewCollate(make([]byte, 0, 1024))
-
-	config.NewValue([]interface{}{10, 20, 100}).Tocbor(cbr)
-	fmt.Printf("to json   : %q\n", cbr.Tojson(jsn).Bytes())
-	fmt.Printf("to collate: %q\n", cbr.Tocollate(clt).Bytes())
-	fmt.Printf("to value  : %v\n", cbr.Tovalue())
-	// Output:
-	// to json   : "[10,20,100]"
-	// to collate: "nP>>21-\x00P>>22-\x00P>>31-\x00\x00"
-	// to value  : [10 20 100]
-}
-
-func ExampleCollate_Transforms() {
+func ExampleCollate() {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
@@ -132,7 +125,7 @@ func ExampleCollate_Transforms() {
 	// value: [10 20 100]
 }
 
-func ExampleJson_Transforms() {
+func ExampleJson() {
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	jsn := config.NewJson(make([]byte, 0, 1024))
