@@ -4,8 +4,8 @@ import "encoding/json"
 import "bytes"
 
 // Collation order for supported types. Applications desiring different
-// ordering between types can initialize these bytes values before
-// using this package.
+// ordering between types can initialize these byte values before
+// instantiating a config object.
 var (
 	Terminator  byte = 0
 	TypeMissing byte = 49
