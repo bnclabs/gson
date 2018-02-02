@@ -55,7 +55,7 @@ different and so its output.
 ['100', '20', '346', '560']
 ```
 
-The comparator function used to sort a list of numbers represented as string
+The comparator function used to sort a list of numbers represented in string
 type is not really working out. What went wrong ? Our mistake was in
 choosing a wrong comparator function by choosing a wrong data representation.
 
@@ -158,8 +158,7 @@ Sort order for each JSON type:
 Null
 ----
 
-Since this is a single value type, and all null values shall be encoded
-into as:
+This is a single value type and all null values shall be encoded as:
 
 ```go
 $ ./gson -inptxt null -json2collate
@@ -206,13 +205,22 @@ The trade-off between the two is that, former implementation may consume less
 CPU while later implementation will be future proof. Either way, we will
 be encoding all number as arbitrarily sized floating point.
 
+Encoding numbers is based on the paper
+[Efficient Lexicographic Encoding of Numbers](docs/collate.pdf). Section 2
+`Natural numbers` from the paper describe the basic idea in encoding
+natural numbers of arbitrary size, Section 3 extends this idea to
+negative numbers there by covering the full set of integers, and Section 3
+`Small Decimals` apply similar idea to decimal number set r ∈ (0,1). Based
+on the ideas articulated from these three sections, we will further improvise
+them to encode floating point numbers of arbitrary length.
+
 A floating point number `f` takes a mantissa `m` and an integer exponent
 `e` such that `f = 10e × ±m`. Unlike the IEEE-754 specification mantissa and
 exponent can be of arbitrary length which helps us to encode very larger
-numbers. The mantissa will always have a non-zero digit after
-the point and for each number `f` will have a unique exponent. This is the
-normalised representation and ensures comparison can be determined by the
-exponent where it differs otherwise by the mantissa.
+numbers. The mantissa will always have a non-zero digit after the point
+and for each number `f` will have a unique exponent. This is the normalised
+representation and ensures comparison can be determined by the exponent where
+it differs otherwise by the mantissa.
 
 The floating point number is then a triple `(+, e, m)` or `(−, −e, m)`
 consisting of a sign followed by the exponent and mantissa. The exponent
@@ -221,10 +229,8 @@ negative numbers to ensure ordering. The mantissa is represented as a
 positive small decimal but its sign must appear at the front of the entire
 representation. As with large decimals there is no need to include a
 delimiter since the exponent is length prefixed. Zero is represented as
-0 since a sign symbol will be used for all other numbers. The resulting
-representations look like the large decimals with a sign added except the
-integer is used multiplicatively to scale the number rather than as an
-additive offset. Following is a set of examples:
+0 since a sign symbol will be used for all other numbers. Following is a
+set of examples:
 
 ```text
 float           binary compiled
@@ -255,7 +261,7 @@ String
 
 ASCII formatted strings are similar to binary comparison of byte arrays.
 Every character in ASCII has a corresponding byte value and byte order has
-one-one correspondence with character ordering. This get complicated once
+one-to-one correspondence with character ordering. This get complicated once
 we move on to Unicoded strings.
 
 Strings are collated as it is received from the input **without un-quoting**
@@ -292,6 +298,7 @@ Coll: [110 80 62 62 50 49 45 0 70 0 50 0 0]
 
 **For partial compare between two binary-compiled arrays, prune the last byte
 from the encoded text of smaller array and continue with binary comparison.**
+This is because of the Terminator byte suffixed to encoded JSON value.
 
 Property
 --------
@@ -319,3 +326,7 @@ Json: {"first":true, "second":false}
 Coll: "xd>2\x00Zfirst\x00\x00F\x00Zsecond\x00\x00<\x00\x00"
 Coll: [120 100 62 50 0 90 102 105 114 115 116 0 0 70 0 90 115 101 99 111 110 100 0 0 60 0 0]
 ```
+
+**Reference**
+
+* [Efficient Lexicographic Encoding of Numbers](docs/collate.pdf)
