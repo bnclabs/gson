@@ -15,7 +15,7 @@ import "compress/gzip"
 import "io/ioutil"
 import "runtime/pprof"
 
-import "github.com/prataprc/gson"
+import "github.com/bnclabs/gson"
 
 var options struct {
 	// generat options

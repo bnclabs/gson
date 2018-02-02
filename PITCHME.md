@@ -3,7 +3,7 @@ Gson: Data formats
 
 R Pratap Chakravarthy <br/>
 prataprc@gmail.com <br/>
-[https://github.com/prataprc/gson](https://github.com/prataprc/gson) <br/>
+[https://github.com/bnclabs/gson](https://github.com/bnclabs/gson) <br/>
 24, Jun 2017
 
 ---
@@ -74,7 +74,7 @@ of lookup.
 
 If document lookup and manipulations are not available in
 the expected format, please raise an
-[issue](http://github.com/prataprc/gson/issues).
+[issue](http://github.com/bnclabs/gson/issues).
 
 ---
 
@@ -225,6 +225,6 @@ Thank you
 
 If gson sounds useful please check out the following links.
 
-[Project README](https://github.com/prataprc/gson). <br/>
-[Gson API doc](https://godoc.org/github.com/prataprc/gson). <br/>
-[Please contribute](https://github.com/prataprc/gson/issues). <br/>
+[Project README](https://github.com/bnclabs/gson). <br/>
+[Gson API doc](https://godoc.org/github.com/bnclabs/gson). <br/>
+[Please contribute](https://github.com/bnclabs/gson/issues). <br/>

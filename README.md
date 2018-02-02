@@ -2,11 +2,11 @@ Object formats and notations
 ============================
 
 [![talk on matrix](https://github.com/prataprc/dotfiles/blob/master/assets/talkonmatrix.svg)](https://riot.im/app/#/user/@prataprc:matrix.org?action=chat)
-[![Build Status](https://travis-ci.org/prataprc/gson.png)](https://travis-ci.org/prataprc/gson)
-[![Coverage Status](https://coveralls.io/repos/prataprc/gson/badge.png?branch=master&service=github)](https://coveralls.io/github/prataprc/gson?branch=master)
-[![GoDoc](https://godoc.org/github.com/prataprc/gson?status.png)](https://godoc.org/github.com/prataprc/gson)
-[![Go Report Card](https://goreportcard.com/badge/github.com/prataprc/gson)](https://goreportcard.com/report/github.com/prataprc/gson)
-[![GitPitch](https://gitpitch.com/assets/badge.svg)](https://gitpitch.com/prataprc/gson/master?grs=github&t=white)
+[![Build Status](https://travis-ci.org/bnclabs/gson.png)](https://travis-ci.org/bnclabs/gson)
+[![Coverage Status](https://coveralls.io/repos/bnclabs/gson/badge.png?branch=master&service=github)](https://coveralls.io/github/bnclabs/gson?branch=master)
+[![GoDoc](https://godoc.org/github.com/bnclabs/gson?status.png)](https://godoc.org/github.com/bnclabs/gson)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bnclabs/gson)](https://goreportcard.com/report/github.com/bnclabs/gson)
+[![GitPitch](https://gitpitch.com/assets/badge.svg)](https://gitpitch.com/bnclabs/gson/master?grs=github&t=white)
 
 - High performance algorithms for data transformation, serialization and
   manipulation.
@@ -396,7 +396,7 @@ Articles
 How to contribute
 -----------------
 
-[![Issue Stats](http://issuestats.com/github/prataprc/gson/badge/issue)](http://issuestats.com/github/prataprc/gson)
+[![Issue Stats](http://issuestats.com/github/bnclabs/gson/badge/issue)](http://issuestats.com/github/bnclabs/gson)
 
 * Pick an issue, or create an new issue. Provide adequate documentation for
   the issue.
@@ -405,7 +405,7 @@ How to contribute
 * Gson is written in [golang](https://golang.org/), hence expected to follow the
   global guidelines for writing go programs.
 * If the changeset is more than few lines, please generate a
-  [report card](https://goreportcard.com/report/github.com/prataprc/gson).
+  [report card](https://goreportcard.com/report/github.com/bnclabs/gson).
 * As of now, branch `master` is the development branch.
 
 **Task list**
@@ -440,7 +440,7 @@ Notes
 * Output buffer should have its len() == cap(), so that encoder and decoder
   can avoid append and instead use buffer index.
 
-[gitpitch-link]: https://gitpitch.com/prataprc/gson/master?grs=github&t=white
+[gitpitch-link]: https://gitpitch.com/bnclabs/gson/master?grs=github&t=white
 [JSON-link]: http://www.json.org/
 [RFC7159-link]: https://tools.ietf.org/html/rfc7159
 [CBOR-link]: http://cbor.io/

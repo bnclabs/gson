@@ -10,10 +10,12 @@ before_install:
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - go get github.com/bmizerany/assert
+  - go get github.com/bnclabs/gson-tools
   - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 
 script:
   - go get -d ./...
   - go get -tags n1ql -d ./...
   - make test
-  - $HOME/gopath/bin/goveralls -service=travis-ci -package github.com/prataprc/gson
+  - $HOME/gopath/bin/goveralls -service=travis-ci -package github.com/bnclabs/gson
+  - cd $HOME/gopath/src/github.com/bnclabs/gson-tools; make check
