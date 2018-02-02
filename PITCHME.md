@@ -18,7 +18,7 @@ Goals
   for APIs creating golang values from encoded data.
 * [JSON](http://json.org) for web.
 * [CBOR](http://cbor.io) for machine.
-* [Binary-Collation](https://github.com/prataprc/gson/blob/master/docs/collate.md)
+* [Binary-Collation](https://prataprc.github.io/jsonsort.io)
   for crazy fast comparison/sorting.
 * [JSON-pointer](https://tools.ietf.org/html/rfc6901) for field lookup within
   document.

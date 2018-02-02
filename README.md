@@ -15,7 +15,7 @@ Object formats and notations
   for APIs creating golang values from encoded data.
 - [JSON](http://json.org) for web.
 - [CBOR](http://cbor.io) for machine.
-- [Binary-Collation](docs/collate.md) for crazy fast comparison/sorting.
+- [Binary-Collation][jsonsort] for crazy fast comparison/sorting.
 
 **This package is under continuous development, but the APIs are fairly stable**.
 
@@ -26,7 +26,7 @@ Quick Links
 * [What is what](#what-is-what)
 * [Configuration](#configuration)
 * [Transforms](#transforms)
-* [Understanding collation](docs/collate.md)
+* [Understanding collation][jsonsort]
 * [Getting started](docs/gettingstarted.md)
 * [Play with command line](cmd/README.md)
 * [Articles related to gson](#articles)
@@ -49,7 +49,7 @@ What is what
 * JSON objects, aka properties, are presented in golang as
   `map[string]interface{}`.
 * Following golang-types can be transformed to JSON, CBOR, or,
-  [Binary-collation](docs/collate.md): `nil`, `bool`,
+  [Binary-collation][jsonsort] - `nil`, `bool`,
   `byte, int8, int16, uint16, int32, uint32, int, uint, int64, uint64`,
   `float32, float64`,
   `string`, `[]interface{}`, `map[string]interface{}`,
@@ -77,7 +77,7 @@ What is what
 * Transform back to original JSON from binary representation.
 * Numbers can be treated as floating-point, for better performance or either as
   floating-point or integer, for flexibility.
-* More details can be found [here](docs/collate.md)
+* More details can be found [here][jsonsort]
 
 **JSON-Pointer**
 
@@ -340,7 +340,7 @@ Transforms
 * Type CBOR-text with indefinite encoding are not supported.
 * Type Simple type float16 are not supported.
 
-For transforming to and from binary-collation refer [here](docs/collate.md)
+For transforming to and from binary-collation refer [here][jsonsort]
 
 **CBOR to Collate**
 
@@ -447,3 +447,4 @@ Notes
 [RFC7049-link]: https://tools.ietf.org/html/rfc7049
 [RFC6901-link]: https://tools.ietf.org/html/rfc6901
 [article1-link]: http://prataprc.github.io/sorting-data.html
+[jsonsort]: https://prataprc.github.io/jsonsort.io
