@@ -1,71 +1,71 @@
 General options
 ---------------
 
-* ``-inpfile`` process file containing JSON doc(s) based on other options.
-* ``-inptxt`` process input text based on their options.
-* ``-mprof`` take memory profile for testdata/code.json.gz.
-* ``-outfile`` write output to file.
-* ``-overheads`` compute overheads on CBOR and collation encoding.
-* ``-quote`` use strconv.Unquote on inptxt/inpfile.
-* ``-repeat`` repeat count.
-* ``-nk`` can be ``smart``, treat number as int64 or fall back to float64, or,
-  ``float``, treat number only as float64 (default "float").
-* ``-ws`` can be ``ansi`` white space, or, ``unicode`` white space, default
+* `-inpfile` process file containing JSON doc(s) based on other options.
+* `-inptxt` process input text based on their options.
+* `-mprof` take memory profile for testdata/code.json.gz.
+* `-outfile` write output to file.
+* `-overheads` compute overheads on CBOR and collation encoding.
+* `-quote` use strconv.Unquote on inptxt/inpfile.
+* `-repeat` repeat count.
+* `-nk` can be `smart`, treat number as int64 or fall back to float64, or,
+  `float`, treat number only as float64 (default "float").
+* `-ws` can be `ansi` white space, or, `unicode` white space, default
   "ANSI".
 
 To include [n1ql](https://www.couchbase.com/products/n1ql), compile it with
-``-tags n1ql``.
+`-tags n1ql`.
 
 Convert from JSON
 -----------------
 
-* ``-json2cbor`` convert inptxt or content in inpfile to CBOR output.
-* ``-json2collate`` convert inptxt or content in inpfile to collated output.
-* ``-json2value`` convert inptxt or content in inpfile to golang value.
+* `-json2cbor` convert inptxt or content in inpfile to CBOR output.
+* `-json2collate` convert inptxt or content in inpfile to collated output.
+* `-json2value` convert inptxt or content in inpfile to golang value.
 
 **options for JSON**
 
-* ``-pointers`` list of json-pointers for doc specified by input-file.
+* `-pointers` list of json-pointers for doc specified by input-file.
 
 Convert from CBOR
 -----------------
 
-* ``-cbor2collate`` convert inptxt or content in inpfile to collated output.
-* ``-cbor2json`` convert inptxt or content in inpfile to JSON output.
-* ``-cbor2value`` convert inptxt or content in inpfile to golang value.
+* `-cbor2collate` convert inptxt or content in inpfile to collated output.
+* `-cbor2json` convert inptxt or content in inpfile to JSON output.
+* `-cbor2value` convert inptxt or content in inpfile to golang value.
 
 **options for CBOR**
 
-* ``-ct`` container encoding for CBOR, allowed ``stream`` (default), or,
-  ``lenprefix``.
+* `-ct` container encoding for CBOR, allowed `stream` (default), or,
+  `lenprefix`.
 
 Convert from Collate
 --------------------
 
-* ``-collate2cbor`` convert inptxt or content in inpfile to CBOR output.
-* ``-collate2json`` convert inptxt or content in inpfile to JSON output.
-* ``-collate2value`` convert inptxt or content in inpfile to value.
+* `-collate2cbor` convert inptxt or content in inpfile to CBOR output.
+* `-collate2json` convert inptxt or content in inpfile to JSON output.
+* `-collate2value` convert inptxt or content in inpfile to value.
 
 
 **options for collation**
 
-* ``-arrlenprefix`` set SortbyArrayLen for collation ordering.
-* ``-maplenprefix`` SortbyPropertyLen for collation ordering (default true)
-* ``-domissing`` consider missing type while collation (default true).
-* ``-collatesort`` sort inpfile, with one or more JSON terms, using
+* `-arrlenprefix` set SortbyArrayLen for collation ordering.
+* `-maplenprefix` SortbyPropertyLen for collation ordering (default true)
+* `-domissing` consider missing type while collation (default true).
+* `-collatesort` sort inpfile, with one or more JSON terms, using
   collation algorithm.
-* ``-n1qlsort`` sort inpfile, with one or more JSON terms, using
+* `-n1qlsort` sort inpfile, with one or more JSON terms, using
   collation algorithm.
-* ``-checkdir`` test files for collation order in specified directory. For
-  every input file ``<checkdir>/filename``, there should be reference file
-  ``<checkdir>/filename.ref``.
+* `-checkdir` test files for collation order in specified directory. For
+  every input file `<checkdir>/filename`, there should be reference file
+  `<checkdir>/filename.ref`.
 
 Convert from value
 ------------------
 
-* ``-value2cbor`` convert inptxt JSON to value and then to CBOR.
-* ``-value2json`` convert inptxt JSON to value and then back to JSON.
-* ``-value2collate`` convert inptxt JSON to value and then back to binary.
+* `-value2cbor` convert inptxt JSON to value and then to CBOR.
+* `-value2json` convert inptxt JSON to value and then back to JSON.
+* `-value2collate` convert inptxt JSON to value and then back to binary.
 
 
 Examples
