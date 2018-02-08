@@ -22,7 +22,7 @@ Object formats and notations
 Quick Links
 -----------
 
-* [slides on gson][gitpitch-link]
+* [Slides on gson][gitpitch-link]
 * [What is what](#what-is-what)
 * [Configuration](#configuration)
 * [Transforms](#transforms)
@@ -397,6 +397,7 @@ How to contribute
 -----------------
 
 [![Issue Stats](http://issuestats.com/github/bnclabs/gson/badge/issue)](http://issuestats.com/github/bnclabs/gson)
+[![Issue Stats](http://issuestats.com/github/bnclabs/gson/badge/pr)](http://issuestats.com/github/bnclabs/gson)
 
 * Pick an issue, or create an new issue. Provide adequate documentation for
   the issue.
