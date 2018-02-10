@@ -580,7 +580,7 @@ func TestTagEpoch(t *testing.T) {
 		}()
 		buf := make([]byte, 16)
 		n := tag2cbor(tagEpoch, buf)
-		n += valbytes2cbor([]byte{1, 2}, buf[n:])
+		valbytes2cbor([]byte{1, 2}, buf[n:])
 		config.NewCbor(buf).Tovalue()
 	}()
 }
@@ -684,7 +684,7 @@ func TestRegexp(t *testing.T) {
 		}()
 		buf := make([]byte, 1024)
 		n := tag2cbor(tagRegexp, buf)
-		n += valtext2cbor(`a([0-9]t*+`, buf[n:])
+		valtext2cbor(`a([0-9]t*+`, buf[n:])
 		config.NewCbor(buf).Tovalue()
 	}()
 }
