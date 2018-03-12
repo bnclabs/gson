@@ -34,6 +34,7 @@ func BenchmarkVal2CborNull(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborTrue(b *testing.B) {
@@ -44,6 +45,7 @@ func BenchmarkVal2CborTrue(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborFalse(b *testing.B) {
@@ -53,6 +55,7 @@ func BenchmarkVal2CborFalse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborUint8(b *testing.B) {
@@ -63,6 +66,7 @@ func BenchmarkVal2CborUint8(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborInt8(b *testing.B) {
@@ -73,6 +77,7 @@ func BenchmarkVal2CborInt8(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborUint16(b *testing.B) {
@@ -83,6 +88,7 @@ func BenchmarkVal2CborUint16(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborInt16(b *testing.B) {
@@ -93,6 +99,7 @@ func BenchmarkVal2CborInt16(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborUint32(b *testing.B) {
@@ -103,6 +110,7 @@ func BenchmarkVal2CborUint32(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborInt32(b *testing.B) {
@@ -113,6 +121,7 @@ func BenchmarkVal2CborInt32(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborUint64(b *testing.B) {
@@ -123,6 +132,7 @@ func BenchmarkVal2CborUint64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborInt64(b *testing.B) {
@@ -133,6 +143,7 @@ func BenchmarkVal2CborInt64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborFlt32(b *testing.B) {
@@ -143,6 +154,7 @@ func BenchmarkVal2CborFlt32(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborFlt64(b *testing.B) {
@@ -153,6 +165,7 @@ func BenchmarkVal2CborFlt64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborINum(b *testing.B) {
@@ -163,6 +176,7 @@ func BenchmarkVal2CborINum(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborUNum(b *testing.B) {
@@ -173,6 +187,7 @@ func BenchmarkVal2CborUNum(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborTBytes(b *testing.B) {
@@ -183,6 +198,7 @@ func BenchmarkVal2CborTBytes(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborText(b *testing.B) {
@@ -193,6 +209,7 @@ func BenchmarkVal2CborText(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborArr0(b *testing.B) {
@@ -203,6 +220,7 @@ func BenchmarkVal2CborArr0(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborArr5(b *testing.B) {
@@ -214,6 +232,7 @@ func BenchmarkVal2CborArr5(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborMap0(b *testing.B) {
@@ -224,14 +243,17 @@ func BenchmarkVal2CborMap0(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborMap5(b *testing.B) {
-	value := interface{}([][2]interface{}{
-		{"key0", 5}, {"key1", 5.0},
-		{"key2", "hello world"},
-		{"key3", true}, {"key4", nil},
-	})
+	value := map[string]interface{}{
+		"key0": 5,
+		"key1": 5.0,
+		"key2": "hello world",
+		"key3": true,
+		"key4": nil,
+	}
 	config := NewDefaultConfig()
 	cbr := config.NewCbor(make([]byte, 0, 1024))
 	val := config.NewValue(value)
@@ -239,6 +261,7 @@ func BenchmarkVal2CborMap5(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
 
 func BenchmarkVal2CborTyp(b *testing.B) {
@@ -252,4 +275,5 @@ func BenchmarkVal2CborTyp(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		val.Tocbor(cbr.Reset(nil))
 	}
+	b.SetBytes(int64(len(cbr.Bytes())))
 }
