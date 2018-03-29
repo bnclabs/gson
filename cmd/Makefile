@@ -8,4 +8,4 @@ test: build
 	./transforms.sh
 
 clean:
-	rm -rf gson gsonn1ql
+	rm -rf gson gsonn1ql cmd
