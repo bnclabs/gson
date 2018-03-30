@@ -116,6 +116,7 @@ func TestCollated2Number(t *testing.T) {
 
 	var code [64]byte
 	var n int
+	config := NewDefaultConfig()
 
 	for _, tcase := range tcases {
 		t.Logf("%T %v", tcase[0], tcase[0])
@@ -123,9 +124,9 @@ func TestCollated2Number(t *testing.T) {
 		case float64:
 			n = collateFloat64(val, code[:])
 		case uint64:
-			n = collateUint64(val, code[:])
+			n = collateUint64(val, code[:], config)
 		case int64:
-			n = collateInt64(val, code[:])
+			n = collateInt64(val, code[:], config)
 		}
 		if ref := tcase[1].(string); ref != string(code[:n]) {
 			t.Errorf("expected %v, got %v", ref, string(code[:n]))

@@ -2,6 +2,7 @@ package gson
 
 import "bytes"
 import "fmt"
+import "math/big"
 import "encoding/json"
 
 // NumberKind how to treat numbers.
@@ -75,6 +76,8 @@ func (config *Config) init() *Config {
 	config.enc = json.NewEncoder(config.buf)
 	a, b, c, d := config.strlen, config.numkeys, config.itemlen, config.ptrlen
 	config.pools = newMempool(a, b, c, d)
+	config.zf = big.NewFloat(0)
+	config.zf.SetPrec(64)
 	return config
 }
 

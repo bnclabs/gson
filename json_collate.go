@@ -16,7 +16,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 	if digitCheck[txt[0]] == 1 {
 		code[n] = TypeNumber
 		n++
-		m, remtxt := jsonnum2collate(txt, code[n:], config.nk)
+		m, remtxt := jsonnum2collate(txt, code[n:], config)
 		n += m
 		code[n] = Terminator
 		n++
@@ -163,8 +163,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 	panic("collate scanner expectedToken")
 }
 
-func jsonnum2collate(txt string, code []byte, nk NumberKind) (int, string) {
-	s, e, l := 0, 1, len(txt)
+func jsonnum2collate(txt string, code []byte, config *Config) (int, string) {
+	nk, s, e, l := config.nk, 0, 1, len(txt)
 	if len(txt) > 1 {
 		for ; e < l && intCheck[txt[e]] == 1; e++ {
 		}
@@ -180,10 +180,10 @@ func jsonnum2collate(txt string, code []byte, nk NumberKind) (int, string) {
 
 	case SmartNumber:
 		if i, err := strconv.ParseInt(txt[s:e], 10, 64); err == nil {
-			n := collateInt64(i, code)
+			n := collateInt64(i, code, config)
 			return n, txt[e:]
 		} else if ui, err := strconv.ParseUint(txt[s:e], 10, 64); err == nil {
-			n := collateUint64(ui, code)
+			n := collateUint64(ui, code, config)
 			return n, txt[e:]
 		}
 		f, err := strconv.ParseFloat(txt[s:e], 64)

@@ -142,7 +142,7 @@ func collateCborT0Info27(buf, out []byte, config *Config) (int, int) {
 	case FloatNumber:
 		n += collateFloat64(float64(i), out[n:])
 	case SmartNumber:
-		n += collateUint64(i, out[n:])
+		n += collateUint64(i, out[n:], config)
 	default:
 		panic(fmt.Errorf("unknown number kind, %v", config.nk))
 	}
@@ -163,7 +163,7 @@ func collateCborT1Info27(buf, out []byte, config *Config) (int, int) {
 	case FloatNumber:
 		n += collateFloat64(float64(val), out[n:])
 	case SmartNumber:
-		n += collateInt64(val, out[n:])
+		n += collateInt64(val, out[n:], config)
 	default:
 		panic(fmt.Errorf("unknown number kind, %v", config.nk))
 	}

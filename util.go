@@ -139,67 +139,46 @@ func collateFloat64(value float64, code []byte) int {
 	return collateFloat(bs, code)
 }
 
-func collateUint64(value uint64, code []byte) int {
-	var num, fltx [64]byte
+func collateUint64(value uint64, code []byte, config *Config) int {
+	var fltx [64]byte
 	if value > 9007199254740991 {
-		intx := strconv.AppendUint(num[:0], value, 10)
-		fltx[0], fltx[1] = intx[0], '.'
-		n := 2 + copy(fltx[2:], intx[1:])
-		fltx[n], fltx[n+1], n = 'e', '+', n+2
-		tmp := strconv.AppendInt(fltx[n:n], int64(len(intx[1:])), 10)
-		ln := n + len(tmp)
-		return collateFloat(fltx[:ln], code)
-
+		config.zf.SetUint64(value)
+		bs := config.zf.Append(fltx[:0], 'e', -1)
+		return collateFloat(bs, code)
 	}
-	bs := strconv.AppendFloat(num[:0], float64(value), 'e', -1, 64)
+	bs := strconv.AppendFloat(fltx[:0], float64(value), 'e', -1, 64)
 	return collateFloat(bs, code)
 }
 
-func collateInt64(value int64, code []byte) int {
-	var num, fltx [64]byte
-	if value > 9007199254740991 {
-		intx := strconv.AppendInt(num[:0], value, 10)
-		fltx[0], fltx[1] = intx[0], '.'
-		n := 2 + copy(fltx[2:], intx[1:])
-		fltx[n], fltx[n+1], n = 'e', '+', n+2
-		tmp := strconv.AppendInt(fltx[n:n], int64(len(intx[1:])), 10)
-		ln := n + len(tmp)
-		return collateFloat(fltx[:ln], code)
-
-	} else if value < -9007199254740992 {
-		intx := strconv.AppendInt(num[:0], value, 10)
-		fltx[0], fltx[1], fltx[2] = intx[0], intx[1], '.'
-		n := 3 + copy(fltx[3:], intx[2:])
-		fltx[n], fltx[n+1], n = 'e', '+', n+2
-		tmp := strconv.AppendInt(fltx[n:n], int64(len(intx[2:])), 10)
-		ln := n + len(tmp)
-		return collateFloat(fltx[:ln], code)
-
-	} else {
-		bs := strconv.AppendFloat(num[:0], float64(value), 'e', -1, 64)
+func collateInt64(value int64, code []byte, config *Config) int {
+	var fltx [64]byte
+	if value > 9007199254740991 || value < -9007199254740992 {
+		config.zf.SetInt64(value)
+		bs := config.zf.Append(fltx[:0], 'e', -1)
 		return collateFloat(bs, code)
 	}
+	bs := strconv.AppendFloat(fltx[:0], float64(value), 'e', -1, 64)
+	return collateFloat(bs, code)
 }
 
-func collateUint64Str(value string, code []byte) int {
+func collateJsonNumber(value string, code []byte, config *Config) int {
 	var fltx [64]byte
-	fltx[0], fltx[1] = value[0], '.'
-	n := 2 + copy(fltx[2:], value[1:])
-	fltx[n], fltx[n+1], n = 'e', '+', n+2
-	tmp := strconv.AppendInt(fltx[n:n], int64(len(value[1:])), 10)
-	ln := n + len(tmp)
-	return collateFloat(fltx[:ln], code)
-}
 
-// value is always negative
-func collateInt64Str(value string, code []byte) int {
-	var fltx [64]byte
-	fltx[0], fltx[1], fltx[2] = value[0], value[1], '.'
-	n := 3 + copy(fltx[3:], value[2:])
-	fltx[n], fltx[n+1], n = 'e', '+', n+2
-	tmp := strconv.AppendInt(fltx[n:n], int64(len(value[2:])), 10)
-	ln := n + len(tmp)
-	return collateFloat(fltx[:ln], code)
+	if len(value) > len("9007199254740991") { // may need higher precision
+		zf, _, err := config.zf.Parse(value, 0)
+		if err != nil {
+			panic(fmt.Errorf("collateJsonNumber(%q): %v", value, err))
+		}
+		bs := zf.Append(fltx[:0], 'e', -1)
+		return collateFloat(bs, code)
+	}
+
+	num53, err := strconv.Atoi(value)
+	if err != nil {
+		panic(fmt.Errorf("strconv.Atoi(%q): %v", value, err))
+	}
+	bs := strconv.AppendFloat(fltx[:0], float64(num53), 'e', -1, 64)
+	return collateFloat(bs, code)
 }
 
 func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {

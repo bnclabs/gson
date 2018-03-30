@@ -45,7 +45,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += collateInt64(value, code[n:])
+		n += collateInt64(value, code[n:], config)
 		code[n] = Terminator
 		n++
 		return n
@@ -54,7 +54,7 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += collateUint64(value, code[n:])
+		n += collateUint64(value, code[n:], config)
 		code[n] = Terminator
 		n++
 		return n
@@ -63,25 +63,16 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += collateInt64(int64(value), code[n:])
+		n += collateInt64(int64(value), code[n:], config)
 		code[n] = Terminator
 		n++
 		return n
 
 	case json.Number:
-		if isnegative(value) {
-			n := 0
-			code[n] = TypeNumber
-			n++
-			n += collateInt64Str(string(value), code[n:])
-			code[n] = Terminator
-			n++
-			return n
-		}
 		n := 0
 		code[n] = TypeNumber
 		n++
-		n += collateUint64Str(string(value), code[n:])
+		n += collateJsonNumber(string(value), code[n:], config)
 		code[n] = Terminator
 		n++
 		return n

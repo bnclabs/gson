@@ -1,6 +1,7 @@
 package gson
 
 import "encoding/json"
+import "math/big"
 import "bytes"
 
 // Collation order for supported types. Applications desiring different
@@ -32,6 +33,7 @@ type collateConfig struct {
 	propertyLenPrefix bool // first sort properties based on length
 	enc               *json.Encoder
 	buf               *bytes.Buffer
+	zf                *big.Float
 }
 
 // Collate abstraction for value encoded into binary-collation.
