@@ -186,16 +186,7 @@ func collateCborT2(buf, out []byte, config *Config) (int, int) {
 
 func collateCborT3(buf, out []byte, config *Config) (int, int) {
 	ln, m := cborItemLength(buf)
-	if config.doMissing && MissingLiteral.Equal(bytes2str(buf[m:m+ln])) {
-		out[0], out[1] = TypeMissing, Terminator
-		return m + ln, 2
-	}
-	n := 0
-	out[n] = TypeString
-	n++
-	n += suffixEncodeString(buf[m:m+ln], out[n:])
-	out[n] = Terminator
-	n++
+	n := collateString(bytes2str(buf[m:m+ln]), out, config)
 	return m + ln, n
 }
 

@@ -51,15 +51,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		defer config.pools.stringPool.Put(scratchi)
 
 		txt, p := scanString(txt, scratch)
-		if config.doMissing && MissingLiteral.Equal(bytes2str(scratch[:p])) {
-			code[n], code[n+1] = TypeMissing, Terminator
-			return txt, n + 2
-		}
-		code[n] = TypeString
-		n++
-		n += suffixEncodeString(scratch[:p], code[n:])
-		code[n] = Terminator
-		n++
+		str := bytes2str(scratch[:p])
+		n += collateString(str, code[n:], config)
 		return txt, n
 
 	case '[':
@@ -123,7 +116,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 			for {
 				// NOTE: empty string is also a valid key
 				txt, x = scanString(txt, altcode[p:])
-				if txt = skipWS(txt, config.ws); len(txt) == 0 || txt[0] != ':' {
+				txt = skipWS(txt, config.ws)
+				if len(txt) == 0 || txt[0] != ':' {
 					panic("collate scanner expectedColon")
 				}
 				key := bytes2str(altcode[p : p+x])

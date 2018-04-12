@@ -181,6 +181,24 @@ func collateJsonNumber(value string, code []byte, config *Config) int {
 	return collateFloat(bs, code)
 }
 
+func collateString(str string, code []byte, config *Config) (n int) {
+	if config.doMissing && MissingLiteral.Equal(str) {
+		code[0], code[1] = TypeMissing, Terminator
+		return 2
+	}
+	code[n] = TypeString
+	n++
+	n += suffixEncodeString(str2bytes(str), code[n:])
+	code[n] = Terminator
+	n++
+	return n
+}
+
+func collate2String(code []byte, str []byte) ([]byte, int) {
+	x, y := suffixDecodeString(code, str)
+	return str[:y], x
+}
+
 func collated2Number(code []byte, nk NumberKind) (uint64, int64, float64, int) {
 	var mantissa, scratch [64]byte
 	_, y := collated2Float(code, scratch[:])

@@ -144,16 +144,3 @@ func collateLength(length int, code []byte) (n int) {
 	n++
 	return n
 }
-
-func collateString(str string, code []byte, config *Config) (n int) {
-	if config.doMissing && MissingLiteral.Equal(str) {
-		code[0], code[1] = TypeMissing, Terminator
-		return 2
-	}
-	code[n] = TypeString
-	n++
-	n += suffixEncodeString(str2bytes(str), code[n:])
-	code[n] = Terminator
-	n++
-	return n
-}

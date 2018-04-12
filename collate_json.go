@@ -32,22 +32,24 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 		return n + x, m + y
 
 	case TypeString:
+		var x int
+
 		scratchi := config.pools.stringPool.Get()
 		scratch := scratchi.([]byte)
 		defer config.pools.stringPool.Put(scratchi)
 
-		x, y := suffixDecodeString(code[n:], scratch[:])
+		scratch, x = collate2String(code[n:], scratch[:])
 
 		if config.strict {
 			config.buf.Reset()
-			if err := config.enc.Encode(bytes2str(scratch[:y])); err != nil {
+			if err := config.enc.Encode(bytes2str(scratch)); err != nil {
 				panic(err)
 			}
 			s := config.buf.Bytes()
 			m += copy(text[m:], s[:len(s)-1]) // -1 to strip \n
 			return n + x, m
 		}
-		remtxt, err := encodeString(scratch[:y], text[m:m])
+		remtxt, err := encodeString(scratch, text[m:m])
 		if err != nil {
 			panic(err)
 		}

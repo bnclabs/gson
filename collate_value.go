@@ -39,8 +39,8 @@ func collate2gson(code []byte, config *Config) (interface{}, int) {
 
 	case TypeString:
 		s := make([]byte, encodedStringSize(code[n:]))
-		x, y := suffixDecodeString(code[n:], s)
-		return bytes2str(s[:y]), n + x
+		s, x := collate2String(code[n:], s)
+		return bytes2str(s), n + x
 
 	case TypeBinary:
 		m := getDatum(code[n:])
