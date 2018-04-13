@@ -4,6 +4,8 @@ import "encoding/json"
 import "math/big"
 import "bytes"
 
+import "golang.org/x/text/collate"
+
 // Collation order for supported types. Applications desiring different
 // ordering between types can initialize these byte values before
 // instantiating a config object.
@@ -34,6 +36,8 @@ type collateConfig struct {
 	enc               *json.Encoder
 	buf               *bytes.Buffer
 	zf                *big.Float
+	tcltbuffer        *collate.Buffer
+	textcollator      *collate.Collator
 }
 
 // Collate abstraction for value encoded into binary-collation.

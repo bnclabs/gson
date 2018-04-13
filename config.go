@@ -5,6 +5,8 @@ import "fmt"
 import "math/big"
 import "encoding/json"
 
+import "golang.org/x/text/collate"
+
 // NumberKind how to treat numbers.
 type NumberKind byte
 
@@ -72,12 +74,15 @@ func NewDefaultConfig() *Config {
 }
 
 func (config *Config) init() *Config {
+	// collateConfig
 	config.buf = bytes.NewBuffer(make([]byte, 0, 1024)) // start with 1K
 	config.enc = json.NewEncoder(config.buf)
-	a, b, c, d := config.strlen, config.numkeys, config.itemlen, config.ptrlen
-	config.pools = newMempool(a, b, c, d)
 	config.zf = big.NewFloat(0)
 	config.zf.SetPrec(64)
+	config.tcltbuffer = &collate.Buffer{}
+	// mempools
+	a, b, c, d := config.strlen, config.numkeys, config.itemlen, config.ptrlen
+	config.pools = newMempool(a, b, c, d)
 	return config
 }
 
@@ -133,6 +138,12 @@ func (config Config) UseMissing(what bool) *Config {
 func (config Config) SetMaxkeys(n int) *Config {
 	config.numkeys = n
 	return config.init()
+}
+
+// SetTextCollator for string type.
+func (config Config) SetTextCollator(collator *collate.Collator) *Config {
+	config.textcollator = collator
+	return &config
 }
 
 // ResetPools configure a new set of pools with specified size, instead

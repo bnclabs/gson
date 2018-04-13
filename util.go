@@ -186,9 +186,16 @@ func collateString(str string, code []byte, config *Config) (n int) {
 		code[0], code[1] = TypeMissing, Terminator
 		return 2
 	}
+	strcode := str2bytes(str)
+	if config.textcollator != nil {
+		config.tcltbuffer.Reset()
+		strcode = config.textcollator.Key(config.tcltbuffer, strcode)
+		strcode = strcode[:len(strcode)-1] // return text is null terminated
+	}
+
 	code[n] = TypeString
 	n++
-	n += suffixEncodeString(str2bytes(str), code[n:])
+	n += suffixEncodeString(strcode, code[n:])
 	code[n] = Terminator
 	n++
 	return n

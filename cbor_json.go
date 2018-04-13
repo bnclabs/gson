@@ -3,8 +3,8 @@
 
 package gson
 
-import "strconv"
 import "math"
+import "strconv"
 import "encoding/binary"
 
 var nullBin = []byte("null")
