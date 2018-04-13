@@ -110,7 +110,7 @@ func TestTextNocase(t *testing.T) {
 
 	for _, tc := range testCases {
 		for _, tag := range strings.Split(tc.lang, ",") {
-			collator := collate.New(language.MustParse(tag))
+			collator := collate.New(language.MustParse(tag), collate.IgnoreCase)
 			config := NewDefaultConfig().SetTextCollator(collator)
 			for _, item := range tc.in {
 				item.collate(config)
