@@ -140,7 +140,8 @@ func (config Config) SetMaxkeys(n int) *Config {
 	return config.init()
 }
 
-// SetTextCollator for string type.
+// SetTextCollator for string type. If collator is not set, strings will
+// be treated as byte-array and compared as such.
 func (config Config) SetTextCollator(collator *collate.Collator) *Config {
 	config.textcollator = collator
 	return &config
