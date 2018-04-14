@@ -1,5 +1,6 @@
 package gson
 
+import "fmt"
 import "strconv"
 
 // Constants used in text representation of basic data types.
@@ -299,7 +300,7 @@ func collateFloat(text, code []byte) int {
 	var exponent [64]byte // fix exponent
 	expi, err := strconv.Atoi(bytes2str(exp))
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("%v", err))
 	}
 	expi++
 	if prefix == negPrefix {

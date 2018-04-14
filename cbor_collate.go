@@ -263,7 +263,7 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 		n += collateCborLength(ln, out[n:], config)
 	}
 
-	bufn, p := config.bufferh.getbuffer(len(buf)*2), 0
+	bufn, p := config.bufferh.getbuffer(len(buf)*5), 0
 	altcode := bufn.data
 
 	poolobj2 := config.pools.keypool.Get()
@@ -299,7 +299,7 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	out[n] = TypeObj
 	n++
 
-	bufn, p := config.bufferh.getbuffer(len(buf)*2), 0
+	bufn, p := config.bufferh.getbuffer(len(buf)*5), 0
 	altcode := bufn.data
 
 	poolobj2 := config.pools.keypool.Get()

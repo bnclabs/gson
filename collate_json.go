@@ -34,7 +34,7 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 	case TypeString:
 		var x int
 
-		bufn := config.bufferh.getbuffer(len(code[n:]) * 2)
+		bufn := config.bufferh.getbuffer(len(code[n:]) * 5)
 		scratch := bufn.data
 
 		scratch, x = collate2String(code[n:], scratch[:])

@@ -40,7 +40,7 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		panic("gson scanner expectedFalse")
 
 	case '"':
-		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		bufn := config.bufferh.getbuffer(len(txt) * 5)
 		scratch := bufn.data
 		remtxt, n := scanString(txt, scratch)
 		value := string(scratch[:n]) // this will copy the content.
@@ -83,7 +83,7 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		var n int
 
 		m := make(map[string]interface{})
-		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		bufn := config.bufferh.getbuffer(len(txt) * 5)
 		scratch := bufn.data
 		for {
 			txt, n = scanString(txt, scratch) // empty string is also valid key

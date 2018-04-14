@@ -46,7 +46,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		panic("collate scanner expectedFalse")
 
 	case '"':
-		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		bufn := config.bufferh.getbuffer(len(txt) * 5)
 		scratch := bufn.data
 		txt, p := scanString(txt, scratch)
 		str := bytes2str(scratch[:p])
@@ -99,7 +99,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		code[n] = TypeObj
 		n++
 
-		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		bufn := config.bufferh.getbuffer(len(txt) * 5)
 		altcode := bufn.data
 
 		refsi := config.pools.keypool.Get()

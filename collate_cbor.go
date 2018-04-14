@@ -45,7 +45,7 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 	case TypeString:
 		var x int
 
-		bufn := config.bufferh.getbuffer(len(code[m:]) * 2)
+		bufn := config.bufferh.getbuffer(len(code[m:]) * 5)
 		scratch := bufn.data
 		scratch, x = collate2String(code[m:], scratch[:])
 		n += valtext2cbor(bytes2str(scratch), out[n:])
