@@ -31,6 +31,7 @@ var MaxKeys = 1024
 type Config struct {
 	nk      NumberKind
 	bufferh *bufferhead
+	mkeysh  *mkeyshead
 	pools   mempools
 
 	cborConfig
@@ -52,6 +53,7 @@ func NewDefaultConfig() *Config {
 	config := &Config{
 		nk:      FloatNumber,
 		bufferh: &bufferhead{},
+		mkeysh:  &mkeyshead{},
 
 		cborConfig: cborConfig{
 			ct: Stream,

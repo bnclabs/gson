@@ -119,16 +119,16 @@ func gson2collate(obj interface{}, code []byte, config *Config) int {
 			n += collateLength(len(value), code[n:])
 		}
 
-		poolobj := config.pools.keysPool.Get()
-		keys := poolobj.([]string)
-		defer config.pools.keysPool.Put(poolobj)
+		mkeys := config.mkeysh.getmkeys(len(value))
 
-		for _, key := range sortProps1(value, keys) {
+		for _, key := range mkeys.sortProps1(value) {
 			n += collateString(key, code[n:], config)       // encode key
 			n += gson2collate(value[key], code[n:], config) // encode value
 		}
 		code[n] = Terminator
 		n++
+
+		config.mkeysh.putmkeys(mkeys)
 		return n
 	}
 	panic(fmt.Errorf("collate invalid golang type %T", obj))

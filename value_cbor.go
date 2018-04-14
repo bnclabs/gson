@@ -51,6 +51,7 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 		n += valbytes2cbor(v, out)
 	case string:
 		n += valtext2cbor(v, out)
+
 	case json.Number:
 		if isnegative(v) {
 			vi, err := strconv.ParseInt(string(v), 10, 64)
@@ -65,32 +66,35 @@ func value2cbor(item interface{}, out []byte, config *Config) int {
 			}
 			n += valuint642cbor(vu, out)
 		}
+
 	case []interface{}:
 		n += valarray2cbor(v, out, config)
+
 	case [][2]interface{}:
 		n += valmap2cbor(v, out, config)
+
 	case map[string]interface{}:
-		poolobj := config.pools.keysPool.Get()
-		keys := poolobj.([]string)
-		defer config.pools.keysPool.Put(poolobj)
+		mkeys := config.mkeysh.getmkeys(len(v))
 
 		if config.ct == LengthPrefix {
 			n += valuint642cbor(uint64(len(v)), out[n:])
 			out[n-1] = (out[n-1] & 0x1f) | cborType5 // fix the type
-			for _, key := range sortProps1(v, keys) {
+			for _, key := range mkeys.sortProps1(v) {
 				value := v[key]
 				n += valtext2cbor(key, out[n:])
 				n += value2cbor(value, out[n:], config)
 			}
 		} else if config.ct == Stream {
 			n += mapStart(out[n:])
-			for _, key := range sortProps1(v, keys) {
+			for _, key := range mkeys.sortProps1(v) {
 				value := v[key]
 				n += valtext2cbor(key, out[n:])
 				n += value2cbor(value, out[n:], config)
 			}
 			n += breakStop(out[n:])
 		}
+		config.mkeysh.putmkeys(mkeys)
+
 	// simple types
 	case CborUndefined:
 		n += valundefined2cbor(out)

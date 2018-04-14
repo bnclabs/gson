@@ -19,15 +19,11 @@ type memConfig struct {
 }
 
 type mempools struct {
-	keysPool *sync.Pool
-	keypool  *sync.Pool
+	keypool *sync.Pool
 }
 
 func newMempool(strlen, numkeys, itemlen, jptrlen int) mempools {
 	m := mempools{}
-	m.keysPool = &sync.Pool{
-		New: func() interface{} { return make([]string, 0, numkeys) },
-	}
 	m.keypool = &sync.Pool{
 		New: func() interface{} { return make(kvrefs, numkeys) },
 	}

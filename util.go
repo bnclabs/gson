@@ -300,46 +300,6 @@ func collated2Json(code []byte, text []byte, nk NumberKind) int {
 	panic("unreachable code")
 }
 
-// sort JSON property objects based on property names.
-func sortProps1(props map[string]interface{}, keys []string) []string {
-	for k := range props {
-		keys = append(keys, k)
-	}
-
-	return sortStrings(keys)
-}
-
-func sortProps2(props map[string]uint64, keys []string) []string {
-	for k := range props {
-		keys = append(keys, k)
-	}
-	return sortStrings(keys)
-}
-
-func sortProps3(props [][2]interface{}, keys []string) []string {
-	for _, item := range props {
-		keys = append(keys, item[0].(string))
-	}
-	return sortStrings(keys)
-}
-
-// TODO: bubble sort, moving to qsort should be atleast 40% faster.
-func sortStrings(strs []string) []string {
-	for ln := len(strs) - 1; ; ln-- {
-		changed := false
-		for i := 0; i < ln; i++ {
-			if strs[i] > strs[i+1] {
-				strs[i], strs[i+1] = strs[i+1], strs[i]
-				changed = true
-			}
-		}
-		if changed == false {
-			break
-		}
-	}
-	return strs
-}
-
 //---- data modelling to sort and collate JSON property items.
 
 type kvref struct {
@@ -377,4 +337,21 @@ func (kv kvrefs) sort() {
 			break
 		}
 	}
+}
+
+// NOTE: using built in sort incurs mem-allocation.
+func sortStrings(strs []string) []string {
+	for ln := len(strs) - 1; ; ln-- {
+		changed := false
+		for i := 0; i < ln; i++ {
+			if strs[i] > strs[i+1] {
+				strs[i], strs[i+1] = strs[i+1], strs[i]
+				changed = true
+			}
+		}
+		if changed == false {
+			break
+		}
+	}
+	return strs
 }
