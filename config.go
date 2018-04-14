@@ -29,8 +29,9 @@ var MaxKeys = 1024
 //
 // NOTE: Config objects are immutable.
 type Config struct {
-	nk    NumberKind
-	pools mempools
+	nk      NumberKind
+	bufferh *bufferhead
+	pools   mempools
 
 	cborConfig
 	jsonConfig
@@ -49,7 +50,9 @@ type Config struct {
 // Several methods are available to change configuration parameters.
 func NewDefaultConfig() *Config {
 	config := &Config{
-		nk: FloatNumber,
+		nk:      FloatNumber,
+		bufferh: &bufferhead{},
+
 		cborConfig: cborConfig{
 			ct: Stream,
 		},

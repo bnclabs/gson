@@ -45,11 +45,11 @@ func collate2cbor(code, out []byte, config *Config) (int, int) {
 	case TypeString:
 		var x int
 
-		poolstr := config.pools.stringPool.Get()
-		defer config.pools.stringPool.Put(poolstr)
-		scratch := poolstr.([]byte)
+		bufn := config.bufferh.getbuffer(len(code[m:]) * 2)
+		scratch := bufn.data
 		scratch, x = collate2String(code[m:], scratch[:])
 		n += valtext2cbor(bytes2str(scratch), out[n:])
+		config.bufferh.putbuffer(bufn)
 		return m + x, n
 
 	case TypeBinary:

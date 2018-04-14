@@ -46,13 +46,12 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		panic("collate scanner expectedFalse")
 
 	case '"':
-		scratchi := config.pools.stringPool.Get()
-		scratch := scratchi.([]byte)
-		defer config.pools.stringPool.Put(scratchi)
-
+		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		scratch := bufn.data
 		txt, p := scanString(txt, scratch)
 		str := bytes2str(scratch[:p])
 		n += collateString(str, code[n:], config)
+		config.bufferh.putbuffer(bufn)
 		return txt, n
 
 	case '[':
@@ -100,9 +99,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		code[n] = TypeObj
 		n++
 
-		altcodei := config.pools.codepool.Get()
-		altcode := altcodei.([]byte)
-		defer config.pools.codepool.Put(altcodei)
+		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		altcode := bufn.data
 
 		refsi := config.pools.keypool.Get()
 		refs := refsi.(kvrefs)
@@ -152,6 +150,8 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		}
 		code[n] = Terminator
 		n++
+
+		config.bufferh.putbuffer(bufn)
 		return txt[1:], n
 	}
 	panic("collate scanner expectedToken")

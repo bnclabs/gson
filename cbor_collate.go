@@ -263,9 +263,8 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 		n += collateCborLength(ln, out[n:], config)
 	}
 
-	poolobj1, p := config.pools.codepool.Get(), 0
-	altcode := poolobj1.([]byte)
-	defer config.pools.codepool.Put(poolobj1)
+	bufn, p := config.bufferh.getbuffer(len(buf)*2), 0
+	altcode := bufn.data
 
 	poolobj2 := config.pools.keypool.Get()
 	refs := poolobj2.(kvrefs)
@@ -290,6 +289,8 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 
 	out[n] = Terminator
 	n++
+
+	config.bufferh.putbuffer(bufn)
 	return m, n
 }
 
@@ -298,9 +299,8 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	out[n] = TypeObj
 	n++
 
-	poolobj1, p := config.pools.codepool.Get(), 0
-	altcode := poolobj1.([]byte)
-	defer config.pools.codepool.Put(poolobj1)
+	bufn, p := config.bufferh.getbuffer(len(buf)*2), 0
+	altcode := bufn.data
 
 	poolobj2 := config.pools.keypool.Get()
 	refs := poolobj2.(kvrefs)
@@ -332,6 +332,8 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	}
 	out[n] = Terminator
 	n++
+
+	config.bufferh.putbuffer(bufn)
 	return
 }
 

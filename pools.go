@@ -19,29 +19,17 @@ type memConfig struct {
 }
 
 type mempools struct {
-	prefixPool *sync.Pool // for computing list of possible pointers
-	stringPool *sync.Pool
-	keysPool   *sync.Pool
-	keypool    *sync.Pool
-	codepool   *sync.Pool
+	keysPool *sync.Pool
+	keypool  *sync.Pool
 }
 
 func newMempool(strlen, numkeys, itemlen, jptrlen int) mempools {
 	m := mempools{}
-	m.prefixPool = &sync.Pool{
-		New: func() interface{} { return make([]byte, 0, jptrlen) },
-	}
-	m.stringPool = &sync.Pool{
-		New: func() interface{} { return make([]byte, strlen) },
-	}
 	m.keysPool = &sync.Pool{
 		New: func() interface{} { return make([]string, 0, numkeys) },
 	}
 	m.keypool = &sync.Pool{
 		New: func() interface{} { return make(kvrefs, numkeys) },
-	}
-	m.codepool = &sync.Pool{
-		New: func() interface{} { return make([]byte, itemlen) },
 	}
 	return m
 }

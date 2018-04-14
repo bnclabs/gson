@@ -7,6 +7,13 @@ import "unicode"
 import "strconv"
 import "encoding/json"
 
+func fixbuffer(buffer []byte, size int64) []byte {
+	if buffer == nil || int64(cap(buffer)) < size {
+		buffer = make([]byte, size)
+	}
+	return buffer[:size]
+}
+
 func bytes2str(bytes []byte) string {
 	if bytes == nil {
 		return ""

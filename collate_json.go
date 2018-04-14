@@ -34,9 +34,8 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 	case TypeString:
 		var x int
 
-		scratchi := config.pools.stringPool.Get()
-		scratch := scratchi.([]byte)
-		defer config.pools.stringPool.Put(scratchi)
+		bufn := config.bufferh.getbuffer(len(code[n:]) * 2)
+		scratch := bufn.data
 
 		scratch, x = collate2String(code[n:], scratch[:])
 
@@ -47,12 +46,14 @@ func collate2json(code []byte, text []byte, config *Config) (int, int) {
 			}
 			s := config.buf.Bytes()
 			m += copy(text[m:], s[:len(s)-1]) // -1 to strip \n
+			config.bufferh.putbuffer(bufn)
 			return n + x, m
 		}
 		remtxt, err := encodeString(scratch, text[m:m])
 		if err != nil {
 			panic(err)
 		}
+		config.bufferh.putbuffer(bufn)
 		return n + x, m + len(remtxt)
 
 	case TypeArray:

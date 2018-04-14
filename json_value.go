@@ -40,10 +40,11 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		panic("gson scanner expectedFalse")
 
 	case '"':
-		scratch := config.pools.stringPool.Get().([]byte)
-		defer config.pools.stringPool.Put(scratch)
+		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		scratch := bufn.data
 		remtxt, n := scanString(txt, scratch)
 		value := string(scratch[:n]) // this will copy the content.
+		config.bufferh.putbuffer(bufn)
 		return remtxt, value
 
 	case '[':
@@ -82,8 +83,8 @@ func json2value(txt string, config *Config) (string, interface{}) {
 		var n int
 
 		m := make(map[string]interface{})
-		scratch := config.pools.stringPool.Get().([]byte)
-		defer config.pools.stringPool.Put(scratch)
+		bufn := config.bufferh.getbuffer(len(txt) * 2)
+		scratch := bufn.data
 		for {
 			txt, n = scanString(txt, scratch) // empty string is also valid key
 			key := string(scratch[:n])
@@ -103,6 +104,7 @@ func json2value(txt string, config *Config) (string, interface{}) {
 				panic("gson scanner expectedCloseobject")
 			}
 		}
+		config.bufferh.putbuffer(bufn)
 		return txt[1:], m
 	}
 	panic("gson scanner expectedToken")
