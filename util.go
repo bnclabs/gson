@@ -300,45 +300,6 @@ func collated2Json(code []byte, text []byte, nk NumberKind) int {
 	panic("unreachable code")
 }
 
-//---- data modelling to sort and collate JSON property items.
-
-type kvref struct {
-	key  string
-	code []byte
-}
-
-type kvrefs []kvref
-
-func (kv kvrefs) Len() int {
-	return len(kv)
-}
-
-func (kv kvrefs) Less(i, j int) bool {
-	return kv[i].key < kv[j].key
-}
-
-func (kv kvrefs) Swap(i, j int) {
-	tmp := kv[i]
-	kv[i] = kv[j]
-	kv[j] = tmp
-}
-
-// bubble sort, moving to qsort should be atleast 40% faster.
-func (kv kvrefs) sort() {
-	for ln := len(kv) - 1; ; ln-- {
-		changed := false
-		for i := 0; i < ln; i++ {
-			if kv[i].key > kv[i+1].key {
-				kv[i], kv[i+1] = kv[i+1], kv[i]
-				changed = true
-			}
-		}
-		if changed == false {
-			break
-		}
-	}
-}
-
 // NOTE: using built in sort incurs mem-allocation.
 func sortStrings(strs []string) []string {
 	for ln := len(strs) - 1; ; ln-- {

@@ -102,9 +102,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 		bufn := config.bufferh.getbuffer(len(txt) * 5)
 		altcode := bufn.data
 
-		refsi := config.pools.keypool.Get()
-		refs := refsi.(kvrefs)
-		defer config.pools.keypool.Put(refsi)
+		kv := config.kvh.getkv(config.numkeys)
 
 		if txt = skipWS(txt[1:], config.ws); len(txt) == 0 {
 			panic("collate scanner expectedCloseobject")
@@ -123,7 +121,7 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 
 				txt = skipWS(txt[1:], config.ws)
 				txt, x = json2collate(txt, altcode[p:], config)
-				refs[ln] = kvref{key, altcode[p : p+x]}
+				kv.refs = append(kv.refs, kvref{key, altcode[p : p+x]})
 				p += x
 				ln++
 
@@ -138,20 +136,21 @@ func json2collate(txt string, code []byte, config *Config) (string, int) {
 				}
 			}
 
-			(refs[:ln]).sort()
+			(kv.refs[:ln]).sort()
 		}
 		if config.propertyLenPrefix {
 			n += collateLength(ln, code[n:])
 		}
 		for j := 0; j < ln; j++ {
-			kv := refs[j]
-			n += collateString(kv.key, code[n:], config) // encode key
-			n += copy(code[n:], kv.code)
+			ref := kv.refs[j]
+			n += collateString(ref.key, code[n:], config) // encode key
+			n += copy(code[n:], ref.code)
 		}
 		code[n] = Terminator
 		n++
 
 		config.bufferh.putbuffer(bufn)
+		config.kvh.putkv(kv)
 		return txt[1:], n
 	}
 	panic("collate scanner expectedToken")

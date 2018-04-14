@@ -23,6 +23,22 @@ const (
 // instances.
 var MaxKeys = 1024
 
+// MaxStringLen maximum length of string value inside json document.
+// Affects memory pool. Changing this value will affect all new
+// configuration instances.
+var MaxStringLen = 1024 * 1024
+
+// MaxCollateLen maximum length of collated value. Affects memory pool.
+// Changing this value will affect all new configuration instances.
+var MaxCollateLen = 1024 * 1024
+
+type memConfig struct {
+	strlen  int // maximum length of string value inside JSON document
+	numkeys int // maximum number of keys that a property object can have
+	itemlen int // maximum length of collated value.
+	ptrlen  int // maximum length of json-pointer can take
+}
+
 // Config is the root object to access all transformations and APIs
 // exported by this package. Before calling any of the config-methods,
 // make sure to initialize them with desired settings.
@@ -32,7 +48,7 @@ type Config struct {
 	nk      NumberKind
 	bufferh *bufferhead
 	mkeysh  *mkeyshead
-	pools   mempools
+	kvh     *kvhead
 
 	cborConfig
 	jsonConfig
@@ -54,6 +70,7 @@ func NewDefaultConfig() *Config {
 		nk:      FloatNumber,
 		bufferh: &bufferhead{},
 		mkeysh:  &mkeyshead{},
+		kvh:     &kvhead{},
 
 		cborConfig: cborConfig{
 			ct: Stream,
@@ -85,9 +102,6 @@ func (config *Config) init() *Config {
 	config.zf = big.NewFloat(0)
 	config.zf.SetPrec(64)
 	config.tcltbuffer = &collate.Buffer{}
-	// mempools
-	a, b, c, d := config.strlen, config.numkeys, config.itemlen, config.ptrlen
-	config.pools = newMempool(a, b, c, d)
 	return config
 }
 

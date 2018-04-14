@@ -38,7 +38,7 @@ func (val *Value) Tocollate(clt *Collate) *Collate {
 
 // ListPointers all possible pointers in value.
 func (val *Value) ListPointers(ptrs []string) []string {
-	bufn := val.config.bufferh.getbuffer(MaxJsonpointerLen)
+	bufn := val.config.bufferh.getbuffer(val.config.ptrlen)
 	ptrs = allpaths(val.data, ptrs, bufn.data[:0])
 	ptrs = append(ptrs, "")
 	val.config.bufferh.putbuffer(bufn)

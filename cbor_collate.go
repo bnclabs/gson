@@ -266,31 +266,30 @@ func collateCborT5(buf, out []byte, config *Config) (int, int) {
 	bufn, p := config.bufferh.getbuffer(len(buf)*5), 0
 	altcode := bufn.data
 
-	poolobj2 := config.pools.keypool.Get()
-	refs := poolobj2.(kvrefs)
-	defer config.pools.keypool.Put(poolobj2)
+	kv := config.kvh.getkv(ln)
 
 	for i := 0; i < ln; i++ {
 		x, y := cbor2collate(buf[m:], altcode[p:], config) // key
 		key := altcode[p : p+y]
 		m, p = m+x, p+y
 		x, y = cbor2collate(buf[m:], altcode[p:], config) // value
-		refs[i] = kvref{bytes2str(key), altcode[p : p+y]}
+		kv.refs = append(kv.refs, kvref{bytes2str(key), altcode[p : p+y]})
 		m, p = m+x, p+y
 	}
-	(refs[:ln]).sort()
+	(kv.refs[:ln]).sort()
 	for i := 0; i < ln; i++ {
-		kv := refs[i]
-		copy(out[n:], kv.key)
-		n += len(kv.key)
-		copy(out[n:], kv.code)
-		n += len(kv.code)
+		ref := kv.refs[i]
+		copy(out[n:], ref.key)
+		n += len(ref.key)
+		copy(out[n:], ref.code)
+		n += len(ref.code)
 	}
 
 	out[n] = Terminator
 	n++
 
 	config.bufferh.putbuffer(bufn)
+	config.kvh.putkv(kv)
 	return m, n
 }
 
@@ -302,9 +301,7 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 	bufn, p := config.bufferh.getbuffer(len(buf)*5), 0
 	altcode := bufn.data
 
-	poolobj2 := config.pools.keypool.Get()
-	refs := poolobj2.(kvrefs)
-	defer config.pools.keypool.Put(poolobj2)
+	kv := config.kvh.getkv(config.numkeys)
 
 	m = 1
 	for buf[m] != brkstp {
@@ -312,28 +309,29 @@ func collateCborT5Indef(buf, out []byte, config *Config) (m int, n int) {
 		key := altcode[p : p+y]
 		m, p = m+x, p+y
 		x, y = cbor2collate(buf[m:], altcode[p:], config) // value
-		refs[ln] = kvref{bytes2str(key), altcode[p : p+y]}
+		kv.refs = append(kv.refs, kvref{bytes2str(key), altcode[p : p+y]})
 		m, p = m+x, p+y
 		ln++
 	}
 	m++
 
-	(refs[:ln]).sort()
+	(kv.refs[:ln]).sort()
 
 	if config.propertyLenPrefix {
 		n += collateCborLength(ln, out[n:], config)
 	}
 	for i := 0; i < ln; i++ {
-		kv := refs[i]
-		copy(out[n:], kv.key)
-		n += len(kv.key)
-		copy(out[n:], kv.code)
-		n += len(kv.code)
+		ref := kv.refs[i]
+		copy(out[n:], ref.key)
+		n += len(ref.key)
+		copy(out[n:], ref.code)
+		n += len(ref.code)
 	}
 	out[n] = Terminator
 	n++
 
 	config.bufferh.putbuffer(bufn)
+	config.kvh.putkv(kv)
 	return
 }
 
