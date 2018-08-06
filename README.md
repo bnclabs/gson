@@ -1,7 +1,7 @@
 Object formats and notations
 ============================
 
-[![talk on matrix](https://github.com/prataprc/dotfiles/blob/master/assets/talkonmatrix.svg)](https://riot.im/app/#/user/@prataprc:matrix.org?action=chat)
+[![IRC #go-nuts](https://www.irccloud.com/invite-svg?channel=%23go-nuts&amp;hostname=chat.freenode.net&amp;port=6697&amp;ssl=1)](https://www.irccloud.com/invite?channel=%23go-nuts&amp;hostname=chat.freenode.net&amp;port=6697&amp;ssl=1)
 [![Build Status](https://travis-ci.org/bnclabs/gson.png)](https://travis-ci.org/bnclabs/gson)
 [![Coverage Status](https://coveralls.io/repos/github/bnclabs/gson/badge.svg?branch=master)](https://coveralls.io/github/bnclabs/gson?branch=master)
 [![GoDoc](https://godoc.org/github.com/bnclabs/gson?status.png)](https://godoc.org/github.com/bnclabs/gson)
