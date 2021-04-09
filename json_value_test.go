@@ -19,7 +19,7 @@ func TestScanNull(t *testing.T) {
 	jsn := config.NewJson(make([]byte, 0, 1024))
 
 	if jsnrem, val := jsn.Reset([]byte("null")).Tovalue(); jsnrem != nil {
-		t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
+		t.Errorf("remaining text after parsing should be empty, %v", jsnrem)
 	} else if val != nil {
 		t.Errorf("`null` should be parsed to nil")
 	}
@@ -47,7 +47,7 @@ func TestScanBool(t *testing.T) {
 		jsn.Reset([]byte(tcase))
 		json.Unmarshal([]byte(tcase), &refval)
 		if jsnrem, val := jsn.Tovalue(); jsnrem != nil {
-			t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
+			t.Errorf("remaining text after parsing should be empty, %v", jsnrem)
 		} else if v, ok := val.(bool); !ok || v != refval.(bool) {
 			t.Errorf("%q should be parsed to %v", tcase, refval)
 		}
@@ -78,7 +78,7 @@ func TestScanIntegers(t *testing.T) {
 		config = config.SetNumberKind(SmartNumber).SetSpaceKind(AnsiSpace)
 		jsn := config.NewJson(make([]byte, 0, 1024))
 		if jsnrem, val := jsn.Reset([]byte(tcase)).Tovalue(); jsnrem != nil {
-			t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
+			t.Errorf("remaining text after parsing should be empty, %v", jsnrem)
 		} else if v, ok := val.(int64); !ok || v != int64(ref.(float64)) {
 			t.Errorf("%q int should be parsed to %T %v", tcase, val, ref)
 		}
@@ -156,7 +156,7 @@ func TestCodeJSON(t *testing.T) {
 	config := NewDefaultConfig()
 	jsn := config.NewJson(data)
 	if jsnrem, val := jsn.Tovalue(); jsnrem != nil {
-		t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
+		t.Errorf("remaining text after parsing should be empty, %v", jsnrem)
 	} else if reflect.DeepEqual(val, ref) == false {
 		t.Errorf("codeJSON parsing failed with reference: %v", ref)
 	}

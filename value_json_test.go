@@ -149,7 +149,7 @@ func TestCodeVal2Json(t *testing.T) {
 	jsnrem, outval := config.NewValue(value).Tojson(jsn).Tovalue()
 
 	if jsnrem != nil {
-		t.Errorf("remaining text after parsing should be empty, %q", jsnrem)
+		t.Errorf("remaining text after parsing should be empty, %v", jsnrem)
 	} else if reflect.DeepEqual(outval, value) == false {
 		t.Errorf("codeJSON expected %v, got %v", value, outval)
 	}
